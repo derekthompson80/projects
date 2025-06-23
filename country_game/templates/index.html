@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Therendrim Game Database{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Therendrim Game Database</h1>
+    <p class="lead">This application allows you to view and manage data for the Therendrim game.</p>
+    <hr class="my-4">
+    <p>Use the navigation bar above to access different sections of the database.</p>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Stats</h5>
+                <p class="card-text">View and manage character stats like Politics, Military, Economics, etc.</p>
+                <a href="/stats" class="btn btn-primary">Go to Stats</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Resources</h5>
+                <p class="card-text">View and manage game resources like Coal, Iron, Crops, etc.</p>
+                <a href="/resources" class="btn btn-primary">Go to Resources</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Actions</h5>
+                <p class="card-text">View and manage player actions in the game.</p>
+                <a href="/actions" class="btn btn-primary">Go to Actions</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Projects</h5>
+                <p class="card-text">View and manage ongoing projects in the game.</p>
+                <a href="/projects" class="btn btn-primary">Go to Projects</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

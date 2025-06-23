@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Resources - Therendrim Game Database{% endblock %}
+
+{% block content %}
+<h1>Resources</h1>
+<p>View and manage game resources for the Therendrim game.</p>
+
+{% if message %}
+<div class="alert alert-{{ message_type }}">{{ message }}</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Add New Resource</h5>
+    </div>
+    <div class="card-body">
+        <form action="/resources/add" method="post">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <input type="text" class="form-control" id="type" name="type">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <label for="tier">Tier</label>
+                        <input type="number" class="form-control" id="tier" name="tier">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <label for="natively_produced">Native</label>
+                        <input type="number" class="form-control" id="natively_produced" name="natively_produced" value="0">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <label for="trade">Trade</label>
+                        <input type="number" class="form-control" id="trade" name="trade" value="0">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <label for="committed">Committed</label>
+                        <input type="number" class="form-control" id="committed" name="committed" value="0">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <label for="not_developed">Not Dev.</label>
+                        <input type="number" class="form-control" id="not_developed" name="not_developed" value="0">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <label for="available">Available</label>
+                        <input type="number" class="form-control" id="available" name="available" value="0">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Add Resource</button>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Tier</th>
+                <th>Native</th>
+                <th>Trade</th>
+                <th>Committed</th>
+                <th>Not Dev.</th>
+                <th>Available</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for resource in resources %}
+            <tr>
+                <td>{{ resource.id }}</td>
+                <td>{{ resource.name }}</td>
+                <td>{{ resource.type }}</td>
+                <td>{{ resource.tier }}</td>
+                <td>{{ resource.natively_produced }}</td>
+                <td>{{ resource.trade }}</td>
+                <td>{{ resource.committed }}</td>
+                <td>{{ resource.not_developed }}</td>
+                <td>{{ resource.available }}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ resource.id }}">Edit</button>
+                    <a href="/resources/delete/{{ resource.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this resource?')">Delete</a>
+                </td>
+            </tr>
+            
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editModal{{ resource.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ resource.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel{{ resource.id }}">Edit Resource</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="/resources/edit/{{ resource.id }}" method="post">
+                                <div class="form-group">
+                                    <label for="edit_name{{ resource.id }}">Name</label>
+                                    <input type="text" class="form-control" id="edit_name{{ resource.id }}" name="name" value="{{ resource.name }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_type{{ resource.id }}">Type</label>
+                                    <input type="text" class="form-control" id="edit_type{{ resource.id }}" name="type" value="{{ resource.type }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_tier{{ resource.id }}">Tier</label>
+                                    <input type="number" class="form-control" id="edit_tier{{ resource.id }}" name="tier" value="{{ resource.tier }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_natively_produced{{ resource.id }}">Natively Produced</label>
+                                    <input type="number" class="form-control" id="edit_natively_produced{{ resource.id }}" name="natively_produced" value="{{ resource.natively_produced }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_trade{{ resource.id }}">Trade</label>
+                                    <input type="number" class="form-control" id="edit_trade{{ resource.id }}" name="trade" value="{{ resource.trade }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_committed{{ resource.id }}">Committed</label>
+                                    <input type="number" class="form-control" id="edit_committed{{ resource.id }}" name="committed" value="{{ resource.committed }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_not_developed{{ resource.id }}">Not Developed</label>
+                                    <input type="number" class="form-control" id="edit_not_developed{{ resource.id }}" name="not_developed" value="{{ resource.not_developed }}">
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_available{{ resource.id }}">Available</label>
+                                    <input type="number" class="form-control" id="edit_available{{ resource.id }}" name="available" value="{{ resource.available }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

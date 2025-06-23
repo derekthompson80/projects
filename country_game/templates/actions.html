@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Actions - Therendrim Game Database{% endblock %}
+
+{% block content %}
+<h1>Actions</h1>
+<p>View and manage player actions for the Therendrim game.</p>
+
+{% if message %}
+<div class="alert alert-{{ message_type }}">{{ message }}</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Add New Action</h5>
+    </div>
+    <div class="card-body">
+        <form action="/actions/add" method="post">
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="action_number">Action Number</label>
+                        <input type="number" class="form-control" id="action_number" name="action_number" required>
+                    </div>
+                </div>
+                <div class="col-md-10">
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="stat1">Stat 1</label>
+                        <input type="text" class="form-control" id="stat1" name="stat1">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="stat1_value">Stat 1 Value</label>
+                        <input type="number" class="form-control" id="stat1_value" name="stat1_value">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="stat2">Stat 2</label>
+                        <input type="text" class="form-control" id="stat2" name="stat2">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="stat2_value">Stat 2 Value</label>
+                        <input type="number" class="form-control" id="stat2_value" name="stat2_value">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="advisor_used">Advisor Used</label>
+                        <select class="form-control" id="advisor_used" name="advisor_used">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="gold_spent">Gold Spent</label>
+                        <input type="number" class="form-control" id="gold_spent" name="gold_spent" value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="resources_used">Resources Used (comma separated)</label>
+                        <input type="text" class="form-control" id="resources_used" name="resources_used">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Add Action</button>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Action #</th>
+                <th>Description</th>
+                <th>Stat 1</th>
+                <th>Value</th>
+                <th>Stat 2</th>
+                <th>Value</th>
+                <th>Advisor</th>
+                <th>Resources</th>
+                <th>Gold</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for action in actions %}
+            <tr>
+                <td>{{ action.id }}</td>
+                <td>{{ action.action_number }}</td>
+                <td>{{ action.description|truncate(50) }}</td>
+                <td>{{ action.stat1 }}</td>
+                <td>{{ action.stat1_value }}</td>
+                <td>{{ action.stat2 }}</td>
+                <td>{{ action.stat2_value }}</td>
+                <td>{{ "Yes" if action.advisor_used else "No" }}</td>
+                <td>{{ action.resources_used }}</td>
+                <td>{{ action.gold_spent }}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ action.id }}">Edit</button>
+                    <a href="/actions/delete/{{ action.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this action?')">Delete</a>
+                </td>
+            </tr>
+            
+            <!-- Edit Modal -->
+            <div class="modal fade" id="editModal{{ action.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ action.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editModalLabel{{ action.id }}">Edit Action</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="/actions/edit/{{ action.id }}" method="post">
+                                <div class="form-group">
+                                    <label for="edit_action_number{{ action.id }}">Action Number</label>
+                                    <input type="number" class="form-control" id="edit_action_number{{ action.id }}" name="action_number" value="{{ action.action_number }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edit_description{{ action.id }}">Description</label>
+                                    <textarea class="form-control" id="edit_description{{ action.id }}" name="description" rows="3">{{ action.description }}</textarea>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="edit_stat1{{ action.id }}">Stat 1</label>
+                                            <input type="text" class="form-control" id="edit_stat1{{ action.id }}" name="stat1" value="{{ action.stat1 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="edit_stat1_value{{ action.id }}">Stat 1 Value</label>
+                                            <input type="number" class="form-control" id="edit_stat1_value{{ action.id }}" name="stat1_value" value="{{ action.stat1_value }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="edit_stat2{{ action.id }}">Stat 2</label>
+                                            <input type="text" class="form-control" id="edit_stat2{{ action.id }}" name="stat2" value="{{ action.stat2 }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="edit_stat2_value{{ action.id }}">Stat 2 Value</label>
+                                            <input type="number" class="form-control" id="edit_stat2_value{{ action.id }}" name="stat2_value" value="{{ action.stat2_value }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="edit_advisor_used{{ action.id }}">Advisor Used</label>
+                                            <select class="form-control" id="edit_advisor_used{{ action.id }}" name="advisor_used">
+                                                <option value="0" {% if not action.advisor_used %}selected{% endif %}>No</option>
+                                                <option value="1" {% if action.advisor_used %}selected{% endif %}>Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="edit_gold_spent{{ action.id }}">Gold Spent</label>
+                                            <input type="number" class="form-control" id="edit_gold_spent{{ action.id }}" name="gold_spent" value="{{ action.gold_spent }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="edit_resources_used{{ action.id }}">Resources Used (comma separated)</label>
+                                    <input type="text" class="form-control" id="edit_resources_used{{ action.id }}" name="resources_used" value="{{ action.resources_used }}">
+                                </div>
+                                <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
