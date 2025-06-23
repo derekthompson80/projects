@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Entry - My Diary Blog</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('blog') }}" class="btn btn-outline-secondary">&larr; Back to Blog</a>
+                <h1>{% if is_edit %}Edit Blog Entry{% else %}New Blog Entry{% endif %}</h1>
+            </div>
+        </header>
+
+        <!-- Flash messages -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'error' else 'danger' }}" role="alert">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Entry form -->
+        <div class="new-entry-form">
+            <form action="{% if is_edit %}{{ url_for('edit_entry', entry_id=entry_id) }}{% else %}{{ url_for('new_entry') }}{% endif %}" method="post">
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ title|default('') }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="author" class="form-label">Author</label>
+                    <input type="text" class="form-control" id="author" name="author" value="{{ author|default('') }}" placeholder="Anonymous">
+                </div>
+                <div class="mb-3">
+                    <label for="content" class="form-label">Content</label>
+                    <textarea class="form-control" id="content" name="content" rows="10" required>{{ content|default('') }}</textarea>
+                    <div class="form-text">Your entry will be automatically checked for grammar and spelling.</div>
+                </div>
+
+                <!-- Pexels Media Search Section -->
+                <div class="mb-4">
+                    <h4>Add Media from Pexels</h4>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="media-search" placeholder="Search for images or videos...">
+                                <button class="btn btn-outline-secondary" type="button" id="search-button">Search</button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="mediaType" id="type-photos" value="photos" checked>
+                                <label class="form-check-label" for="type-photos">Photos</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="mediaType" id="type-videos" value="videos">
+                                <label class="form-check-label" for="type-videos">Videos</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div id="search-results" class="row g-3 mb-3" style="max-height: 400px; overflow-y: auto;">
+                        <!-- Results will be populated here via JavaScript -->
+                    </div>
+
+                    <!-- Selected Media Preview -->
+                    <div id="selected-media" class="mb-3" style="display: none;">
+                        <h5>Selected Media</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                <div id="media-preview" class="text-center mb-3">
+                                    <!-- Preview will be shown here -->
+                                </div>
+                                <p id="media-attribution" class="small text-muted"></p>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="remove-media">Remove</button>
+                            </div>
+                        </div>
+                        <!-- Hidden inputs to store selected media data -->
+                        <input type="hidden" id="media-id" name="media_id">
+                        <input type="hidden" id="media-type" name="media_type">
+                        <input type="hidden" id="media-url" name="media_url">
+                        <input type="hidden" id="media-thumbnail" name="media_thumbnail">
+                        <input type="hidden" id="media-width" name="media_width">
+                        <input type="hidden" id="media-height" name="media_height">
+                        <input type="hidden" id="media-attribution" name="media_attribution">
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('media-search');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const selectedMedia = document.getElementById('selected-media');
+            const mediaPreview = document.getElementById('media-preview');
+            const mediaAttributionText = document.getElementById('media-attribution');
+            const removeMediaButton = document.getElementById('remove-media');
+
+            // Hidden form fields
+            const mediaIdInput = document.getElementById('media-id');
+            const mediaTypeInput = document.getElementById('media-type');
+            const mediaUrlInput = document.getElementById('media-url');
+            const mediaThumbnailInput = document.getElementById('media-thumbnail');
+            const mediaWidthInput = document.getElementById('media-width');
+            const mediaHeightInput = document.getElementById('media-height');
+            const mediaAttributionInput = document.getElementById('media-attribution');
+
+            // Search for media when the search button is clicked
+            searchButton.addEventListener('click', function() {
+                const query = searchInput.value.trim();
+                if (!query) return;
+
+                const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
+
+                // Show loading indicator
+                searchResults.innerHTML = '<div class="col-12 text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+
+                // Make AJAX request to search for media
+                fetch(`/pexels/search?query=${encodeURIComponent(query)}&type=${mediaType}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        displaySearchResults(data, mediaType);
+                    })
+                    .catch(error => {
+                        console.error('Error searching media:', error);
+                        searchResults.innerHTML = '<div class="col-12 text-center text-danger">Error searching media. Please try again.</div>';
+                    });
+            });
+
+            // Display search results
+            function displaySearchResults(data, mediaType) {
+                searchResults.innerHTML = '';
+
+                if (mediaType === 'photos' && data.photos && data.photos.length > 0) {
+                    data.photos.forEach(photo => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 col-sm-6';
+
+                        col.innerHTML = `
+                            <div class="card h-100">
+                                <img src="${photo.src.medium}" class="card-img-top" alt="${photo.alt || 'Photo'}">
+                                <div class="card-body">
+                                    <p class="card-text small">Photo by <a href="${photo.photographer_url}" target="_blank">${photo.photographer}</a> on <a href="https://www.pexels.com" target="_blank">Pexels</a></p>
+                                    <button type="button" class="btn btn-sm btn-primary select-media" 
+                                        data-id="${photo.id}"
+                                        data-type="photo"
+                                        data-url="${photo.src.original}"
+                                        data-thumbnail="${photo.src.medium}"
+                                        data-width="${photo.width}"
+                                        data-height="${photo.height}"
+                                        data-attribution="Photo by ${photo.photographer} on Pexels">
+                                        Select
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+
+                        searchResults.appendChild(col);
+                    });
+                } else if (mediaType === 'videos' && data.videos && data.videos.length > 0) {
+                    data.videos.forEach(video => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 col-sm-6';
+
+                        // Find a suitable video file (HD or SD)
+                        let videoFile = video.video_files.find(file => file.quality === 'hd') || 
+                                        video.video_files.find(file => file.quality === 'sd') ||
+                                        video.video_files[0];
+
+                        col.innerHTML = `
+                            <div class="card h-100">
+                                <img src="${video.image}" class="card-img-top" alt="Video thumbnail">
+                                <div class="card-body">
+                                    <p class="card-text small">Video by <a href="${video.user.url}" target="_blank">${video.user.name}</a> on <a href="https://www.pexels.com" target="_blank">Pexels</a></p>
+                                    <button type="button" class="btn btn-sm btn-primary select-media" 
+                                        data-id="${video.id}"
+                                        data-type="video"
+                                        data-url="${videoFile.link}"
+                                        data-thumbnail="${video.image}"
+                                        data-width="${video.width}"
+                                        data-height="${video.height}"
+                                        data-attribution="Video by ${video.user.name} on Pexels">
+                                        Select
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+
+                        searchResults.appendChild(col);
+                    });
+                } else {
+                    searchResults.innerHTML = '<div class="col-12 text-center">No results found. Try a different search term.</div>';
+                }
+
+                // Add event listeners to select buttons
+                document.querySelectorAll('.select-media').forEach(button => {
+                    button.addEventListener('click', function() {
+                        selectMedia(this.dataset);
+                    });
+                });
+            }
+
+            // Select a media item
+            function selectMedia(data) {
+                // Update hidden form fields
+                mediaIdInput.value = data.id;
+                mediaTypeInput.value = data.type;
+                mediaUrlInput.value = data.url;
+                mediaThumbnailInput.value = data.thumbnail;
+                mediaWidthInput.value = data.width;
+                mediaHeightInput.value = data.height;
+                mediaAttributionInput.value = data.attribution;
+
+                // Update preview
+                if (data.type === 'photo') {
+                    mediaPreview.innerHTML = `<img src="${data.thumbnail}" class="img-fluid" alt="Selected photo">`;
+                } else {
+                    mediaPreview.innerHTML = `
+                        <video controls class="img-fluid">
+                            <source src="${data.url}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                }
+
+                mediaAttributionText.textContent = data.attribution;
+
+                // Show selected media section
+                selectedMedia.style.display = 'block';
+
+                // Clear search results
+                searchResults.innerHTML = '';
+                searchInput.value = '';
+            }
+
+            // Remove selected media
+            removeMediaButton.addEventListener('click', function() {
+                // Clear hidden form fields
+                mediaIdInput.value = '';
+                mediaTypeInput.value = '';
+                mediaUrlInput.value = '';
+                mediaThumbnailInput.value = '';
+                mediaWidthInput.value = '';
+                mediaHeightInput.value = '';
+                mediaAttributionInput.value = '';
+
+                // Clear preview
+                mediaPreview.innerHTML = '';
+                mediaAttributionText.textContent = '';
+
+                // Hide selected media section
+                selectedMedia.style.display = 'none';
+            });
+
+            // Handle Enter key in search input
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchButton.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

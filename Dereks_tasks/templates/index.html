@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets Task Manager</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; word-wrap: break-word; }
+        th { background-color: #e9e9e9; }
+        td.description-cell { max-width: 300px; } /* Limit width of description */
+        .flash-messages { list-style: none; padding: 0; }
+        .flash-messages li { padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .flash-messages .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash-messages .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; }
+        .form-group input[type="text"], .form-group input[type="date"], .form-group select, .form-group textarea {
+            width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+        }
+        .form-group button {
+            padding: 10px 15px; background-color: #007bff; color: white; border: none;
+            border-radius: 4px; cursor: pointer;
+        }
+        .form-group button:hover { background-color: #0056b3; }
+        .task-actions form { display: inline-block; margin-left: 5px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google Sheets Task Manager</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Add New Task</h2>
+        <form action="{{ url_for('add_task') }}" method="POST" class="form-group">
+            <div>
+                <label for="task_name">Task Name (Task to complete):</label>
+                <input type="text" id="task_name" name="task_name" required>
+            </div>
+            <div>
+                <label for="task_timeframe">Timeframe:</label>
+                <input type="text" id="task_timeframe" name="task_timeframe">
+            </div>
+            <div>
+                <label for="task_description">Description of task:</label>
+                <textarea id="task_description" name="task_description" rows="3"></textarea>
+            </div>
+            <div>
+                <label for="task_recurring">Recurring task:</label>
+                <select id="task_recurring" name="task_recurring">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                    <option value="Daily">Daily</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                </select>
+            </div>
+            <div>
+                <label for="task_due_date">Date of task (Optional):</label>
+                <input type="date" id="task_due_date" name="task_due_date">
+            </div>
+            <div>
+                <label for="task_completed">Completed:</label>
+                <select id="task_completed" name="task_completed">
+                    <option value="No" selected>No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+            <button type="submit">Add Task</button>
+        </form>
+
+        <h2>Current Tasks</h2>
+        {% if tasks %}
+            <table>
+                <thead>
+                    <tr>
+                        {% if header %}
+                            <th>{{ header[0] if header|length > 0 else 'Task' }}</th>
+                            <th>{{ header[1] if header|length > 1 else 'Timeframe' }}</th>
+                            <th class="description-cell">{{ header[2] if header|length > 2 else 'Description' }}</th>
+                            <th>{{ header[3] if header|length > 3 else 'Recurring' }}</th>
+                            <th>{{ header[4] if header|length > 4 else 'Date of Task' }}</th>
+                            <th>{{ header[5] if header|length > 5 else 'Completed' }}</th>
+                            <th>Actions</th>
+                        {% else %}
+                            <th>Task Name</th>
+                            <th>Timeframe</th>
+                            <th class="description-cell">Description</th>
+                            <th>Recurring</th>
+                            <th>Date of Task</th>
+                            <th>Completed</th>
+                            <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.name }}</td>
+                        <td>{{ task.timeframe }}</td>
+                        <td class="description-cell">{{ task.description }}</td>
+                        <td>{{ task.recurring }}</td>
+                        <td>{{ task.due_date }}</td>
+                        <td>{{ task.status }}</td> {# This is the 'Completed' status from the sheet #}
+                        <td class="task-actions">
+                            <form action="{{ url_for('update_task_status', task_row_id=task.id) }}" method="POST">
+                                <input type="hidden" name="task_name" value="{{ task.name }}"> {# Keep for email notification #}
+                                <select name="new_status" onchange="this.form.submit()">
+                                    <option value="No" {% if task.status == 'No' or task.status == '' %}selected{% endif %}>No</option>
+                                    <option value="Yes" {% if task.status == 'Yes' %}selected{% endif %}>Yes</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No tasks found in the sheet, or an error occurred.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
