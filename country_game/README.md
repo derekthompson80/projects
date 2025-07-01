@@ -1,6 +1,6 @@
-# Therendrim Game Database
+# Country Game Database
 
-A web application for managing data from the Therendrim game using Flask and MySQL.
+A web application for managing data from the Country Game using Flask and MySQL.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ A web application for managing data from the Therendrim game using Flask and MyS
    ```
 
    This script will:
-   - Create a database named `therendrim_game`
+   - Create a database named `county_game_server`
    - Create tables for stats, resources, actions, and projects
    - Import data from the CSV files into these tables
 

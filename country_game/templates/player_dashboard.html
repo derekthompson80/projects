@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Player Dashboard - Country Game{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Player Dashboard</h1>
+
+    {% if message %}
+    <div class="alert alert-{{ message_type }}">{{ message }}</div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Action Updates Section -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Submit Action Update</h5>
+                </div>
+                <div class="card-body">
+                    {% if max_actions %}
+                    <div class="alert alert-info">
+                        <p>Your Politics rating is {{ politics_rating }}. You can submit up to {{ max_actions }} actions.</p>
+                        {% if politics_rating < 3 %}
+                        <p>Increase your Politics rating to 3 to unlock a 3rd action.</p>
+                        {% elif politics_rating < 5 %}
+                        <p>Increase your Politics rating to 5 to unlock a 4th action.</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <form action="{{ url_for('submit_player_action') }}" method="post">
+                        <div class="form-group mb-3">
+                            <label for="action_number">Action Number</label>
+                            <input type="number" class="form-control" id="action_number" name="action_number" required min="1" max="{{ max_actions }}" placeholder="Enter a number from 1 to {{ max_actions }}">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="description">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="stat1">Primary Stat</label>
+                            <input type="text" class="form-control" id="stat1" name="stat1">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="stat1_value">Primary Stat Value</label>
+                            <input type="number" class="form-control" id="stat1_value" name="stat1_value">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="stat2">Secondary Stat</label>
+                            <input type="text" class="form-control" id="stat2" name="stat2">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="stat2_value">Secondary Stat Value</label>
+                            <input type="number" class="form-control" id="stat2_value" name="stat2_value">
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="advisor_used" name="advisor_used" value="1">
+                            <label class="form-check-label" for="advisor_used">Advisor Used</label>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="resources_used">Resources Used</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="resources_used" name="resources_used">
+                                <select class="form-control" id="all_resources_player">
+                                    <option value="">-- Select a resource --</option>
+                                    {% if all_resources %}
+                                        {% for resource in all_resources %}
+                                            <option value="{{ resource.name }}">{{ resource.name }} ({{ resource.type }}, Tier: {{ resource.tier }})</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled>No resources available in CSV</option>
+                                    {% endif %}
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" id="add_resource_btn_player">Add</button>
+                            </div>
+                            <small class="form-text text-muted">Select resources from the dropdown and click "Add" to add them to the list. Separate multiple resources with commas.</small>
+                        </div>
+
+                        <script>
+                            document.getElementById('add_resource_btn_player').addEventListener('click', function() {
+                                const resourceSelect = document.getElementById('all_resources_player');
+                                const resourceName = resourceSelect.value;
+                                const resourcesInput = document.getElementById('resources_used');
+
+                                if (resourceName) {
+                                    // Add the resource to the input field
+                                    if (resourcesInput.value) {
+                                        // If there are already resources, add a comma and the new resource
+                                        resourcesInput.value += ', ' + resourceName;
+                                    } else {
+                                        // If the input is empty, just add the resource
+                                        resourcesInput.value = resourceName;
+                                    }
+
+                                    // Reset the dropdown
+                                    resourceSelect.selectedIndex = 0;
+                                } else {
+                                    alert('Please select a resource first.');
+                                }
+                            });
+                        </script>
+                        <div class="form-group mb-3">
+                            <label for="gold_spent">Gold Spent</label>
+                            <input type="number" class="form-control" id="gold_spent" name="gold_spent" value="0">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Action</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Section -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Messages</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Send Message to Staff</h6>
+                        <form action="{{ url_for('send_message') }}" method="post">
+                            <input type="hidden" name="recipient_type" value="staff">
+                            <div class="form-group mb-3">
+                                <label for="subject">Subject</label>
+                                <input type="text" class="form-control" id="subject" name="subject" required>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="message_content">Message</label>
+                                <textarea class="form-control" id="message_content" name="content" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success">Send Message</button>
+                        </form>
+                    </div>
+
+                    <hr>
+
+                    <div>
+                        <h6>Message History</h6>
+                        {% if messages %}
+                            <div class="list-group">
+                                {% for message in messages %}
+                                    <div class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ message.subject }}</h6>
+                                            <small>{{ message.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ message.content }}</p>
+                                        <small>
+                                            {% if message.sender_id == session.user_id %}
+                                                <span class="badge bg-primary">Sent</span>
+                                            {% else %}
+                                                <span class="badge bg-info">Received</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted">No messages yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Actions Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Your Recent Actions</h5>
+        </div>
+        <div class="card-body">
+            {% if actions %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Action #</th>
+                                <th>Description</th>
+                                <th>Stats Used</th>
+                                <th>Resources Used</th>
+                                <th>Gold Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in actions %}
+                                <tr>
+                                    <td>{{ action.action_number }}</td>
+                                    <td>{{ action.description }}</td>
+                                    <td>
+                                        {% if action.stat1 %}{{ action.stat1 }} ({{ action.stat1_value }}){% endif %}
+                                        {% if action.stat2 %}<br>{{ action.stat2 }} ({{ action.stat2_value }}){% endif %}
+                                    </td>
+                                    <td>{{ action.resources_used }}</td>
+                                    <td>{{ action.gold_spent }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No actions submitted yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

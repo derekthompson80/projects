@@ -1,14 +1,45 @@
 {% extends 'base.html' %}
 
-{% block title %}Home - Therendrim Game Database{% endblock %}
+{% block title %}Home - Country Game{% endblock %}
 
 {% block content %}
 <div class="jumbotron">
-    <h1 class="display-4">Welcome to Therendrim Game Database</h1>
-    <p class="lead">This application allows you to view and manage data for the Therendrim game.</p>
+    {% if country_info %}
+    <h1 class="display-4">{{ country_info.name }}</h1>
+    <p class="lead">Ruled by {{ country_info.ruler_name }} - {{ country_info.government_type }}</p>
     <hr class="my-4">
-    <p>Use the navigation bar above to access different sections of the database.</p>
+    <p>{{ country_info.description }}</p>
+    <p><small class="text-muted">Database: {{ country_info.db_name }}</small></p>
+    {% else %}
+    <h1 class="display-4">Welcome to The Country Game</h1>
+    <p class="lead">This application allows you to view and manage data for the Country Game.</p>
+    <hr class="my-4">
+    <p>Create a new country or use the navigation bar above to access different sections of the database.</p>
+    <p><a href="/create_country" class="btn btn-primary btn-lg">Create New Country</a></p>
+    {% endif %}
 </div>
+
+{% if country_info %}
+<h2 class="mt-4 mb-3">Country Stats</h2>
+<div class="row">
+    {% for stat in country_info.stats %}
+    <div class="col-md-3 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ stat.name }}</h5>
+                <h2 class="display-4 text-center">{{ stat.rating }}</h2>
+                {% if stat.modifier %}
+                <p class="text-center">Modifier: {{ stat.modifier }}</p>
+                {% endif %}
+                {% if stat.advisor %}
+                <p class="text-center">Advisor: {{ stat.advisor }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 <div class="row mt-4">
     <div class="col-md-3">

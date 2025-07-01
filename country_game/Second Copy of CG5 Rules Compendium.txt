@@ -1,0 +1,2945 @@
+﻿Words 25,077
+
+
+Introduction
+This is the 5th edition of the Country Game.  The Country Game is a roleplaying game wherein players take on the role of leaders of fantastical nations in a fantastical world.  Gameplay officially occurs over email, Discord, World Anvil, and Google Drive although players are welcome to discuss or roleplay outside of these mediums as well.  There are more than 30 pre-generated nations just waiting for someone to lead them into legend.    
+
+
+The Country Game is inspired by, and indeed runs off of, the realities of physics as presented in the Pathfinder RPG. This isn’t to say that the countries use those game mechanics, and you won’t be using them to accomplish your goals in the game, but frequently the staff will be describing game elements in terms, creatures, and magic from the Pathfinder RPG.  
+
+
+Updates from Previous Editions: In the 5th age the god king has increased his divine rank from that of a demigod to a full deity.  The elven mithal was shattered after the elven king went insane. He was put down by the new ruler, but the damage had already been done. Morgaard - Either the paladin has put down the lich king/queen OR the lich king/queen has put down the paladin and declared rule with an iron fist. There is a new pope!  New policies will come from the Pope soon. A new nation was contacted out in the seas. The merfolk remain elusive, but could grow into a mighty power.
+
+
+Actions must be submitted through the character portal, a spreadsheet-style file that has been shared with each player. You can contact us via country.game.05@gmail.com or discord.  On Mondays you may come and talk to a storyteller, time TBD, appointments are also possible. In person meetings with the staff are on hold during the Covid-19 pandemic
+
+
+***DISCLAIMER*** Player information is not absolute, and is limited to the means available in the game to receive it. For example, it is entirely possible that a neighboring country with an Espionage of 5 might know more about what's happening in your country than you do. Also, this document does not include all possibilities of gameplay.  Just because you don’t see something spelled out here doesn’t mean it is out of the scope of the game.  ***DISCLAIMER***
+
+
+The Country Game is a storyteller arbitration game first and foremost. What rules are written are guidelines to serve as shorthand to help the staff remember or adjudicate.
+
+
+Notes to reading this guide: 
+1. The strictures here apply to countries in general, but specific countries may have exceptions.  Exceptions will be specified on the country’s sheet.  So please keep this in mind.
+2. There are some hard rules, which apply to everyone. In general if you read a rule, that rule is the one that applies. If there is confusion between two rules, the prevailing rule is this: Specific beats general.
+Country Achievements
+Players are encouraged to come up with personal goals for what they would like to get out of playing the Country Game, but we will also provide some ideas for each country.  Each country will receive three goals personalized for that country. You the player have no obligation to pursue them, but we hope you will at least find them inspiring. Achieving a country goal does not end the game, but does grant bragging rights as they tend to be rather challenging. These goals are also meant to be an indication of what your own nation and others will expect from you as the ruler. You should note that significant progress toward your nation’s goals will also have a positive effect on your Trust statistic.
+What to Expect
+From the World
+Time: Each 2 real life weeks is one season in game.  Every four seasons in game is one year.  So, one in-game year is 4 seasons or 4 turns (or 8 weeks) out of game. 
+* Winter: Invasions are more challenging due to the cold, especially in more northern climates.  Players must engage a project that will store food for the winter.
+* Spring: Projects are more difficult to accomplish due to planting and rains, a typical surcharge of 1F or 1g.  Flooding is more common
+* Summer: Invasions are more challenging due to extreme heat, especially in the south. Summer storms may disrupt trade.
+* Fall: Many crops produce extra food. This is treated as a (g) bonus in the form of taxation, plentiful spending, etc.
+
+
+Events: Each year at least one large regional event will happen somewhere on the continent.  Some events will be tied to the seasons specifically, such as Harsh Winter: Due to extreme cold, snow, and spirits of hunger, every player must complete a project called “Winter Stores.” (Generally a Size + Economy project that gets bonuses with food.)  There is also a greater chance of undead rising.  Affects northern countries more than southern.  Other events may be the result of cosmic forces or player actions.
+From Other Players
+Other players’ actions may affect your country.  Other players’ actions may affect what information you have.  We also expect our players to be courteous out of character and keep in-character and out-of-character conflicts separate. This is a game, played for fun.  It is expected that players will behave compassionately towards their fellow players. This means  that they will act to make other players’ games better.  If a player behaves in a way that deliberately harms and discomforts other players, that player will be asked to leave.
+
+
+From the Staff
+Players can expect courteous responses from staff.  The staff will maintain a strict in-character vs out-of-character separation.  The staff will provide information on and run independent (NPC) nations.  Staff will try to respond to questions within 24 hours. If we do not please be patient and ask again.  Please let us know if you have any concerns.
+
+
+
+
+Actions, What They’re Made of, How to Submit Them, Resolution, and More 
+Actions are the meat and potatoes of gameplay, they represent time, effort, and political wrangling on the part of the player (or NPCs).  Actions are how you materially affect your country and the countries of other players.  Each player gets 3 -5 actions (see your country sheet) and the NPCs of each nation gets 0-2 collective actions. The NPC actions are not taken by your advisors, it is taken by other factors or groups within your nation. If the player does not declare their actions then those are taken by their advisors.  An action consists of a description of the desired outcome, how it will be accomplished, and what resources are being applied.  
+
+
+Submitting Actions
+Actions need to be submitted via the player portal (that Google Sheet thing) every other Friday by 11:59 PM in order to be processed for the upcoming turn beginning on Sunday.  1 turn = 2 weeks out of game and 1 season in game.  It is requested that actions be ordered by their priority so that the staff can ensure that the things you think are most important are treated that way.  Staff will then get together and suss out what happens.
+
+
+Sample Actions
+There are effectively an infinite number of different actions players can submit, but here are a few examples of some we think will come up:
+* Mobilizing a battlegroup to invade another country (required pre-invasion)
+* Growing your infrastructure
+* Urban development, settling a new town or growing a town into a city.
+* Establishing a new trade route
+* Establishing a spy network
+* Calling on local clerics to treat victims of a plague
+* Exploiting a resource to get an extra unit of it for some turns.
+* Raiding/piracy - smaller groups, faster movement, no territory taken
+* Spreading/collecting information
+* Searching/prospecting for natural resources.
+* Assimilating a hex
+Action-less Actions aka Free Actions
+Some actions don’t actually take up one of your actions, but you do need to submit in writing that you’re doing it.  These are action-less actions, or more succinctly, free actions.  
+* Converting copper, silver, and gold into currency
+* Using towns and cities to sell resources for currency within your nation
+* Hiring adventures to solve a problem
+* One time trade
+Tips
+The below are some tips and guidelines for submitting effective actions.  
+* Your stats represent a finite pool of personnel, knowledge, and equipment.  Try not to rely too heavily on actions that seem like they would all use a single statistic for your nation (ie. they shouldn’t all be military actions, or trade actions, and so on.) Try to balance spreading out the sorts of actions you take with playing to your strengths. You may use a single stat only twice per turn for an action.
+* If you have a relevant advisor to an action please include it, we will try to remember, but reminders are definitely helpful.
+* Throwing money at a problem always helps. 
+
+
+Amount of Money (g) Added to the Action
+	Bonus
+	1
+	+1
+	3
+	+2
+	6
+	+3
+	10
+	+4
+	15
+	+5
+	
+
+* Supplying food to people engaging in difficult tasks basically always helps, and is mandatory for any project that involves deploying significant numbers of people.
+* Include relevant resources.  In most cases resources are mandatory.  For example if you want to build a ship, include some kind of wood, either as a special resource or pulling off of forest tiles in your nation.
+* Explaining your reasoning for why you think an idea should work; this helps us understand where you’re coming from, which in turn lets us put your actions in a framework that’s far more likely to succeed.
+* You can spend another action to assist an action your taking. This second action can use any stats you can justify and will add ½ it’s rollovers as a bonus on the action. This bonus can last for multiple turns. An example is using espionage to boost your battlegroup with enemy intel
+
+
+Action Template for Someone with 3 Actions
+
+
+1. Highest priority action: A short description of what it is you are doing and what your goal is. Include primary stat and a secondary stat you would like to use. 
+
+
+The primary stat pertains to the nature or overall goal of the action.  The secondary stat represents how you would like to facilitate the action or what direction you would it to take.  The secondary stat does not have to be the same each turn for the same project. For more on this please see stat descriptions. Each stat can only be used twice per turn except for politics which can’t be used in actions.
+
+
+1. Advisor/specialty? You can use each advisor as many times per turn as you would like, but only 1 advisor per action.
+2. Resources? Required for most projects, particularly building projects and almost always adds a bonus.
+3. Currency? Required for most projects and almost always adds a bonus.
+
+
+2. Non-Actions aka Free Actions
+   1. Sell internally
+      1. Through a metropolis: May sell any resource for its value in (g), or Luxuries at their value +1, and may do so twice per turn.
+      2. Through cities: Luxuries sell for their Tier + 1 in cities, while Food and Strategic resources sell for their tier in cities. You may sell 1 unit of resources per city.
+      3. Through towns: You may sell 1 unit of Tier 1 or Tier 2 resources per town at their tier value. You can’t sell Tier 3 resources in towns, except whales.  You may sell 1 unit of resources per town.
+   2. Mint Currency: Copper, silver, and gold can be converted to currency (g) for free.
+   3. Maintenance: This is really just a yes or no.  That way we know whether you considered something else higher priority or if there was just a clerical error or something. This is usually equal (unless you are told otherwise by the staff) to twice your nation’s Size in (g) and total tiers of food resources.
+
+
+NOTE: Resources not traded or otherwise used directly by the player will be used by the people of the nation. The people of the nation will also take actions using available resources if you do not, committing them without your say-so.
+
+
+   5. Changing Goods Traded on a Mature Trade Route: This is a free action, but does require the agreement of all parties trading.
+   6. Misc: Ex: recording a contract or agreement, confirming a trade route, etc., questions with readily available answers such as “When are my religion’s high holy days?”  You can also put any unique costs to your country here.
+
+
+Example Action Set
+
+
+1. Highest priority action: I need more food so I would like to cultivate crops.  Last turn I found arable land, I want to plant vegetables in it now.  I will use Economy + Technology.
+   1. Advisor/specialty? My Technology advisor, specialty in agriculture.
+   2. Resources? 1 Iron to make plows and 1 crops for seeds and feeding the laborers.  Food is particularly important for actions requiring intense manual labor and is sometimes used to pay unskilled laborers.
+   3. Currency? 2g.  Before planting this player had to find arable land, for which they paid 1(g).  To finish planting they will need another 1 iron and 2 crops and 1(g).
+
+
+                So the whole project costs this much: 
+ 4(g) = 1(g) exploration [previous turn] + 2(g) initial planting and clearing [this turn] + 1(g) finishing planting [next turn]  
+2 iron = 1 iron planting and clearing [this turn] + 1 iron finishing planting [next turn]
+3 crops = 1 crop planting and clearing [this turn] + 2 crops finishing planting [next turn].
+
+
+In theory the player could pay all of this at the beginning and then wait for the laborers to finish, but if you have (or only want to spend) 1 iron per turn that’s fine.  The crops will be ready once everything is paid and the laborers have finished working.
+
+
+2. Second highest priority: I don’t want people to know about the monsters in my basement, until it is time, muahaha! I will use mind blank and such to prevent people finding out.  Espionage + Arcane.  This is a counterintelligence action.
+   1. Advisor/specialty? My Espionage advisor, no specialty.
+   2. Resources? 1 Residuum
+   3. Currency? 3g
+The minimum for this project is the Residuum (or an equivalent) and 2(g) or theoretically an equivalent.  Because the player is paying 3(g) they get a bonus.
+ 
+5. Third highest priority: Grow society.  I will start this by combing through all my libraries and museums (do I have museums?) throughout the land for great history and awesome artifacts.  Society + Size.
+   1. Advisor/specialty? My Society advisor, specialty in history.
+   2. Resources? None.
+   3. Currency? 1(g)
+
+
+This is phase 1 of a larger project.  The whole project will cost more.  How much more depends on how high the Society is beforehand.  With larger projects like this there can also be discussions about how and what types of resources to be spent.  Ex: A dwarven nation might want to use more metals than say a human nation would because dwarves like sturdy materials and the metal and stone aesthetic.
+ 
+6. Non-Actions aka Free Actions
+   1. Store: Store 1 unit of pearls, glass, and truffles.
+   2. Sell internally
+      1. Through a Metropolis: Treat as having two cities.
+      2. Through cities: None.
+      3. Through towns: Incense for 1(g)
+   3. Mint Currency: 1 copper to 1(g)
+   4. Maintenance: Yes
+   5. Misc: 
+      1. Confirm trade route with Karstak, my 1(g) for their 1 crop.
+      2. Cancel trade route with Pallenia, am not informing them, just dicking them over.
+  
+Common Terms
+* Stat: Scores by which nations are measured.
+* Actions: People spending time, effort, and political wherewithal to get things done.  Most nations have five actions per turn, how many of those are directed by the player is a function of their Politics score. Most players will control three actions, with advanced Politics four, and a maximum of five.
+* Project: Any action that takes multiple rounds is called a project.  Unless you specifically declare otherwise, the resources you committed to a project will automatically continue to be committed, accruing credit towards project completion without requiring another action. You can take an action to speed this up if you so desire.
+* Tile: The game map is a hex map. The hexes on the map are referred to as tiles.
+* Ownership: Having possession of or occupying a tile. The tile counts in your Size.
+* Assimilate: To gain control of a tile.
+* Control: Getting access to resources on a tile and otherwise able to command a tile.
+* Food: Food is a type of resource. It is used to feed your people and on projects. Most food does not produce in winter
+* Turn: 2 week in out of game time = 1 season of in game time.  Actions will be due by Friday 11:59pm for the next turn.
+* Luxury: A type of resource, used to make your people happy and on some projects.
+* Strategic: A type of resource, used to build up your military and other projects.
+* Sentient Creatures: Groups of non-humanoids living in your nation. Many of them can fly and know about the wilds of your nation.
+* Advisor:  Advisors are people (npcs) who are always loyal to the player character and who are extremely skilled at one stat (not politics) and also have a specialty within that stat.
+* Maintenance: Maintaining your nation costs 2 units food and 2 units of currency per size each turn.
+Stats Overview
+Politics
+Politics is the measure of how much control over your country you have as it’s ruler. A ruler with high politics is someone who has near total control over their country and people carry out their will as well as they are able. A low politics represents a ruler who people merely pay lip service to if they even bother to do that. 
+
+
+People in this world respect action. They are raised on tales of heroes who are stronger and more powerful than people can be in our world. The best way to make people listen to you is do well by the standards of your people. The ideal ruler line of your country description will give an indicator of what types of actions will go over well in your country. For example, a ruler looking to increase their control over Morgaard, the cursed nation of evil, will likely want a different strategy than the ruler of Levain, a strong eco-centric spiritual land.
+
+
+Politics cannot be used in any actions, including grow actions.  Politics grows or falls based on player actions within the context of their country, which is directly represented by the Trust substat. The ideal ruler line of your country description will give an indicator of what types of actions will go over well in your country.
+Trust
+Trust runs from -5 to 5. When your trust hits -5 you will have to overcome a crisis within your country. If you succeed you politics stat will increase and if you fail there will be consequences and your politics stat will fall. When your trust hits five you will be faced with a challenge brought on by the will of your subjects. You can cash in your peoples good will to stop the challenge with no consequences and your trust is set to 0. If you accept and succeed in the challenge your politics will increase by one. If you fail your politics will fall.
+
+
+Number of Actions
+Politics determines how many actions you can use.  Each country gets 5 actions a turn and their leader controls 3-5 of these actions. You can use (1/2 your politics +2) actions per turn.  Unused actions will also be used by NPCs, who may not be friendly with you or your aims.  Please see the chart below for how many actions you get.
+
+
+Table 2 - Number of Player Actions
+	Politics
+	Player Actions
+	NPC Actions
+	1
+	3
+	2
+	2
+	3
+	2
+	3
+	4
+	1
+	4
+	4
+	1
+	5
+	5
+	0
+	Size
+Size is a measure of the physical landmass of the country. With increased area there are generally more resources and people to pull from for projects. Size can be used in any action that draws on the country’s wide ranging natural resources and good talent pool. There are limits to this but they are few. Coastal tiles are controlled by countries and can have resources on them but don’t count toward size (for both positive and negative).  
+
+
+Maintenance
+Maintaining your nation costs 2 food and 2 currency per size each turn.  Ex: A size 3 country requires 6 food and 6 currency in maintenance. 
+
+
+Soft Caps
+Some things in the game are soft capped by their (primary stat and size) plus 1. If you exceed these soft caps the overburdened infrastructure will start to take damage every turn. You can raise these caps by increasing the relevant stats or by completing a medium sized project to permanently raise the cap by one. These projects increase as you repeat them.
+* Forts (both freestanding and urban) are capped by (Military times Size) plus 1
+* Urban centers are capped by (Society times Size) plus 1
+* Trade routes are capped by Economy plus Size plus 1
+* Created Spy Rings are capped by Espionage plus Size plus 1
+
+
+Autonomous zones in your territory have different maintenance and soft caps than the nation they are part of allowing them to be used to bypass some soft caps. For example you could bypass the cap on fortesses by creating a March. See the Society section for more.
+
+
+Tile space
+Most tiles by default have 2 slots for things on them. Particularly inhospitable land only have 1 slot while land that favors your people has 3. Each resource, urban center, and fortress takes up a slot. Some other things may take up a slot too, like a logistics supply center to increase the maximum number of battlegroups you can safely field. Urban centers create room for additional spots but these spots are limited in what they can do. Urban centers can only have manufactured resources, fortress walls, or some cap increasing projects
+
+
+Size calculation
+Size is calculated by the number of land tiles a country has. To go up a size level you need the desired level cubed.
+Size
+	Tiles
+	1
+	1-7
+	2
+	8-26
+	3
+	27-63
+	4
+	64-124
+	5
+	125+
+	
+
+
+
+Military
+Military is a measure of your country’s army, navy, air force, and fortification. Armies are used for land based actions, navies are used for water and coastal actions, and air forces can be used anywhere but are harder to get. Fortifications are used to defend your borders against invasion and raiding. Individual military when raised use this Stat to determine their effectiveness. Your military can be used to invade other countries, defend your borders, and raid territory for wealth and resources.  
+
+
+Military is a measure of your country’s army, navy, air force, and fortification. Armies are used for land based actions, navies are used for water and coastal actions, and air forces can be used anywhere but are harder to get. Fortifications are used to defend your borders against invasion and raiding. Individual military forces are not tracked. Beyond grow actions your military can be used to invade, defend, and raid territory.
+
+
+Raiding: A use of your military is the raiding action. This compares your score against either the defending players military+1 (passively) or their score (if they have an action committing resources to defense or a battlegroup committed to defending the area). Raiding lets you attack nearby nations and take their money (g), as well as some progress from the “Winter Stores” project. If you succeed you get the difference in your attack and their defense in (g) and half that value (round up) applied to your “Winter Stores” project. Forts provide a bonus from +1 to +3 to the region that they are in to defending against a raid. You can raid a region and return to your starting position in one turn so long as those areas are adjacent. If it is further away this will give notable penalties to the action. You can raid your own territory, but this is not advised, as it will give no (g) benefit, though it will benefit your “winter stores.” This form of the action will however be treated as a specific use exploitation that has the result of the raiding check as a penalty.
+
+
+Forces can move outside their country any number regions per turn. Every region beyond the first that your forces move begins incurring a penalty to your battlegroup’s effectiveness, effectively damaging it via attrition. Naval and air forces halve this penalty and this attrition, allowing them much greater flexibility in terms of range. This problem is further compounded by penalties that are incurred the further your forces are away from their sources of supply.
+
+
+Invasion: The biggest use of your military is invading other countries. To start an invasion you must first raise a Battlegroup, the costs of which are detailed below.. 
+
+
+Military actions suffer a -1 penalty for the attacker if they are attacking over a river. Attacking from or into bad terrain (swamp, hill, mountain, forest, desert, and Morgaard) gives a -1 to -3 penalty depending on the severity of the terrain. Attackers suffers a -2 penalty if they are attempting an amphibious invasion. Seasonal penalties (-2 in winter and -1 in summer) apply to only the invader. Armies in their home country do not take terrain penalties to attack or defense.
+
+
+Special Forces: Militaries can have special bonuses that are listed as a special ability in the country doc. To integrate a special bonus into your military you must get/develop the means then complete a special project to integrate. Some examples of special units that you might develop are:
+
+
+* Cavalry: Cavalry special forces either do extra damage to enemy battlegroups when you win a battle, increase the range in which your battlegroup can intercept an enemy force, or some amount of both.
+* Siege: Siege special forces wear down fortifications making them easier to assault. Each turn (after the 1st turn) that you are sieging a fortress your siege special force reduces it’s might by 1.
+* Marines: Marine forces contain troops who are experts in amphibious actions. Reduce the penalty for rivers and amphibious invasions by 1
+* Mages: Mages cause your battlegroup deals one more damage to your enemy’s battlegroup (win or lose)
+* Healers: Healers help your battlegroup take one less damage from combat (cannot reduce this below 1).  Even with divine intervention or expertly applied medicine war takes its toll.
+* Dragons: Dragons are terrifying and experts of destruction. They apply a  -1 to your enemy and cause your battlegroup to deal 1 more damage (win or lose).
+* Terrain specialists: Reduces penalty for fighting on that terrain type by 1.  
+* Army/Navy Air Corp: A small air forces attached to the armies and navys negates up to 1 point of the enemies bonuses.
+
+
+Armies and Logistics:
+You can spend an action to raise a battalion (army), fleet group (navy), or air group (air force). These will be referred to here as battlegroups. These battlegroups are essential for doing military actions outside of your own borders and for defending your own borders from enemy battlegroups. Battlegroups cost 1g, 1 food, and 1 strategic resource each turn to raise and maintain. Each battlegroup is spawned with 2 attributes; Might and Magnitude. Might is equal to your military substat + whatever stat you used in conjunction when you take the raise and maintain battlegroup action. Magnitude is equal to your military substat + size stats. Bonuses like advisers and extra resources are added to power when the force actually fights. When battlegroups fight the group with the lower Magnitude gets a penalty equal to ½ the difference.
+Special forces can be added in without action whenever the  battlegroup is raised. They can also be added in later as their own action. 
+Whenever a  battlegroup fights they take 1 point of damage to both Might and Magnitude afterwards. If they lose they take ½ the rollovers of the winner as damage (min 1). Things like sabotage can also cause small amounts of damage.
+Battlegroups can take a number of actions. It takes an action issue orders but you can chain together multiple orders or give larger more complex orders. In order to stop a battlegroup after orders have been issued or to change their orders it takes another action. They can take one of these actions each turn, except move. Move can be paired with other actions at a penalty. Battlegroups can attack another battlegroup or fort, move to a new distance zone, they can conquer territory, the can guard an area, they can garrison in a fort, they can fortify an area without a fort, they can siege.
+A battlegroup can move to any new distance zone as an action. For each distance zone (see the Distance Zones/Regions map) entered into the battlegroup takes a cumulative 1 pt penalty. If total penalties (after bonuses are factored in) exceeds -5 the difference is taken as damage to magnitude and might, representing attrition and forced marches. Battlegroups cannot simply move past fort tiles or adjacent tiles. They must take the fort to conquer the surrounding territory.
+When a battlegroup conquers territory they roll off against the owners passive defence (Military +1) to determine how much they take. They get a number of tiles equal to ½ rollovers. Tiles with forts cannot be taken this way. Each fortress must be taken separately. Forts give a +1/2/3 to surrounding tiles as a bonus against getting conquered.
+A battlegroup can guard an area with a 5 tile radius from wherever they are. If another enemy battlegroup attempts to enter the guarded area your battlegroup will intercept and fight them. Unknown battlegroups are considered to be stopped at the border. It is a free action to inform your battlegroups that another battlegroup may pass through territory that they are guarding.
+When garrisoning a fortress you add the battlegroup’s and the fort’s Might and Magnitude together when defending. If your battlegroup would have to leave the fortress it’s garrisoning in then no bonus.
+A battlegroup can fortify a position. Each turn the battlegroup gets a 1 pt bonus (up to 3 pts). This does not stack with a fort and only works if the army is attacked.
+Battlegroups can siege fortifications as long as they collectively have a higher Magnitude than the fortress’ Magnitude. If for some reason a battlegroup couldn’t physically surround a fortress it can’t lay siege.
+Air forces can only conquer one tile at a time but they have +1 might
+Forts have both a Might and Magnitude of the owners military + 3x the forts rating. Magnitude goes down 1 point per turn while under siege. Forts Might and Magnitude go down 1 point each time an army assaults them. When a fort loses a fight it is taken regardless of remaining Magnitude and Might. Taken forts start with a Might and number of 1 each and must be healed to their max by logistics operations or time. Forts only use ½ their Might and Magnitude for anything that is not defending against an assault.
+
+
+Added
+Damaged is calculated after every fight when multiple units fight one unit (this is to make ganging up more useful as one big group is mu8ch better than multiple smaller groups)
+
+
+Staff is introducing a cheaper, weaker type of battlegroup called a militia battlegroup. They function the same as regular land, air, and sea battlegroups except that the only cost 1 food to maintain and are half might and magnitude (round up). Raising a militia battlegroup is a 5pt project. For every extra 5pts in a single action you get another militia battlegroup of the same type (each costs 1 food to maintain). ie if you get 16pts of a raise militia action in a single turn you get 3 groups. They do count against your maximum number of battlegroups of size+military. Also if you make 20pts on a single action for a raise battlegroup action or a search for resources action you get 2 battlegroups/new resources.
+
+
+Logistics
+
+
+Logistics operations coming in 2 different projects. The first one runs a supply train to the battle group to restore lost Might and Magnitude to damaged forces. The 2nd one lets you extend your your “in supply” area beyond it’s normal range. Normal range is 4 tiles from any fort or urban center in your territory and in your territory.
+Battlegroups outside of your supply range take 1 damage to both Might and Magnitude for each full turn they are out of out of supply range. Battlegroups that are in supply range naturally restore lost Might and Magnitude. Inside of your supply range battlegroups and forts heal 1 Might and Magnitude each turn they don’t move or do anything.
+When fighting multiple forces who are not coordinating you roll separately against each one. If you are fighting forces that are coordinating you get a penalty equal to 1/2 the difference in their combined Magnitude stat. In order to properly coordinate the forces working together each player must declare that they are working together and which battle group is leading.
+
+
+War
+
+
+Basics
+Your military stat represents the highest rating among your army, navy, or air force. Army, Navy, and Air Forces may be referred to as branches in this document. Your military also factors into how many forts you can have. You can have up to your size times military in fortifications. Fortified towns and cities count. If you want to improve your army, navy, or air force you must work on them separately. If one of them is raised about your current military stat your military stat goes up by 1. Improving a force to 4 or 5 is very difficult and you need a good plan.
+
+
+Raiding is a good way to get more resources and injure your rivals. Raiding requires an action to but needs no other resources. If you don’t specify where you’re going and what you’re looking for your people will pick a random valid target nearby. This could be a trade route, a country, a specific urban center, or resource. Most people do not consider simple raiding as an act of war but some do. It wouldn’t be hard to turn raids into a valid reason to go to war against the aggressor. Fortifications provide a small bonus against raiding for their tile and adjacent tiles.
+
+
+There is a penalty for military operations based on distance. The further away the place you want to attack the larger the penalties. Having a willing ally en route to assist with logistics or raiding reduce distance penalties. The ally in question must acknowledge the aid as a free action.
+
+
+After you conquer territory you’ll need to integrate it into your country before you get access to the resource production, urban centers, and fortifications. This is a mix of repairs and convincing the locals to fall in line. Assimilating territory is a social action that costs 1g and 1 luxury resource each turn. 
+
+
+
+
+
+
+Special Forces
+Your nations will have special forces divisions. These divisions can be deployed as part of another action or can be deployed as their own action. Deploying most special forces costs 1g each turn. Please see your sheet for specific details. Special forces grant a +1 bonus to that action, and an additional +1 if the action uses the listed stat. Also they have their own special effects. These effects will last until project end or if they are recalled early. Recalling special forces is a free action but they cannot be redeployed again until the next turn. Actions can only have 1 special forces group deployed with them at a time. The exception is war. In war you can deploy up to your ½  your relevant branches' stat in special forces. If you use a second branch you can assign special forces to that branch too. You must pay separately for each one deployed. 
+
+
+Special forces can be lost or damaged. This only happens when violence or sabotage is involved. There is risk of damage anytime your special forces engage in violence. Losing makes this much more likely to happen. When you win or tie a battle a D20 is rolled. On a 1 a random unit is damaged and another D20 is rolled. If this is also a 1 the unit is shattered and will have to be built back up from scratch. Damaged units lose many of their benefits and bonuses and risk being shattered if you roll poorly. When you lose a battle you roll a D20 for each point of rollover the enemy had on you.
+
+
+Here are some examples of basic special forces. New special forces will be about this powerful. Stronger and more advanced forces exist. A project will be unlocked to improve a special forces unit after it has gotten enough field experience. Being part of completed projects from beginning to end and participating in war give experience. Advancing a special force will require both experience in war and projects. Raiding does not give field experience by default.
+
+
+
+
+Example
+Stoney, King of the Belves wants to invade the forests of the Sheepenthar and reclaim the Belves ancestral lands. He has a military stat of 5 with an army of 4, navy of 5, and an air force of 2. Both nations are size 4 so no bonuses or penalties there. Unfortunately this battle will be entirely land based so Stoney can’t use his navy. Stoney spends the 1st turn preparing his forces. He is spending resources based on his army of 4. He spends 2g, 1 crops, and 1 iron on this. 
+Unfortunately Gregory, the Lord of the Sheepenthar gets word of this mobilization using the passive espionage system. He doesn’t know if the Belves are going to invade next turn or keep preparing. He could either declare his next turn’s action to prepare or defend. He decides it’s not worth the risk and declares an action on the 2nd turn to defend against an invasion. The Sheepenfar have a Military of 3. They have an army of 3 and no airforce. Gregory uses his arcane of 4 as his secondary stat by supplying his army with wizardly support. He also assigns 2 special forces units, the cavalry/siege unit known as The Dire Ram Horns (this is an experienced unit) and a wizard unit called Dan the Magnificent’s Mages (this is a basic unit). Here are their stats:
+
+
+Gregory, Lord of the Sheepenthar
+	Name
+	Stat
+	Terrain
+	Special
+	The Dire Ram Horns
+	Military
+	Land
+	Gives no bonus, instead gives a -2 penalty to enemy forces and negates 2 points of enemy fortification bonuses.
+	Dan the Magnificent’s Mages
+	Arcane
+	All
+	Gives a -1 penalty to enemy forces
+	 
+The total cost for this defence and the special forces units is 4g, and 3 food. 2g and 1 food from the defence itself, and 1g and 1 food for each special forces units. Gergory also has 2 forts along his border with the Belves. This gives him a +2 on his defence and Dan the Magnificent’s Mages will give him another +2 since he’s using arcane as one of his stats. The Dire Ram Horns don’t give a bonus because of their special abilities. Gregory also has an Army: Raiding adviser, Josepher the Swift. While it’s not his area of expertise Josepher will still help. Between his forts, special forces, and adviser Gregory has a bonus of +5. He has his army 3 + arcane 4 + adviser 1 + forts 2 + special force 2 for a total of 12. Not bad Gregory, lets see what Stoney is doing with his second action. 
+Stoney is invading. He’s in it to win it so he’s spending 2 actions to invade. The first is with his army and the second one is to coordinate his air force with it. He will also be deploying 3 sets of special forces, 2 with his army and 1 with his air force. The first force is the Super Arrow Force, a group of arcane archer rangers (this is an experienced force). The next is 1st Siege Division, they are a basic siege force. The last group are the Belves prestigious dragon knight corp, Los Caballeros de la Vid Llameante (this is a peak special forces unit). Here are their stats:
+
+
+Stoney, King of the Belves
+	Name
+	Stat
+	Terrain
+	Special
+	Super Arrow Force
+	Arcane/Military
+	All
+	Nullify the penalties for fighting in forested tiles and gives a -1 penalty to enemy forces
+	1st Siege Division
+	Military
+	Land
+	Negates 1 point of fortification bonus each turn (cumulative). Resets as you take forts.
+	Los Caballeros de la Vid Llameante
+	Military
+	All
+	Gives a -2 penalty to enemy force and negates 2 points of their bonuses. Costs 1 extra (g)
+	
+
+Stoney’s going to be spending a lot on this. He is spending 5g and 2 food between invading with his army (4g, 1 food) and his air force (1g, 1 food). He’s also spending 4g and 3 food between his special forces for a total of 9g and 5 food. He has an army of 4, an air force of 2, and he’s using his nations advanced technology and metallurgy to fuel his war machine so he’ll use his technology stat of 4 as his second stat. He has no military adviser and gets a +1 this turn for his preparations. These bonuses equal +8 but first we take off 3 points from the penalties provided by the sheepenthar special forces. This brings it down to +5. He gets his army 4 + technology 4 + air 1 + special forces 6 + preparation 1 + enemy special forces -3 = 13. We’re also going to have to now factor in the penalties Gregory is now getting from Stoney’s special forces. They are giving Gregory’s forces -3 and negating 2 points of their bonuses. This takes Gregory from a 12 to a 7. This does not look good for Gregory. As a note on bonuses and penalties. Anything that is not your primary and secondary stats are considered bonuses or penalties.
+        Gregory gets lucky and mounts a heroic defence but still gets pushed back. The border is 5 hexes long and has 2 forts on Gregory’s side. Stoney takes 2 tiles, since there are 3 non fort tiles he takes from those first. No special forces took damage in this leg of the war.
+They will declare the same actions on turn 3. The only difference is that Stoney’s preparation bonus wears off. He’ll make this up by spending 1g and 1 unit of gems to pay bonuses to well performing squads in the form of sheep bounties. This will give him a +1 and replace the lost preparation bonus. Gregory gets very unlucky and some poorly relayed messages cause his right flank to collapse. Stoney takes 5 tiles this turn. He first takes the tile in the line without a fort, then the 2 tiles with forts. The line moves over one hex (there are no forts in the new line of battle) and Stoney takes another 2 tiles. With his forts gone Gregory is in a pickle. Also Dan the Magnificent's Mages have taken terrible casualties and will be much less effective. Luckily Gregory has an ace up his sleeve. His special forces unit Counting Sheep (an experienced spec-ops unit) has just arrived after he recalled them from another assignment this turn. They will be ready to deploy on turn 4. 
+
+
+Gregory, Lord of the Sheepenthar
+	Name
+	Stat
+	Terrain
+	Special
+	Counting Sheep
+	Military/Espionage
+	All
+	Nullify one enemy special forces unit. Also grants the normal bonus.
+	
+
+Gregory with be switching out Dan the Magnificent Mages with Counting Sheep. Let’s go over the scores again. Gregory is using his Military 3-, Arcane 4, Special Forces bonuses 2, Adviser bonus 1 for a total of 10. He will negate Stoney’s dragon riders and give Stoney’s forces -2. Stoney can’t afford to keep paying sheep bounties so he’ll drop that extra funding. Stoney’s score will consist of his military of 4, technology of 4, special forces bonus 4, air force support 1 for a total of 13. He’s losing 2 points form the Dire Rams Horns which takes him to 11. He’s also giving a -1 penalty to Gregory so Gregory’s score will be 9. At a 9 vs 11 Gregory is still at a disadvantage but it’s much less bad than before. Gregory does well and manages to stop Stoney’s advance. Since this is turn 4 and Stoney lost this turn his Military goes from a 5+ to 5, his army goes from 4+ to 4, and his air force goes from 2 to 2-. Since Gregory knows his Military stat will drop to a 2+ next turn he is going to try to negotiate. Stoney has recaptured most of the land that he wanted so he is open to negotiation. They negotiate so that Gregory gives another 3 tiles to the Belves and that the peace will be guaranteed by their mutual neighbor Steven the Blue of the Magma Dwarves. Stoney spent a total of 30g, 16 food, 1 iron, 1 gems, and 7 actions over 4 turns and he gained 11 tiles. Gregory spent 12g, 9 food, and 3 actions over 4 turns and lost 11 tiles.
+
+
+
+
+
+
+Economy
+Economy has a couple of facets; trade, resources, maintenance, and towns/cities. This represents a major effort to create or produce a resource within that tile. Resources come in three types: Food, Luxuries, Strategic. Food resources are used to feed people. Luxury resources are used to keep people happy and they generate currency better. Strategic resources have military applications. 
+
+
+Resources are spent on actions, maintenance, and on being converted into currency. Most actions cost 1-3g, a luxury or strategic resource, and a unit of food with harder actions requiring better quality resources (like iron vs steel). Each country also pays a maintenance cost every turn equal to twice its size in currency and food. So a size 3 nation needs to pay 6 units of food and 6g each turn to feed its people and maintain its infrastructure. You can generate currency by converting copper (1g), silver (2g), or gold (3g) directly into money. You can also sell resources in towns and cities to generate money for your nation. After completing a project to establish a trade route it will generate 1g each turn as long as the route remains active. To stay active a trade route must have some resources flowing both ways.
+
+
+Economy is a measure of how much your country produces. It is how well your country produces, refines, and transports resources. Economy can be used on grow and other actions. A country’s starting income (in currency and resources) is its 2(economy+1) x (size+1). This only used to determine how rich a country is at game start. The amount of currency you gain each turn is partially based on your economy. You get your economy in currency each season plus anything you gain from other players though trade and raiding. You can also use towns and cities to turn resources into currency. This does not cost an action.   Each town or city can handle 1 unit of resources each turn. A town can turn lv 1 or 2 food or strategic resource into 1g, a lv 1 luxury resource into 1g, or a lv 2 luxury resource into 2g. Cities allow for the sale of any scale of good of that good’s teir in (g) or tier +1 if that good is a luxury.
+
+
+
+
+
+
+	T1 Food
+	T2 Food
+	T3 Food
+	T1 Strategic
+	T2 Strategic
+	T3 Strategic
+	T1 Luxury
+	T2 Luxury
+	T3 Luxury
+	Towns
+	1g
+	2g
+	N/A
+	1g
+	2g
+	N/A
+	1g
+	2g
+	N/A
+	Cities
+	1g
+	2g
+	3g
+	1g
+	2g
+	3g
+	2g
+	3g
+	4g
+	
+
+
+
+All forms of new resource production (manufacturing, discovering then mining, and cultivating) fall under economy as grow economy projects.
+
+
+Each country pays a maintenance of 2 currency and 2 food per level of its size stat. For every unit of currency or food you are missing you get a -1 penalty (max -5) and for every full season this happens you lose 1 integrity in politics.
+Each country gains its economy in currency per turn.
+
+
+Food: You must engage a “winter stores” project each year to make it through the winter. During the winter a country’s progress on the “winter stores project” will be checked against. Failure to meet the requirements in progress (5 x Size) will be met with possible starvation and consequent damage to a nation’s stats.
+
+
+Trade: Countries trade with their neighbors and there are trade routes running in the background but this is factored into the income through using resources and towns/cities to generate money. Players can also make formal trade routes with other nations. This costs an action to start and any money and resources that are being traded start being available at the beginning of the next turn. The player must spend one use of their economy and another stat when they declare the trade route on beginning to formalise the trade route. The agreed upon goods flow regardless of how much the total score. They can continue spending actions on the route in the future and if they make a total of 10 points they start making an additional 1g a season on the trade route as merchants in their country start to take advantage of it. However, this does not ever happen on the first turn a trade route is formed.  This is lost if the route ends but players can switch what is being traded without interrupting it. Changing what resources are being traded through a trade route is a free action. This +1g counts toward the total value of the route for raiding. The total value of a trade route is what both nations are trading plus the extra gold from formalising the trade route (up to +2).
+
+
+Resources
+
+
+Resources
+Resources are something that can exist on hex tiles. A resource node on a tile represents a large scale effort and is the major industry of that tile.  Resources affect the nation, so for example, crops would represent a tile with significantly more farming than just to feed the locals. Some resources go by multiple names, like livestock could be cattle, sheep, goats, etc. 
+
+
+There are four types of resources; food, luxury, strategic, and sentient creatures.  Food resources provide units of food for people to eat. The amount of food a nation needs each season is primarily based on its size (2 per size). Luxuries are used to keep your population happy. Strategic resources have military applications. Most of them are used for equipment but boats specifically need wood to be made. Air forces need something that allows access to flight. This could be arcane spells, phlogiston, or flying creatures. Most flying creatures large enough to ride are intelligent, sentient creatures, and will need to be convinced to let people ride them.  
+
+
+In addition to types there are also tiers or levels of resources.  These range from 1 to 3.  Tier 1 resources are more common than tier 2, which in turn are more common than tier 3.  Tier 1 resources usually do not have prerequisites, but tier 3 resources usually do.  For example, gunpowder requires Technology 4 to utilize.  Resources, their types, tiers, prerequisites, and a brief description are in Table - 1 Resources at the end of this section.
+
+
+Each country starts the game with at least some resources discovered and utilized.  However, it is possible to discover, cultivate, or possibly manufacture resources as well.  This is an Economy project. Please see Table 3 - Example Projects in the Actions section below for more details.
+
+
+Each resource normally produces one unit of itself every turn.  You can, however, exploit resources for a chance at an extra unit of that resource. This costs an action but is otherwise “free”. 
+
+
+
+
+Exploiting a Resource
+Each resource normally can be tapped for use once every turn.  You can, however, exploit resources for an extra use of that resource. This costs an action but is otherwise “free”. With one action you can exploit one resource per your rating of Economy. The duration of this extra resource is determined by the success of the exploitation action. There is risk to exploiting resources like this. The risks are greater the higher the tier of the resource to be exploited. Also, repeatedly exploiting a resource without giving it time to recover, at least a season, increases the risk of unwanted consequences.  In times of need rulers who turn to this are wise to prepare contingencies or have strategies to mitigate the effects of pushing their workers too hard.  In mechanics terms the staff roles a D% and they use this to determine what happens. It ranges from great success to failure to a workers strike to unearthing a balrog and everything in between.
+
+
+Table 1 - Resources
+	Name
+	Type
+	Tier
+	Prerequisites
+	Description
+	Adamant
+	Strat
+	3
+	Technology 3 AND Process*
+	A "god metal", it absorbs damage and is resilient.
+	Spirits
+	Lux
+	2
+	Society 2 AND Town*
+	Run, Vodka, Wiskey, Dwarven Beer, ect.
+	Baubles
+	Lux
+	2
+	Society 2 AND Town**
+	Simply made but attractive pieces of adornment.
+	Beer
+	Lux
+	1
+	None
+	Beeer! Hops!
+	Bloodstone
+	Strat
+	2
+	Arcane 3
+	AKA "Leechstone" it is used in alchemy and vile magics. Causes weapons to do bleed damage. Armor studded with bloodstone will transform when it's wearer does.
+	Brass
+	Lux/Strat
+	2
+	Copper AND Town**
+	Mix of copper and zinc
+	Bronze
+	Lux/Strat
+	2
+	Copper AND Tin AND Town**
+	Mix of copper and tin
+	Cheese
+	Food
+	1
+	Livestock AND Town**
+	This is a basic processed milk product.
+	Cinnabar
+	Lux
+	2
+	Technology 2 OR Arcane 2 AND Town**
+	Mercury
+	Coal
+	Lux
+	2
+	None
+	Burned for warmth and forging/smelting metals
+	Cocoa
+	Lux
+	2
+	Society 2
+	Stimulant, can be made into chocolate
+	Coffee
+	Lux
+	2
+	Society 2
+	Stimulant
+	Cold Iron
+	Strat
+	2
+	Technology 2 AND Town**
+	Specially made iron. Strong against some outsiders.
+	Copper
+	Lux/Strat
+	1
+	None
+	Used to make jewelry, arms and armor
+	Coral
+	Lux
+	1
+	Proccess
+	Brightley colored living stone
+	Crops
+	Food
+	1
+	None
+	Any vegetable, tuber, legum, or grain.
+	Cursed Stone
+	Strat
+	2
+	Religion 2
+	Can be used to make undead but these undead are sentient and listen to the old gods.
+Causes bad luck. Used in siege artillery shots.
+	Cursed Wood
+	Strat
+	2
+	Religion 2
+	Poisonous hardwood
+Causes bad luck. Entities slain with it have a higher chance of rising as the undead.
+	Darkwood
+	Strat
+	2
+	None
+	Extremely light hardwood
+	Deathstone
+	Lux
+	3
+	Religion 4
+	Stone with negative energy, raising the undead
+	Diamonds
+	Lux
+	3
+	Technology 2
+	Used for resurrection and restoration. Higher levels of technology make this significantly safer. Use at own risk.
+	Dire Crops
+	Food
+	2
+	Process*
+	Crops of massive proportions grown by the halflings. Produces twice as much food as crops 1.
+	Dyes
+	Lux
+	2
+	Technology 2
+	Used to color textiles
+	Eternium
+	Lux/Strat
+	3
+	Technology 4OR Process*
+	One of the "god metals", never degrades, ever. Extremely light and a noble metal. Sharper weapons, more durable armor.
+	Faerzess
+	Lux/Strat
+	3
+	Arcane 4 OR Process*
+	Crystal that only occurs in the Underdark. Used by the Drow to make enchanted items. Dissolves in sunlight. As hard as iron.
+	Fine Clothes
+	Lux
+	2
+	Textiles or Fur, Dyes, Society 3 AND City***
+	Embroidery, fine silhouettes, and changing fashions
+	Fruit
+	Food
+	1
+	None
+	Apples, mangos, pears, berries, etc.
+	Fur
+	Lux
+	1
+	None
+	Used as clothing.
+	Game (Hunting)
+	Food
+	1
+	None
+	Rabbits, deer, quail, etc.
+	Gems
+	Lux
+	2
+	Technology 2
+	Rubies, sapphires, and emeralds oh my! Higher levels of technology make this significantly safer. Use at own risk.
+	Glass
+	Lux
+	2
+	Technology 3 AND Town**
+	Sand heated to between 1,600 and 1,900℉
+	Gold
+	Lux
+	3
+	None
+	A soft metal used in jewelry and decoration.
+	Greenwood
+	Strat
+	1
+	None
+	Continues to heal after you have used it in crafting, self mending items. Common in elven and lizardfolk watercraft.
+	Gunpowder
+	Strat
+	3
+	Technology 4 AND Town** AND Process**
+	BOOM!
+	Hardwood
+	Strat
+	1
+	None
+	Exactly as it sounds. Ex: Walnut, teak. Great for wheel making.
+	Healing Potions
+	Strat
+	2
+	Religion 2 AND Herbs or Medicines AND Town**
+	A one time bonus for an action. Reduces losses and injuries in combat.
+	Herbs
+	Lux
+	1
+	None
+	Fresh or dried, plant matter.
+	Holystone
+	Lux
+	3
+	Religion 4
+	Smeltable stone that naturally contains positive energy.
+	Honey
+	Food
+	2
+	None
+	Beloved by humanoids and bears alike. Higher levels of technology or druidic faith make this significantly safer. Use at own risk.
+	Iced Cream
+	Food/Lux
+	2
+	Cold Linite AND Society 3 AND Town **
+	
+
+	Incense
+	Lux
+	1
+	Herbs
+	Used in a wide variety of religious ceremonies. Also recreational use.
+	Iron
+	Strat
+	1
+	Technology 2
+	A core metal for many technologies, arms and armor.
+	Ironwood
+	Strat
+	2
+	Technology 2
+	Heavily metallic wood, can be smelted as iron. Dense.
+	Ivory
+	Lux
+	2
+	Military 2
+	A hard white material taken from the tusks and teeth of elephants, walrus, or narwhals.
+	Jewelry
+	Lux
+	3
+	Society 3 AND City**
+	Personal ornaments, made of gems, precious metals, glass, etc.
+	Lead
+	Lux
+	1
+	Technology 2
+	Used in paints, dyes, cosmetics, pipes, etc.
+	Linite
+	Lux
+	2
+	Arcane 2
+	Rock that naturally produces heat or cold.
+	Livestock
+	Food
+	1
+	None
+	Pigs, cows, sheep, etc.
+	Lumber
+	None
+	0
+	Forest
+	Wood used fro construction
+	Marble
+	Lux
+	1
+	Society 2
+	Metamorphic form of limestone, used in sculpture and architecture.
+	Medicine
+	Lux
+	2
+	Technology 2 or Religion 2 AND Town**
+	Compounds, tinctures, drops, and ointments for healing the sick.
+	Mithral
+	Lux/Strat
+	3
+	Process and Silver
+	Silver infused with lunar energy. Only the elven peoples have this secret (at game start.)
+	Narcotics
+	Lux
+	2
+	Society 2 or Religion 2 AND Town**
+	Recreational drug use.
+	Olives
+	Food
+	1
+	None
+	Grown from evergreen trees in warm climates.
+	Onyx
+	Strat
+	2
+	None
+	Used in necromancy. Please?
+	Oricalculum
+	Lux/Strat
+	3
+	Religion 4 AND City***
+	A "god metal", grants bonus caster levels and insight bonus, used in artifacts.
+	Paper
+	Lux
+	2
+	Society 3 and City***
+	A writing material made from plant fiber
+	Parchment
+	Lux
+	1
+	Society 2 and Town**
+	A writing material made from animal hides
+	Peat
+	Lux
+	1
+	None
+	Decomposing vegetable matter in wet acidic conditions, used in fuel and gardening.
+	Pearls
+	Lux
+	2
+	
+
+	A valuable gem-like substance from the sea.
+	Phlogiston
+(Helium)
+	Strat
+	3
+	Technology 5 AND Process* AND City***
+	A magical gas used for airships, flying carpets, etc.
+	Poison
+	Strat
+	2
+	Espionage 3 AND Herbs or Narcotics AND Town**
+	A one time bonus for a an espionage or military action.
+	Porcelain
+	Lux
+	2
+	Society 3 AND Town**
+	A strong and often translucent ceramic.
+	Residuum
+	Lux
+	2
+	Arcane 2
+	Residue that is left over after high energy magical activities. Animals who include this in their diet will become magical beasts.
+	Riding Animals (Basic)
+	Strat/Food
+	1
+	None
+	Horses and Camels
+	Riding Animals (Advanced)
+	Strat/Food
+	2
+	Military 2
+	Dinosaurs and Wargs
+	Salt
+	Lux
+	2
+	Technology 2
+	Used to preserve food, flavor food, and in
+	Seafood
+	Food
+	1
+	None
+	Fish, Crab, Lobsters, Ect
+	Scrolls
+	Strat
+	2
+	Arcane 2 or Religion 2 AND Residuum AND Town**
+	A one time bonus for an action.
+	Silk
+	Lux
+	2
+	Society 2 AND Town**
+	Obtained through worms and spiders.
+	Silver
+	Lux
+	2
+	Technology 2
+	A softer metal used to mint currency.
+	Slaves
+	Lux/Strat
+	1
+	Military 2 AND Town**
+	People who work for you without paychecks. They are against this.
+	Spices
+	Lux
+	2
+	None
+	Used to make food more flavorful, more potent than herbs.
+	Starwood
+	Strat
+	3
+	Technology 4 OR Religion 4
+	A magical wood that grows only in the most ancient of forests.
+	Steel
+	Strat
+	2
+	Technology 3 AND Iron AND Coal AND Town**
+	A manufactured good made from processing iron.
+	Stone
+	None
+	0
+	Hill or Mountain
+	Quarried stone used for building
+	Sugar
+	Lux
+	2
+	Society 2 AND Technology 2
+	A very labor intensive crop.
+	Textiles
+	Lux
+	1
+	Society 2 and Town**
+	Cloth.
+	Tin
+	Strat
+	1
+	None
+	A metal used for manufacturing goods such as pots and tools.
+	Tobacco
+	Lux
+	1
+	None
+	A mildly addictive social smoking drug.
+	Truffles
+	Lux
+	3
+	Livestock (pigs) and Process
+	The fungus not the chocolate
+	Waterwood
+	Lux/Strat
+	2
+	Tech 2
+	Requires specialized processes to use on a strategic scale. Grows sub-aquatically, perfectly water sealant, highly flexible unless heat treated. Fireproof.
+	Wax
+	Lux
+	1
+	Technology 2
+	Beeswax.
+	Whales
+	Lux/Food
+	3
+	Society 2 AND Religion 2
+	Protected by the druids and nature, use at your own risk. Can be sold in towns.
+	Whipwood
+	Strat
+	1
+	Technology 2
+	The most flexible wood, can be used in furniture, ship's sails, etc.
+	Wine
+	Lux
+	2
+	Society 2
+	Alcoholic beverage
+	World Tree
+	Food/Lux/Strat
+	2
+	Process
+	
+
+	
+
+
+
+
+
+Substitutions
+You can substitute resource requirements for projects based on your economy, arcane, technology, and religion. Substitutions must make sense as approved by staff. In order to make a substitution it’s associated stat must be used for the action. You can also never sub out the last food required on a project using these substitution methods.
+
+
+Econ 4: A T1 or T2 resource can be subbed out for 3 or 6g respectively.
+Econ 5: A T1, or T2 resource can be subbed out for 2 or 4g respectively.
+
+
+Arcane 4: A T1 or T2 resource can be subbed out for 2 arcane resources of the same tier or 1 of a higher tier
+Arcane 5: A T1 or T2 resource can be subbed out for 1 arcane resource of the same tier or 1 of a higher tier
+
+
+Tech 4: A T1 or T2 resource can be subbed out for 2 technology resources of the same tier or 1 of a higher tier
+Tech 5: A T1 or T2 resource can be subbed out for 1 technology resource of the same tier or 1 of a higher tier
+
+
+Religion 4: A T1 or T2 resource can be subbed out for 2 religious resources of the same tier or 1 of a higher tier
+Religion 5: A T1 or T2 resource can be subbed out for 1 religious resources of the same tier or 1 of a higher tier
+
+
+Slaves: A unit of slaves can be substituted for most tier 1 resources. This does not have an associated stat and can only be done once per project.
+
+
+Arcane resources: Parchment, Wax, Bloodstone, Cinnabar, Dyes, Gems, Glass, Lead, Onyx, Paper, Residuum, Scrolls, Diamonds, Eternium, Faerzess, Oricalculum
+
+
+Religion resources (All): Incense, Gems, Gold, Holystone
+* Religion (12): Slaves, Marble, Dyes, Adamant, Eternium, Oricalculum
+* Religion (Primean): Marble, Dyes, Orichalculum
+* Religion (Elf, Nature, Spirit): Cocoa, Spices, Mithral, Oricalculum, Herbs
+* Religion (Halfling): Crops, Dire Crops, Tobacco
+* Religion (Dwarf): Beer, Spirits, Silver
+* Religion (Dragons): Copper, Silver, Holystone (good) or Deathstone (evil) (replaces holystone)
+* Religion (Outer Darkness): Slaves, Bloodstone, Onyx, Deathstone. No Holystone
+* Religion (Drow): Slaves, Poison, Narcotics, Faerezz 
+* Religion (Skyfather): Horses, Ivory, Deathstone
+* Religion (Godking): Parchment, Paper, Residuum, Eternium
+
+
+Technology resources: Copper, Tin, Iron, Peat, Brass, Bronze, Cinnabar, Coal, Glass, Lead, Linite, Ironwood, Steel, Adamant, Eternium, Phlogiston
+
+
+New Resources
+Tier 0 resources cannot be sold at urban centers for money.
+Name
+	Tier
+	Requirements 
+	Description
+	Quarried Stone
+	0
+	Access to Hill or Mountain tiles
+	Used for building and infrastructure
+	Lumber
+	0
+	Access to forest tiles
+	Used for building and infrastructure
+	
+
+Projects running without actions - Committed Resources
+Projects can now run without extra actions every turn to keep them going. To start a project you must have all the requirements already met and you must spend an action to start the project. The project will then be “put on the backburner” and will make progress each turn on it’s own. Projects on the back burner do not get the +1D8 if you don’t spend an action on them (so they get +1D8 on the 1st action when you set them up but not after). If for some reason a project on the backburner stops (due to losing resources, not having enough money, sabotage, ect.) before it finishes you must spend another action to start it back up. You may have as many “backburner” projects as you can afford to commit the resources to.
+
+
+
+
+Resource bonuses
+You do not get any bonuses to a project for merely fulfilling the base resource requirements. You can get a resource bonus by committing extra relevant resources for the duration of the project.
+You get a +1 resource bonus for every extra 50% of gold equivalent (money or resources) over the base cost. How much you need for the bonus rounds up. Using higher tier resources than what is asked for also gives a +1 bonus and using certain finished goods also give a +1 (list is later). 
+
+
+Trade and one time trade
+For trade you lose access to 1 unit of the resource your trading and if you’re trading for another resource you gain access to that resource. One time trade no longer costs an action but still costs ½ the money equivalent value of the resource(s) being sent. If you pay the staff doesn’t roll for failure. If you don’t pay the full amount the staff does roll for failure. By default you have a 60% of success, 20% of partial, and a 20% chance of failure. On time trade just gives you access to that resource for that turn. Theoretically someone else could pay this cost for you (essentially giving foreign aid) or people could split the cost. This is also the mechanism that one would use to flat out purchase a single use of a resource from another player. Please note that this also applies to shipments of gold themselves.
+
+
+
+
+Urban centers
+Towns, Cities, and Metropoli are urban centers. Towns have 1 slot, cities have 2, and metropoli have 3. Urban centers can have manufactured resources, or fortifications. You can commit resources to urban centers as a free action like previously to generate money.
+
+
+Finished Goods
+Certain finished goods provide an additional point of resources bonus when used at something they're good for. Here is the current list: Alcohol, Baubles, Beer, Darkwood bows, Fine Clothes, Gunpowder, Healing Potions, Icecream, Jewelry, Medicine, Paper, Parchment, Poison, Rohevanagria, and Scrolls
+
+
+
+
+Manufactured resources
+Manufactured resources are generally developed in the same tile as a settlement, as these are the hubs of industry. Some examples include: Alcohol, Baubles, Brass, Bronze, Cinnabar, Cold, Iron, Darkwood Bows, Fine Clothes, Glass, Gunpowder, Healing Potions, Icecream, Jewelry, Medicine, Narcotics, Oricalculum, Paper, Parchment, Phlogiston, Poison, Porcelain, Rohevanagria, Scrolls, Silk, Steel, and Textiles.
+
+
+Created resources
+These are resources that are “found in nature” and generally developed where they are found. Some examples include: Cocoa, Coffee, Crops, Dire Crops, Fruit, Herbs, Honey, Livestock, Mushrooms, Olives, Riding Animals, Slaves, Spices, Sugar, Tobacco
+
+
+Society
+Your society stat is how culturally advanced your civilization is. It also represents happiness and resilience. A nation with high society is a nice place to live in. A nation with poor society is a hellhole where your people are easily taken in by other cultural influences. Anything for a better life. It is harder to deal with high social populations after you’ve conquered them. Nations with a high society resist assimilation, to the point that it is often more convenient to have that nation agree that it is conquered and allow them to self-administrate under your supervision.
+
+
+Your society stat is how culturally advanced your civilization is. It also represents happiness and resilience. A nation with high society is a nice place to live in. A nation with poor society is a hellhole where your people are easily taken in by other cultural influences. Anything for a better life. It is harder to deal with high social populations after you’ve conquered them.
+
+
+1 - There are scribes who read to the nobility when necessary.  They are not well respected.  It is survival of the fittest.  There are no standards of polite behavior.  There are no strong ties of custom. 
+2- The elites of the nation can read and have gotten some education.  If a noble kills a peasant no one cares.  
+3 - The elites are well educated and the common populace can read the good book and do basic arithmetic.  This is a medieval society.
+4 - Almost everyone gets up to an 8th grade education.  There is a court of law that can prosecute a lord, though they probably won’t.  There is a sense of nationalism and shared culture.  
+5 - There are universities, there are weekends, and even when things are bad there’s still good things.  This is a utopia.  
+
+
+You must assimilate tiles you get during the game into your territory in order to receive any mechanistic benefit from them. The base difficulty of the project to do so is 5 points per tile assimilated. These points rollover from tile to tile and turn to turn. This is resisted by the former owner’s society. So 7 net points would assimilate 1 tile and have 2 points towards the next tile to carry over to the next turn. Assimilating costs 1g per tile (min 1g per turn) and 1 food or luxury resource per turn.
+
+
+You can use your society to attack neighboring tiles. This comes in a few steps. 1st thing you can do is attempt to de-assimilate neighboring tiles. This project costs 10 points. This is an opposed role, passive if your neighbor doesn’t know you’re doing this.  The second thing you can do is flip a non assimilated tile to your ownership. This costs 20 points. You can then assimilate the tile, 5 points, bringing it under your control. 
+
+
+
+
+Espionage
+Espionage represents your nation’s ability to engage in spycraft and other clandestine operations. Nations with a low espionage get their information through gossip and hearsay and their agents are unreliable. Nations with a high espionage have some of the preeminent spies in the world and they might know more about your nation than you do. Espionage’s main use is to provide information but there are more dangerous uses for spies and saboteurs.
+
+
+Arcane
+Arcane represents how common the arcane arts are in your country and how your people feel about them. A country with low arcane has very few practitioners who work in secret for fear of retaliation. A nation with high arcane not only has many wizards and other arcane casters but they are an integral part of life in that country.
+
+
+Technology
+This stat is how technologically advanced a nation is. A very  low technology  represents a people that are around the stone age, maybe bronze age. A very high technology nation would have renaissance or maybe the low end of steam tech (ie pre-locomotive). 
+
+
+Religion 
+Religion is your people’s piety and access to divine magic. It is also how much the gods are willing to intervene on your people’s behalf to help deal with disasters and large scale uses of magic. A religion one nation does not worship their god(s) much or well and has few if any clerics. A religion five country has many divine casters and it’s people reverence for their god(s) is near total and they strongly worship them, and throw frequent festivals in their honor. Religion can be used for relief aid, blight or disease curing and prevention, divination, and  spreading your religion. Divination of the future is generally only reliable a few seasons in advance and divination cannot reveal decisions that have not been made.
+
+
+
+
+Advisers 
+Each player gets 3 advisers.  Advisers are people (non-player characters) who are always loyal to the player character and who are extremely skilled at one stat (not politics) and also have a specialty within that stat. This allows them to give excellent advice in their area of expertise. Mechanically this manifests as a +1 bonus to actions involving that stat and an additional +1 bonus to actions also involving their specialty. If for some reason the player does not use all of their allotted actions, then their advisers will take over those actions before other NPCs in the nation can. Players can choose to have multiple advisers on the same stat, however, the overall +1 is only applied once.  For instance, with 3 Technology advisers the result would be a +1 to all actions involving Technology and 3 Technology specialities.
+
+
+Stat Health: Stats are primed to be “improved” (denoted by a +), “normal,” or “damaged” (denoted by a -). Players will be informed if there is movement on a stat that indicates it is ready to be improved or is having problems.
+
+
+Stats in Detail
+
+
+
+
+
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+Espionage
+Espionage represents your nation’s ability to engage in spycraft and other clandestine operations. It’s main use is to provide information but there are more dangerous uses for spies and saboteurs. Espionage passively provides information based on the difference between your nation’s rating and that of other nations. You can maintain one espionage operation per level of espionage.  Your counter-intelligence abilities also increase with a higher espionage rating.  
+* At one you are getting your intelligence from your friends and family who may or may not know what they are talking about.  At this level your people are loose lipped, you have virtually no counter-intelligence.
+* At two you have access to a variety of ambassadors and other public persons of other countries. They are working for their interests, but will provide assistance and information if it benefits them in some way or accrues favors owed.  At two you have people who understand confidentiality, but are not prepared to defend against any direct espionage action.
+* At three you have actual spies.  They will stealthily gain knowledge and perform operations. Operations include but are not limited to: surveillance, poisoning a water supply, turning an asset, gathering intelligence, and extracting other persons.  Your network defends against other spy rings.  If you want to root out specific activities you can spend an action to shut them down (opposed roll).
+* At four you have a large network of operatives with a variety of skill sets from disguise to infiltration to sabotage.
+* At five your spies are some of the pre-eminent in the world.  
+
+
+You can boost your point total against another country by spending an action and 1g to establish a network in another country, colloquially known as a “Red” spy ring. This will give you basic information about that nation while you are committing the upkeep. Increasing it a level (a project/action that requires 1g and a luxury resource) makes it “Orange,” and gives you automatic espionage rolls to find projects that they have hidden. Further increases give you more breadth in your network. The costs of maintaining a spy ring are detailed in the expanded espionage section. While your network is active (ie. you have committed resources to maintaining the spy ring) you can also spend an action and 2g and a strategic or luxury resource to gather more specific information or conduct operations. This gives you +2 per difference in the level of your spy rings in that nation. You will passively engage in counter-intelligence according to your stat.  Also, if another country bungles an operation you will likely receive a heads up.  If you wish you may focus on counter-intelligence and attempt to find out what spy rings are active in your country.  This requires an action to root them out or otherwise subvert them. You automatically have a spy ring in your own nation of a color commensurate with your Espionage rating.
+
+
+When stealing, you can steal currency, arcane or technical secrets, objects, or persons, some of which are more closely guarded than others. Of course, individuals are welcome to set up special defenses for what they see fit.
+
+
+A successful assassination of a player character reduces the number of actions they can take until they are resurrected.  You lose 6 - your religion stat in actions.  This loss can carry on to the next turn.  Morganti weapons are the only way to permanently kill someone. Really clever plans can increase the amount of time it takes to be resurrected. This can be anything from stealing the body to prevent lesser forms of resurrection to trapping the ruler’s soul in a magical artifact. Cleverer plans are harder to pull off. Your country will put up with you being gone for one year before moving on.
+
+
+Arcane
+This stat represents how common the arcane arts are in your country and how your people feel about them. A arcane one country has very few practitioners who work in secret for fear of retaliation. A arcane 5 nation not only has many wizards and other arcane casters but they are an integral part of life in that country.  Arcane is good at providing one time bonuses or other one time advantages.
+
+
+Research:
+You can do research projects to discover new spells or uses of arcane energies to aid in other actions or projects. These research projects will cost about 5-30 points based off of their scope and will cost about 1-3g and some materials as reagents. These projects primarily give one time bonuses but can do more permanent effects but they do these less well than the technology stat. Projects that are bigger in scope can get a lot more expensive.
+
+
+Craft: Create advanced magic items for use by various persons.  Ex:  An enchanted ship(s) that is fire resistant, can summon mild winds once per day, and has a cargo hold of holding.  Costs 20 points, a strategic resource, 2g, and 1 unit of food.  Can improve speed of a single trade route and is more resistant to raiding.
+
+
+Other Examples:
+* Spells cast or scrolls written that provide a bonus equivalent to the Mage corps for a limited time. 10 pt project, 1g, 1f, and 1 dyes per turn
+* Ploughs enchanted for the season for greater food yield. 20 pt project, 2g, 1f, and 1 ressidium per turn. Food sources of 1 type provide 1 more food each season for a year.
+* Roads that do not freeze for one winter. 20 pt project, 2g, 1f, and 1 linite per turn. Negate the penalties of winter in your country for one winter.
+* Faster courier or transport service for a specific assignment. 5-10 pt project, 1g and 1f per turn. One action that is normally delayed by travel (like long distance raiding, recalling spys, or getting resources through trade) happens one turn sooner (up to happening this very turn). Cost is based on scope.
+* Scrying on enemies to supplement Espionage. 5 pt project, 1g and 1 food. Gain a +2 on a specific espionage action or ask 1 question based on your arcane score in place of espionage.
+
+
+
+
+Technology
+This stat is how technologically advanced a nation is. Technology 1 is represents a people that are around stone or bronze age. Tech 2 is iron age, tech 3 is medieval, and tech 4 is renaissance. Tech 5 represents the low end of steam tech (ie pre-locomotive).  
+
+
+Research: You can do research projects to discover new uses of resources, create better (or different) versions of existing items, or new processes.  These projects take longer to complete than Arcane research projects, but typically provide a permanent improvement.
+
+
+Ex: 
+
+
+* Ploughs that are better suited for sandy soil vs soil with a high clay content. 
+* Discovering how to Improve iron into steel. Requires Technology 3
+* Grinding lenses to “invent” the telescope.
+
+
+Manufacture: Useful for processing or creating large batches of advanced items or single large scale items/facilities.  These projects also include educating personnel to use the equipment.
+
+
+Ex:
+
+
+* Cultivating luxury resources such as textiles. See Create Resources action
+* Improving textiles to fine clothes. See Create Resources action
+* Providing telescopes to your navy to better see raiders coming (or find better targets to raid.) See improve navy action
+
+
+
+
+Religion 
+Religion is your people’s piety and access to divine magic. It is also how much the gods are willing to intervene on your people’s behalf to help deal with disasters and large scale uses of magic. A religion one nation does not worship their god(s) much or well and has few if any clerics. A religion five country has many divine casters and it’s people love their god(s), strongly worship them, and throw festivals in their honor.
+
+
+Religion can be used for relief aid, blight or disease curing and prevention, divination, and religious spread.  When providing aid after a disaster or spread of disease the use of religion and divine magic will be less expensive than the use of the base stat originally used.  Curing a disease or at least treating an outbreak will be a project with details determined by staff.  Divination is generally only reliable a few seasons in advance.  Also, divination cannot reveal decisions that have not been made.  To spread a religion you declare in an action and what methodology you are using (pamphlets, by the sword, etc).  This project has a base point total of 15 and it flips one of the target’s religions integrity points to your religion.
+
+
+Conjure food and water: There is a project to create units of food. You get 1 unit of bland tasteless food and drinkable water for every two points you amass on this project. Each “unit” of food counts toward your “Winter stores” project.
+
+
+Actions
+
+
+All actions use two different stats, a base stat that is determined by the type of action and a second stat that you choose based on the methodology you use. You add these two stats together, then add/subtract relevant modifiers (max -7 and +7)  to determine how effective your action is. You also roll 1D8 in opposed actions. All stats can only be used twice each season on your actions. Politics cannot be directly used.
+
+
+Ongoing actions are like regular actions except that their effect continues happening after the first turn. You have to spend a regular action for the first turn. You use the original base total but reroll the D8 for substiquent turns (if it is opposed). While you don’t have to spend actions on substiquent turns you do pay a maintenance. It is 1g per turn unless otherwise noted. Ongoing actions stop when you stop them or another player stops them. It does not cost an action but it does take a season.
+
+
+Unless specified, actions that use resources use tier 1 resources. Using better resources gives a bonus to the action. Using one tier better gives a +1 and using a resource that is 2 tiers better gives +2.
+
+
+You can put extra resources into projects to give them bonuses. This represents a bigger budget. 1g gives +1, 3g gives +2, and 6g gives +3. Not all projects can benefit from this action.
+
+
+You can hire adventurers to help solve problems. 2g buys you some low level adventurers or a few middle level adventurers (+1). 5g buys you the services of many low level/some medium level/a few high level adventurers (+2). 9g gets you many medium or some high level adventurers (+3). If you are using nonunion adventurers  (ie unaffiliated with the nation of Prindar) then they cost 50% more (minimum 1g extra).
+
+
+You use growth actions to build up your country. These manifest as increased stats over time but also as projects with more immediate benefits. When you declare a grow action you choose a project. That project determines the base stat. Each project has a total number of points to be completed. You will have to spend multiple grow actions to complete a project but you can’t work on the same project multiple times a turn. You must pay the listed cost each turn, or the project is put on hold. A project loses 2 points each season if you stop working on it in the middle of the project. In addition most cost currency, some require specific resources, and a few have more esoteric requirements. You cannot directly grow politics or size. To increase size you must acquire more land and to increase politics you must take actions that your country would approve of, succeed, and build it up. Taking actions that your country likes can add to your Trust,  and actions they don’t like can remove it. When your Trust hits +5 or -5 your nation will be given a challenge. Success in this challenge increases your Politics, failure decreases it. At the conclusion of this challenge the Trust resets to zero.
+
+
+This is a list of many possible growth actions, but it is not exclusive. The general idea is that projects are either major or minor projects. Most major projects cost 30-50 points to finish and cost about 8-12 money equivalents. Projects for stats above 3 cost more (+5 to 10 points and 12-20 money equivalents.) Most minor projects cost 10-20 points and 1-2g and 1-2 resources. Some minor projects for higher stats cost more. A major project can also add 1 Trust at storyteller discretion. Resource requirements can (pending storyteller approval) be bypassed either by completing an additional small project (5-10 pts) which costs an action or using more lower quality resources (3-4 lv 1 resources in place of a lv 2). 
+
+
+
+
+New Project Costs
+Resource costs are now paid per turn you are working on the project. More specifically, you must have the needed resources to start the project and they are committed to the project for its duration. Gold cost is paid per turn. If you lose access to the resource or don’t have enough gold the project will stall out and will need another action and the resources to start it up again.
+Table 3 - Example Projects
+	
+
+	Project
+	Stat Type
+	Points Cost
+	Resource Costs (total)
+	Requirements
+	Other
+	Change adviser
+	New adviser’s stat
+	15-35
+	1g, 1 luxury
+	You must have an open adviser slot
+	
+
+	Winter storage
+	Any
+	5xSize
+	1g, 1 food, 1T0, 1 fuel 
+	Fuel is any wood, coal, hot linite or peat
+	You must finish this before Winter, you can go over for extra stores.
+	Crisis at Politics 1
+	Any
+	25
+	1g, 2 resources, 1 food, 1T0
+	
+
+	
+
+	Crisis at Politics 2
+	Any
+	35
+	1g, 1T1, 1T2 resources, 1 food, 1T0
+	
+
+	
+
+	Crisis at Politics 3
+	Any
+	45
+	2g, 2T1, 1T2 resources, 1 food, 1T0
+	
+
+	
+
+	Crisis at Politics 4
+	Any
+	55
+	3g, 2T1, 2T2 resources, 2 food, 1T0
+	
+
+	
+
+	Crisis at Politics 5
+	Any
+	70
+	4g, 3T1, 2T2, 1T3 resources, 2 food, 2T0
+	
+
+	
+
+	Create the Army (0->1)
+	Military
+	30
+	1g, 1 strategic, 1 food, and 1 T0
+	
+
+	
+
+	Improve the Army (1+->2)
+	Military
+	25
+	1g, 1 strategic, 1 food, and 1 T0
+	
+
+	
+
+	Improve the Army (2+->3)
+	Military
+	35
+	2g, 1 T1 and 1 T2 strategic, 1 food, and 1 T0
+	
+
+	
+
+	Improve the Army (3+->4)
+	Military
+	45
+	3g, 2 T1, 2 T2 strategic, 2 food, and 1 T0
+	
+
+	
+
+	Improve the Army (4+->5)
+	Military
+	60
+	4g, 3 T1, 2 T2, and 1 T3 strategic, 3 food, and 2 T0
+	
+
+	
+
+	Create a Navy (0->1)
+	Military
+	30
+	1g, 1 strategic, 1 food, and 1 lumber
+	
+
+	
+
+	Improve the Navy (1+->2)
+	Military
+	25
+	1g, 1 strategic, 1 food, and 1 lumber
+	
+
+	
+
+	Improve the Navy (2+->3)
+	Military
+	35
+	2g, 1 T1 and 1 T2 strategic, 1 food, and 1 lumber
+	1 strategic resource must be some kind of wood
+	
+
+	Improve the Navy (3+->4)
+	Military
+	45
+	3g, 2 T1 and 2 T2 strategic, 2 food, and 1 lumber
+	1 T1 and 1 T2 strategic resource must be some kind of wood
+	
+
+	Improve the Navy (4+->5)
+	Military
+	60
+	4g, 3 T1, 2 T2, and 1 T3 strategic, 3 food, and 2 lumber
+	1 T1 and 1 T2 strategic resource must be some kind of wood
+	
+
+	Create an Air Force (0->1)
+	Military
+	45
+	2g, 1 strategic, 1 food, and 1 flying something
+	You must have some methodology of flight (either an animal ally or resource) to have an air force
+	
+
+	Improve the Air Force (1+->2)
+	Military
+	35
+	2g, 1 strategic, 1 food, and 1 flying something
+	
+
+	
+
+	Improve the Air Force (2+->3)
+	Military
+	45
+	3g, 1 T1 and 1 T2 strategic, 1 food, and 1 flying something
+	
+
+	
+
+	Improve the Air Force (3+->4)
+	Military
+	55
+	4g, 2 T1, 2 T2 strategic, 2 food, and 1 flying something
+	
+
+	
+
+	Improve the Air Force (4+->5)
+	Military
+	70
+	5g, 3 T1, 2 T2, and 1 T3 strategic, 3 food, and 1 flying something
+	
+
+	
+
+	Create a new special regiment
+	Military
+	35
+	2g, 2 strategic, and 1 food
+	Must have a military of at least 2 and the regiments primary stat at 3
+	
+
+	Learn a special regiment from another nation
+	Military
+	25
+	2g, 2 strategic, and 1 food
+	
+
+	
+
+	Create Fortifications
+	Military
+	25
+	1g, 1 T1 strategic, 1 food, and 1T0
+	
+
+	
+
+	Fortify an urban center
+	Military
+	35
+	1g, 1 T1  strategic, 1 T1 luxury, 1 food, and 1T0
+	
+
+	
+
+	Improve Fortifications to a Citadel (lv 2)
+	Military
+	40
+	2g, 1 T1 and 1 T2 strategic, 2 food, and 2T0
+	Can only replace an existing tier 1 fort
+	
+
+	Improve urban fortifications to lv 2
+	Military
+	50
+	2g, 1 T1 and 1 T2 strategic, 1 T1 and 1 T2 luxuries, 2 food, and 2T0
+	Can only be used on a city with a lv 1 fort
+	
+
+	Lv 3 fortification
+	Military
+	60
+	4g, 1 T1, T2, and T3 strategic, 3 food, and 2T0
+	
+
+	
+
+	Improve urban fortifications to lv 3
+	Military
+	70
+	4g, 1 T1, T2, and T3 strategic, 1 T1, T2, and T3 luxuries, 3 food, and 2T0
+	Can only be used on a metropolis with a lv 2 fort
+	
+
+	Subjugating a sentient race in your territory
+	Military
+	25
+	1g, 1 strategic, 1 food
+	
+
+	
+
+	Befriend a sentient race in your territory
+	Society
+	30
+	1g, 1 luxury, 1 food
+	
+
+	
+
+	Raise and maintain a battlegroup
+	Military
+	10
+	1g, 1 food, and 1 strategic resource
+	
+
+	
+
+	Establish a supply line
+	Military
+	10
+	1g
+	
+
+	Causes a tile one of your battlegroups is on to be in supply. Can be attacked
+	Reinforce a battlegroup
+	Military
+	10
+	1g, 1 food, and 1 strategic resource
+	
+
+	Send more supplies and fresh troops to heal might and magnitude damage to 1 battlegroup
+	Search for Resources
+	Any
+	10
+	1g
+	
+
+	
+
+	Tier 1 manufactured resource
+	Economy
+	25
+	1g, 1T1 luxury, 1 food, and 1T0
+	Need to have 1 unused urban center
+	
+
+	Tier 1 discovered resource
+	Economy
+	25
+	1g, 1T1 strategic, 1 food, and 1T0
+	
+
+	
+
+	Tier 1 created resource
+	Economy
+	25
+	1g, 1 food, 1 one of the created resource, and 1T0
+	Need to find a suitable location first
+	
+
+	Develop a new T1 resource
+	Economy
+	20
+	2g, 1 luxury, 2 relevant resources 
+	
+
+	Does not give you a unit of the resource
+	Tier 2 manufactured resource
+	Economy
+	50
+	2g, 2T1 and 1T2 luxury, 1 food, and 1T0
+	Need to have 1 unused urban center
+	
+
+	Tier 2 discovered resource
+	Economy
+	50
+	2g, 1T1 and 1T2 resources, 2 food, and 1T0
+	
+
+	
+
+	Tier 2 created resource
+	Economy
+	50
+	2g, 2 food, 2 resources, 1 one of the created resource, and 1T0
+	Need to find a suitable location first
+	
+
+	Develop a new T2 resource
+	Economy
+	45
+	4g, 1T1 and 1T2 luxury, 4 relevant resources 
+	
+
+	Does not give you a unit of the resource
+	Tier 3 manufactured resource
+	Economy
+	75
+	4g, 2T1, 1T2, 1T3 luxury, 2 food, and 2T0
+	Need to have 1 unused urban center
+	
+
+	Tier 3 discovered resource
+	Economy
+	75
+	4g, 1T1, 1T2, 1 T3 resources, 3 food, and 2T0
+	
+
+	
+
+	Tier 3 created resource
+	Economy
+	75
+	4g, 3 food, 1T1, 1T2, 1 T3 resource, 1 one of the created resource, and 2T0
+	Need to find a suitable location first
+	
+
+	Develop a new T3 resource
+	Economy
+	75
+	7g, 1T1, 1T2, 1T3 luxury, 7 relevant resources 
+	
+
+	Does not give you a unit of the resource
+	Build a Town
+	Economy
+	35
+	1g, 1 food, 1 luxury, 1 T0
+	
+
+	
+
+	Build a City
+	Economy
+	55
+	2g, 2 food, 1T1 and 1T2 luxuries, 1 T0
+	Can only replace an existing town
+	
+
+	Build a Metropolis
+	Economy
+	80
+	4g, 3 food, 1T1, 1T2, and 1T3 luxuries, 2 T0
+	Can only replace an existing city.
+And a plan
+	
+
+	Build a major road
+	Economy
+	5/tile
+	1g, 1 food, 1 T0 
+	
+
+	
+
+	Improve Economy (1+->2)
+	Economy
+	25
+	1g, 1 luxury, 1 food, and 1 T0
+	
+
+	
+
+	Improve Economy (2+->3)
+	Economy
+	35
+	2g, 1 T1 and 1 T2 luxury, 1 food, and 1 T0
+	
+
+	
+
+	Improve Economy (3+->4)
+	Economy
+	45
+	4g, 2 T1, 2 T2 luxury, 1 food, and 1 T0
+	
+
+	
+
+	Improve Economy (4+->5)
+	Economy
+	60
+	6g, 3 T1, 2 T2, and 1 T3 luxury, 2 food, and 1 T0
+	
+
+	
+
+	Improve Espionage (1+->2)
+	Espionage
+	25
+	2g, 1 luxury, 1 food
+	
+
+	
+
+	Improve Espionage (2+->3)
+	Espionage
+	35
+	3g, 1 T1 and 1 T2 luxury, 1 food
+	
+
+	
+
+	Improve Espionage (3+->4)
+	Espionage
+	45
+	4g, 3 T1, 2 T2 luxury, 1 food
+	
+
+	
+
+	Improve Espionage (4+->5)
+	Espionage
+	60
+	6g, 4 T1, 2 T2, and 1 T3 luxury, 2 food
+	
+
+	
+
+	Set up a Red Spy Ring
+	Espionage
+	5
+	1g
+	
+
+	
+
+	Set up an Orange Spy Ring
+	Espionage
+	10
+	1g, 1 lux
+	
+
+	
+
+	Set up a Yellow Spy Ring
+	Espionage
+	15
+	1g, 1 lux, 1 food
+
+
+	
+
+	
+
+	Set up a Green Spy Ring
+	Espionage
+	20
+	2g, 1 lux, 1 food
+
+
+	
+
+	
+
+	Set up a Blue Spy Ring
+	Espionage
+	25
+	2g, 2 lux, 1 food
+
+
+	
+
+	
+
+	Set up an Indigo Spy Ring
+	Espionage
+	30
+	3g, 2 lux, 1 food
+
+
+	
+
+	
+
+	Set up a Violet Spy Ring
+	Espionage
+	35
+	3g, 3 lux, 1 food
+
+
+	
+
+	
+
+	Improve Religion (1+->2)
+	Religion
+	25
+	1g, 1 religious resource, and 1 food, 1T0
+	
+
+	
+
+	Improve Religion (2+->3)
+	Religion
+	35
+	2g, 1 T1 and 1 T2 religious resources, 1 food, and 1 T0
+	
+
+	
+
+	Improve Religion (3+->4)
+	Religion
+	45
+	3g, 2 T1, 2 T2 religious resources, 2 food, and 1 T0
+	
+
+	
+
+	Improve Religion (4+->5)
+	Religion
+	60
+	4g, 3 T1, 2 T2, and 1 T3 religious resources, 3 food, and 2 T0
+	
+
+	
+
+	Create a Permanent Portal/Gate Pair (Religion)
+	Religion
+	40
+	2g, 2T1, and 1T2 religion resources, 1 food, and 1T0
+	Requires at least religion 4
+	
+
+	Improve Technology (1+->2)
+	Technology
+	25
+	1g, 1 tech resource, and 1 food, 1T0
+	
+
+	
+
+	Improve Technology (2+->3)
+	Technology
+	35
+	2g, 1 T1 and 1 T2 tech resources, 1 food, and 1 T0
+	
+
+	
+
+	Improve Technology (3+->4)
+	Technology
+	45
+	3g, 2 T1, 2 T2 tech resources, 2 food, and 1 T0
+	
+
+	
+
+	Improve Technology (4+->5)
+	Technology
+	60
+	4g, 4 T1, 2 T2, and 1 T3 tech resources, 2 food, and 2 T0
+	
+
+	
+
+	Improve Arcane (1+->2)
+	Arcane
+	25
+	1g, 1 arcane resource, and 1 food, 1T0
+	
+
+	
+
+	Improve Arcane (2+->3)
+	Arcane
+	35
+	2g, 1 T1 and 1 T2 arcane resources, 1 food, and 1 T0
+	
+
+	
+
+	Improve Arcane (3+->4)
+	Arcane
+	45
+	3g, 3 T1, 2 T2 arcane resources, 1 food, and 1 T0
+	
+
+	
+
+	Improve Arcane (4+->5)
+	Arcane
+	60
+	4g, 4 T1, 3 T2, and 1 T3 arcane resources, 1 food, and 1 T0
+	
+
+	
+
+	Create a Permanent Portal/Gate Pair (Arcane)
+	Arcane
+	35
+	1g, 2T1, and 1T2 arcane resources, 1 food, and 1T0
+	Requires at least arcane 4
+	
+
+	Improve Society (1+->2)
+	Society
+	25
+	1g, 1 luxury, 1 food, and 1 T0
+	
+
+	
+
+	Improve Society (2+->3)
+	Society
+	35
+	2g, 1 T1 and 1 T2 luxury, 1 food, and 1 T0
+	
+
+	
+
+	Improve Society (3+->4)
+	Society
+	45
+	3g, 2 T1, 2 T2 luxury, 2 food, and 1 T0
+	
+
+	
+
+	Improve Society (4+->5)
+	Society
+	60
+	5g, 3 T1, 2 T2, and 1 T3 luxury, 2 food, and 2 T0
+	
+
+	
+
+	Assimilate a tile
+	Society
+	5/tile
+	1g, 1 luxury
+	
+
+	
+
+	Deassimilate a neighboring tile
+	Society
+	10/tile
+	1g, 1 luxury
+	
+
+	
+
+	Flip a neighboring tile
+	Society
+	10/tile
+	1g, 1 luxury
+	Cannot flip a tile that is assimilated
+	
+
+	Repair damage to a stat at 1
+	Religion + Relevant Stat
+	10
+	1g, 1 resource, 1 food, 1T0
+	
+
+	Removes the minus from that stat
+	Repair damage to a stat at 2
+	Religion + Relevant Stat
+	15
+	1g, 2 resources, 1 food, 1T0
+	
+
+	Removes the minus from that stat
+	Repair damage to a stat at 3
+	Religion + Relevant Stat
+	20
+	2g, 2T1, 1T2 resources, 1 food, 1T0
+	
+
+	Removes the minus from that stat
+	Repair damage to a stat at 4
+	Religion + Relevant Stat
+	25
+	2g, 2T1, 2T2 resources, 2 food, 2T0
+	
+
+	Removes the minus from that stat
+	Repair damage to a stat at 5
+	Religion + Relevant Stat
+	30
+	3g, 3T1, 2T2, 1T3 resources, 2 food, 2T0
+	
+
+	Removes the minus from that stat
+	
+
+Misc
+
+
+Everything rounds up.
+Ties go to the defender.
+
+
+Time
+Every two weeks is an ingame season. One in-game year is 4 seasons/turns. Each year a large regional event will happen somewhere on the continent.
+* Winter: Invasions get a -2 penalty, -1 to all other military actions that are not defense, if winter happens and you have not completed the “winter storage” project, your people suffer.
+* Spring: Flooding is more common. Most large scale actions suffer a -1 due to the need to plant things.
+* Summer: Invasions in some areas get a -1 penalty due to extreme heat. Storms are a severe problem for much of the continent.
+* Fall: Everything is great in fall.
+
+
+Lending Assistance
+You can declare actions for the benefit of other people and in other (willing) countries. You pay for the action normally and you take a -1 if they are adjacent or if you have a trade route with them. Otherwise you take a -2. If they are unwilling then your actions will be opposed by the country in the form of passive stat defense.  This penalty accounts for communication issues and cultural differences as well as the foreign country having to quarter a sudden influx of people.
+
+
+If you declare a hostile or unwanted action in or against another country you will automatically be opposed by that country's relevant stat + relevant bonuses as a passive defence. That player can spend an action on an active defence which uses the relevant stat + another stat + bonuses for defence. Some active defences cost money or resources.
+
+
+Maintenance: Each country pays a maintenance of 2 currency and 2 food per level of its size stat. For every unit of currency or food you are missing you get a -1 penalty (max -5) and for every full season this happens you lose one Trust.
+
+
+Necromancy:
+Use of necromancy raises the dead and puts them to work. Necromance can artificially boost a nation's size for certain uses, increase a battlegroup or forts Magnitude, or create the undead slaves resource.
+
+
+
+
+
+
+Trade
+
+
+What is a formal Trade Agreement?
+Some “trade routes” are already considered to exist as just part of how people do business.  These informal routes are already factored into your country’s Economy stat.  This section deals with more formalized trade agreements set up as national routes between countries. A formal trade route requires an action to set up initially and then once set up continues on its own.   There are two main types of trade agreement.  The first type is where you trade units of a resource without compromising the underlying source of that resource, generally known as an import/export agreement.  The second type is where you lease a resource (lease agreement), which turns over management and utilization of that resource to another player for a set duration. This second type is most commonly used when another nation has the capacity to utilize a resource efficiently, perhaps due to higher Arcane or Technology rating, and you do not. Or they just want it really badly and are willing to pay for it.   There is a third smaller type of trade agreement - the one time trade.
+
+
+To initiate a trade agreement between two countries one of you must spend an action (or more.)  When the trade route is established this effectively taps that resource for the duration of the trade route.
+With that action we require:
+* Who are you trading with?
+* The written agreement of the other party, either by email or discord per usual.
+* What are you trading?
+   * At first a trade route can only handle one thing for one other thing.  Standard market value for a resource is its tier in currency.  Examples of standard market trades follow.
+      * 1 unit of bronze (Tier 2) for 2g of currency
+      * 1 unit of fish (Tier 1) for 1 unit of fur (also Tier 1)
+   * Once a trade route is established as in, it has been running for a year (8 weeks out of game = 4 turns = 1 year in game) then you can trade up to your Economy stat in numbers of goods.  Examples below for a player with Economy 3:
+
+
+
+
+You Trade (Economy 3)
+	They Trade
+	3 units of fish (Tier 1)
+	3g of currency
+	1 unit of bronze (Tier 2) and 
+1 unit of fish (Tier 1)
+	1 unit of alcohol (Tier 2) and 1g of currency
+	3 units of ivory (Tier 2)
+	6g of currency
+	1 unit of narcotics (Tier 2)
+	2 units of fish (Tier 1)
+	
+
+   * NOTE 1:  The examples above are using standard market rates (1g in currency per Tier of the Resource being traded), but players are welcome to negotiate other deals with each other and with NPC nations.  Some nations may be willing to pay a premium on scarce goods (eg: food in winter, or wood for ship building) or they may not be willing to pay the standard rate if, for instance, they already have a lot of it.    
+   * NOTE 2:  Alternative arrangements can be made.  Example:  Country A agrees to set up a trade route of 1 unit of Holystone (a Tier 3 Resource) to Country B for 1g and an agreement to spread the word about the great teachings of The Twelve (Tw) for the next season (1 action per turn for 4 turns).  This is more advanced and enforcing that these agreements are adhered to is its own ball of wax.
+   * NOTE 3:  In order to qualify as a trade route some amount of goods/currency must flow both ways.  This is representative of the people actually hauling the cargo back and forth across the continent.    
+   * NOTE 4: The maximum is always the Economy stat of the initiator of the trade route.
+
+
+To initiate a lease between two countries you must spend an action (or more.)  This is an action on the part of the person leasing the goods.
+With that action we require:
+* Who are you trading with?
+* What are you trading?
+* What is the duration?
+* Will you be setting the gold/compensation terms or the market?
+* Is there some sort of explanation of how those resources are getting to where they are going (presumably into your civilization)?
+
+
+With any Trade action we request/suggest:
+* A reminder of any relevant advisors.  
+* Notation of any currency invested into starting the route and what you would like it applied to such as guards, sea charts, waystations etc.   
+* A reminder of any relevant powers.
+* Do you have a preferred route?  
+* What kind of protection are you providing, if any.
+* Who is initiating/spending the action on setting up the route or lease.
+* A confirmation from the other player.
+
+
+Does it take more than 1 Action?
+When determining whether it takes 1 or more actions to get the trade route or lease set up staff will consider the following:
+
+
+
+
+What you put in
+	Obstacles
+	Advisors, powers, 
+	Difficult terrain (mountains, swamps, deep ocean, etc.)
+	Investment (currency or other)
+	Number of borders crossed
+	Defense, route, etc.
+	Events, wars, other regional effects
+	
+
+Staff will then let you know in action responses whether it’s good to go, is going to need more time, or other difficulties (ex: the planned route goes through a country that has closed its borders.)
+
+
+What do you get and When For Exchanging Resources (Import/export agreement)
+The turn after the route is in effect you get:
+* The goods
+* 1g from commerce that takes place around the route (customs, tourism, waystations, etc.)
+* Additional currency (to the player who spends the action) depending on what you put in vs. obstacles
+The person you are trading with gets:
+* The goods
+* 1g from commerce that takes place around the route (customs, tourism, waystations, etc.)
+These benefits last until/unless:
+* 1 of the trading parties says so
+* The route is raided, effects of raiding may vary, a route raided too much or too often is destroyed and must be recreated from scratch.
+* The trade route is “established” or mature (has been around for a year) at which point you and the person you are trading with get an additional +1g  of currency (more people are willing to cart their stuff along this route or sell to people travelling it) and have the option to trade more goods, up to your Economy stat.
+
+
+What do you get and When For a Lease
+
+
+The turn after the lease is in effect the leasee gets:
+* Management of the resource
+* Responsibility for transporting the resource
+The turn after the lease is in effect the lessor gets:
+* The money
+
+
+The One-Time Trade
+
+
+There are three options for a one-time trade or gift of resources.  There is no mechanical limit to how many resources you can trade this way, but please keep in mind that bigger targets are juicier targets. 
+Safe(er)  
+1. This requires no action. This costs 1/2g per tier per (g) being sent (rounds up).  People need to be paid for transport and guarding, more guarding for more precious materials.  This option is the safest, but the least convenient.  You may also send resources this way, but must pay 1(g) for every two tiers of resources (round up) for each turn that you do this.
+   1. Example costs:  
+
+
+Sending
+	Cost
+	1 crops
+	1g
+	2 crops
+	1g
+	1g, 2 iron
+	2g
+	1 glass, 1 gems
+	2g (1 tier 2 (1g) + 1 tier 2 (1g) 
+	1 hardwood, 1 diamonds, 1 ivory
+	3g
+	
+
+   2. Paying less than the costs indicated is possible, but you will forfeit some/all of the safety that this option provides.
+   3. Alternative payments - Units of copper, silver, gold, gems, or diamonds
+        Less Safe
+2. Part of an exploit action - This does not cost anything, but there must be an existing trade route to the destination, it doesn’t matter who initiated the route, it just has to exist.  Each trade route counts as one resource to be exploited.  
+3. Simple free action - This costs 1g.  It is not especially safe, but it is convenient and does not require an existing trade route.
+
+
+        
+Example Modifiers for One-Time Trades
+	Safer
+	Riskier
+	Trade advisor
+	Large amount of resources sent
+	Existing trade route (required for option 2)
+	Have exploited/sent along this path recently
+	      Defended trade route
+	Closed borders
+	      Mature trade route
+	Environmental factors: At war, difficult terrain, low society stat
+	Roads
+	Cultural predilection for raiding
+	
+
+
+
+Espionage
+The Spy Ring
+These do not require an action, either offensively or defensively to use, but they do require an action to set up. You get a free spy ring in your nation equal to your level of Espionage that requires no upkeep. As a project you can increase any of your spy rings levels to the next highest level. Spy rings are classified by colors of the rainbow, with the lowest level at red and the highest possible at violet. The lowest level (Red) gives you a basic look into the loyalty of a nation and let you know what ongoing actions that require resource commitments that nation is taking assuming that that nation hasn’t taken on a project to hide that information. Orange allows you a chance to find out hidden projects. Yellow gives you insight two levels lower into all nations neighboring your spy ring. Green allows you a chance to see that nation’s intelligence reports. Blue gives you the equivalent of a spy ring two levels lower in any nation that nation is trading with. Indigo spy rings allow the setup of additional rings (which are their own projects) in non-nation entities, such as the Council of Wyrms, the Bulwark alliance, or Cult of Outer Night. Violet gives you a “shadow” ring in the outer planar courts, alerting you to the machinations of the gods themselves.
+
+
+Passive Offense
+The level of detail at this level is fairly sparse and getting it is a comparison of espionage scores plus modifiers.  Information gathered at this level automatically includes are they moving troops or resources as part of a plan to invade my country?  What is their Trust score? What projects do they have ongoing? This is regarding all nations you have established a spy ring in. More advanced spy rings give you a chance at further hidden intelligence.
+
+
+Further Questions aka Directed Intelligence Gathering:
+You may also glean one other piece of information (examples given in the list below) per your rating of espionage.  
+ 
+Therefore someone with a two in espionage could pick two from the list.  The two do not need to be applied to the same nation.  The list is not exhaustive and players are welcome to come up with their own, but they must be fairly broad.  In order to be noticed with passive espionage the target must be doing something on a fairly large scale.  If they wouldn’t need to spend an action on it, then you’re not going to hear about it this way.  They also need to be doing something currently or recently, within the past season.  Passive espionage learns what people are talking about now, it’s more getting caught up on recent events rather than skullduggery. 
+  
+Intelligence Gathering Examples
+* Are they moving troops as part of an invasion plan against someone other than me?   
+* Are they converting to another religion?
+* Are they trading with _____?
+* Are they working on any major projects  within the last season?
+* Were they recently attacked or raided?
+* Did they discover/cultivate a new resource?
+* Are the citizens happy with their government?
+* Are they at war with anyone?  
+Defense
+Your espionage stat plus any modifiers plus two for the level of the spy ring.  Tie goes to defender.
+
+
+Passive Modifiers
+	Offensive
+	Defensive
+	* Shared religion 
+* Trade partners
+* Advisor
+	* Closed borders (yours or theirs)
+* Different majority races
+* Advisor
+* At war (with them)  
+	 
+Examples 
+
+
+Country A has a 3 in espionage and shares borders with 3 countries (B, C, D).  They get to check if any of B, C, or D are planning to invade them.  Then they get to ask 2 questions.  Country A would like to pick a good time to invade country B so they ask if Country B was attacked or raided recently.  They also want to know if they will anger Country C by invading country B so they ask if Country C is trading with Country B.  Here’s a summary of Country A’s questions:
+
+
+Are Countries B, C, or D planning to invade me? Automatic.
+Was Country B attacked or raided recently?  Maybe they’re in a relatively weak position.
+Is Country C trading with Country B?  I at least want to know if this could disrupt C’s business.
+
+
+Country B has a 3 in espionage and shares borders with 3 countries (A, C, D).  They get to check if any of A, C, or D are planning to invade them.  They also get to ask 3 questions.  They want to make an alliance with Country D and can’t stand Country C.  They also have a hunch that Country A is planning something nefarious. Here’s a summary of Country B’s questions:
+
+
+Are Countries A, C, or D planning to invade me? Automatic.
+Was Country D working on any major projects within the last season?  Maybe I can help them and get on their good side.
+Are the citizens of country C happy with their government?  Maybe I can invade them and they’ll like it.
+Was Country A working on any major projects within the last season? What are they up to?
+
+
+Country C has a 1 in espionage and shares borders with 3 countries (A, B, D). They get to check if any of A, B, or D are planning to invade them.  They also get to ask 1 question.  They realize that their espionage score is not very good so they are careful about what country they ask about.  They are trading with A and D and share a religion with A so they decide to ask something about A.  Here’s a summary of Country C’s questions:
+
+
+Are Countries A, B, or D planning to invade me? Automatic. 
+Did anything really salacious happen in Country A recently?  Not on the list, but is specifically asking about something a lot of people would be talking about.  
+
+
+Country D has a 2 in espionage and shares borders with 3 countries (A, B, C).  They get to check if any of A, B, or C are planning to invade them.  Then they get to ask 2 questions.  Country D did not plan ahead for winter so they’re looking for any food they can get.  Here’s a summary of Country C’s questions:
+
+
+Are Countries A, B, or C planning to invade me? Automatic.
+Did country A cultivate a new food resource?  Do they have extras they’d be willing to sell?  Or that I could take.
+Did country B cultivate a new food resource?  Do they have extras they’d be willing to sell? Or that I could take.
+Active
+Offense (External) 
+Before you can engage in operations in another country you must establish a spy network.  You may have as many networks as you can afford.  This requires an action.  Then you can engage in one of the following spy operations.  These take an action or more.  The duration and how difficult these are depend on how well defended the target is and modifiers specified at the end of the section. The below list of operations is not exhaustive.
+* Establish a spy network - Required for any and all operations including those with your neighbors. This will set up a Red spy ring.
+   * Required spending: 1(g) for start up and move in costs and a luxury resource to make friends/contacts quickly.
+* Collect a dossier - Get detailed info on a country or specific aspects of a country.  Frequently a good idea before doing any other operations. This requires an Orange ring in that nation.
+   * More specifics make this easier.  
+   * This can also be used to get more detailed answers on the questions listed in the Passive section.
+   * Can also be used to get a general overview of what’s going on, what the political landscape is, etc.
+   * Can be used as a preparatory measure for bonuses to later operations.  For instance, finding out the passwords used to get into a vault.
+   * Is sometimes required as a preparatory measure for later operations.  For example, when you want to steal from a country, but don’t know what valuables they have.
+   * Required spending: 1(g) for operating costs and 1 relevant resource.
+   * Suggested resources: alcohol, beer, narcotics to get people talking
+* Sabotage an ongoing project or otherwise (ex: guards around a resource, city water flows, army rations, etc.)
+   * Sabotage can be used as a preparatory measure for later actions such as poisoning the army rations so that when the invaders strike next turn the soldiers are sick.
+   * Required spending: 2(g)+ for operational costs and 1 relevant resource.
+   * Suggested resources: poison to knock out the guards, dyes to craft disguises, and tobacco to bribe customs officials.  Also 1(g) for emergencies.
+* Steal a resource or item - If stealing a resource please keep transportation costs in mind. 
+   * Required spending: 2(g)+ for operational and transport costs and 1 or more relevant resources.    
+* Assassination - Please be aware a lot of rulers have resurrection magic so this probably won’t be permanent unless measures are taken.
+   * Required spending: 5(g)+ because an assassin who is caught can expect to face horrible things and requires extensive expertise to have any hope of success.  
+Defense (Internal) 
+You are assumed to have internal agents so you gain a spy ring in your own nation of a color equivalent to your Espionage score. That said, you can do the following things to increase your defense. The below list is not exhaustive.
+* Protect a specific noun (a secret, process, resource, item, etc.) Each such protection takes an action and commitment of 1g per season per thing that you are protecting. These will be listed in the counterintelligence section of your character sheet.
+* Surprise inspection - Refreshes ongoing efforts such as protecting a secret base.   Without reminders people get lax about security.  Doing this once a season or two keeps people on their toes.  Directly targets with a bonus nations that have infiltrated your nations own espionage apparatus.      
+* Uncover enemy spies: Directly targets spy rings in your nation for the purpose of finding them.
+* Uncover disloyalty: Uncovers acts of subversion or sabotage by other nations.
+
+
+
+
+
+
+Active Modifiers 
+	Offensive
+	Defensive
+	* Shared religion 
+* Trade partners
+* Advisor
+* Resources and (g) spent
+	* Closed borders (yours or theirs)
+* Different majority races
+* Advisor
+* At war (with them)
+* Number of borders between you 
+* Resources and (g) spent 
+	
+
+
+
+The fundamental unit of intelligence is denoted by color, these colors are arranged as per the colors of the rainbow. Every nation is assumed to have a spy ring in their own nation at the level equivalent to their espionage rating (ie 1 = red; 2 = orange; 3 = yellow; 4 = green; 5 = blue). The ratings allow the following passive acquisition of information:
+
+
+Red: Loyalty rating of the nation; ongoing non-hidden projects. Provides actionable intelligence bonus for material used by you against an opponent militarily, or half rounded down for someone you share it with.
+Orange: As above, plus a test against hidden projects.
+Yellow: Also acts as two less in surrounding nations to spy ring
+Green:  Gives a test to get internal intelligence reports from nations in which you have this rating
+Blue: Also gives a spy ring two levels lower in every nation you are trading with
+Indigo: Allows you to place a spy rings (up to your espionage rating) in non-nation organizations (ie. the Primean church, the Druids, the Bulwark confederacy, the council of wyrms)
+Violet: Allows extraplanar intelligence updates in the form of spies in the courts of the gods.
+
+
+You have access to your native intelligence node equivalent of your espionage rating for free. All spy rings otherwise have a committed cost commensurate with their level. If you have a spy ring you must pay the listed cost every turn or its equivalent or it immediately degrades to the next lower level.
+
+
+Maintainance costs:
+
+
+Red: 1g
+Orange: 1g + 1 Food
+Yellow: 1g + 1 Food + 1 Luxury
+Green: 2g + 1 Food + 1 Luxury
+Blue: 2g + 1 Food + 2 Luxuries
+Indigo: 2g + 1 Food + 3 Luxuries
+Violet 2g + 1 Food + 3 Luxuries + Any 1 Tier 3 Resource
+
+
+
+
+
+
+Religion
+
+
+A brief description of the major religions of the world:
+Primean Faith (Pr) 
+Devoted to Primus, a monotheistic faith that has echoes of medieval Christianity.  The Primean faith is lawful good in alignment, but with its claims that only humans have souls has a limited following amongst nonhumans.  Other major elements include the divine right of kings, a ban on arcane magic (“thou shalt not suffer a witch to live…”), a missionary attitude, a focus on charity and good works, and the care of its followers’ immortal souls (who go to heaven if they follow the church’s rules, and hell if they don’t.)
+Reformed Primean Church (PrR) 
+Typically, due to actual angels working for the Primean church, it is difficult for its rulers to go bad.  About seventy years ago, a pontiff managed it, and his corruption outraged a number of Athasian bishops, who decided to break from the structure of the church, noting that nowhere in the holy teachings of Primus did it say there should actually be a Patriarch.  Focusing less on the politics end of things and more on the saving of souls, the Reformed Church is a large draw for those dissatisfied with the core mother church.
+The Twelve (Tw) 
+Millenia ago, invited by the prayers of millions to a world in chaos for anyone, anyone at all, to save them, twelve gods arrived on this world, quieted the tossing continents, and brought a peace of sorts to this world.  Each god in this pantheon represents vastly different outlooks and roles in life.  They are:
+* Perelandro - God of orphans, the downtrodden and unfortunate.
+* Morgan - God of order, the city, and justice.
+* Iono - God of Sea and storms, loves women and cats.
+* Aza Guilla - Goddess of Death, Lady of the Long Silence/Night. 
+* Venaportha - Goddess with Two Faces. Lady of love.
+* Gandolo - God of Coin and Commerce. Filler of vaults
+* Nara - Plague Mistress, Lady of Ubiquitous Maladies
+* Callo Androno - Eyes on the Crossroads, god of travel, languages and lore. 
+* Dama Elliza, mother of rains and reaping
+* Sendovani - God of builders, makers, and crafters.
+* Azri - The spellcasting god, master of magic
+* Preva -  Lady of the Red Madness, Goddess of war
+The Lords of Darkness (Da) 
+Somewhere, partially trapped in the outer darkness in the space between worlds, are the true masters of the cosmos.  Beings of a scale that perhaps only Io the Ninefold Dragon can comprehend. This pantheon brings destruction, doom, devastation, and corruption to the world in an attempt to unlock their prison and reclaim a universe that is rightly theirs.
+* The Herald of Apocalypse (believed to also be Nara of the Twelve.)
+* She’thass of the Thousand Eyes, the perception of entropy
+* Yg, the corruptor, patron of serpents and undead
+* G’k’r-lek’non, lord of the Qlippoth, master of demons
+* Tazr, the mouth of darkness
+* The Faceless One, leader of the pantheon, the un-namer.
+Dwarven Pantheon (Dw) 
+A group of gods worshipped by the dwarves, the significant figures are:
+* Moradin the Just (believed to also be Morgan of the Twelve)
+* Sindar the Builder (believed to also be Sendovani of the Twelve)
+* Khelan the Delver
+* Azzak the Rememberer
+* Balduin the Keeper of Families
+Elven Pantheon (El) 
+A group of gods worshipped by the elves, which sometimes causes conflicts with the druidic faith that they also practice.  The significant figures are:
+* Correlon, lord of poetry, music and battle (believed to also be Callo Androno of the Twelve.)
+* Selen, lady of the moon (believed to also be Venaportha of the Twelve.)
+* Astimar, master of the sword
+* Khelena, mistress of the bow
+* Shelasa, mistress of magic
+* Anduriel, master of the elements
+Druidic Faith (Dr) 
+A nature and ancestor worship religion spread throughout the corners of the world, although with relatively few adherents in the modern age, the druidic faith reveres no gods, instead focusing on the primal forces of nature as the things truly worthy of worship, considering humanoid concerns to be petty and useless.  There are four major subsects of this religion, generally separated by region of the continent.
+* Keepers of the Balance (Northwest) devoted to teaching the integration of all beings into harmonious systems
+* Claws of the World (Northeast) which promotes a “nature red in tooth and claw” attitude with an eye towards survival of the fittest.
+* Tenders of the Lifestream (Southcentral) is the smallest sect of the religion, mostly pushing biodiversity in ecosystems and reverence for multiplicity of life forms of all varieties.
+* Children of the Earthmother (Southwest) distinctly matriarchal focus, as a faith teaching that there is a great feminine presence that is responsible for the creation and maintenance of all life.
+
+
+Worship of the God King of Akhenian (Ak) 
+The subjects of the nation of Akhen view their king as a living god.
+Draconic Reverence of Io (Io) 
+The thing the dragons worship is not a god in the traditional sense, nor would the dragons be interested in such a thing.  Io is a deeper representation of metaconcepts in the universe, and his faith involves following such rules as “Don’t rewrite time,” and “objects tend to fall.” (In other words, make sure you use physics to accomplish your aims.)  Io is believed to be the entity responsible for the ordering of the outer planes and the traditional ninefold alignment system.
+Devotees of the Skyfather (Sk) 
+The Skyfather is revered amongst the horselords of the Afenthar.  He demands that all men live lives of greatness and freedom, and turns his face from those that don’t.  He has three daughters, who oversee concepts such as food, family, and magic (believed to be a woman’s art amongst the Afenthar.)
+Spirit Worship (Sp) 
+The oldest of the religions of the world, the spirits of the land are vast incarnations of raw manifestations of nature, each a tremendous power in its own right.  Over the millennia, their worship has been superseded by that of the gods, and they have been weakened and driven from their places of power. Various tribes swear themselves to the following of various spirits, generally one per distinct people.  (The Afenthar were believed to once follow the spirit of Horse before converting to the worship of the Skyfather, for example.)  The worship of the spirits is strongest in Levain, where most of the Spirit worshippers (and their sponsoring spirits) dwell.  Outside of that, the major centers of spirit worship are Karis and Korim, both of which have unusual relationships with their spirit patrons (having killed their patron spirit and making a point of warring on their patron spirit at its request, respectively.)
+Drow Pantheon (Dr) 
+The drow mainly worshiped a pantheon of gods called the Dark Seldarine differently from the elves, who venerated one member of their pantheon above the rest while still paying homage to each of their deities the drow gods weren't venerated out of true piety, but out of fear, respect, or ambition.
+* Church of Lolth: The church of Lolth is the primary drow faith. Its goal is to strengthen Lolth and her authority by bringing all drow under the church's wing, while killing those who are in any way a challenge to the authority of the Spider Queen and her clergy.
+* Church of Vhaeraun: The faith of Vhaeraun is the biggest among surface drow and the second biggest overall among the whole race. Its goal is to re-elevate the Ilythiiri to the position of power they once held, in a society where equality between the sexes reigned. 
+* Church of Ghaunadaur: The church of Ghaunadaur believes that everybody capable of strength is allowed to wield power. An idea that has devolved into an extreme form of "might makes right". The Ghaunadans' goal is to promote the faith of their deity and to ensure that he is fed with sacrifices, chiefly by killing followers of other deities and pillaging their temples.
+* Church of Kiaransalee: The church of Kiaransalee is a fatalistic cult that concerned itself with vengeance and necromancy. They believed that, through loyal service to the Revenancer, they will be reborn as undead and live forever. Said service consists of killing and re-animating people, while at the same time avenging every slight.
+* Church of Selvetarm: The church of Selvetarm, followed by warriors, and guards who constantly hone their fighting skills and revel in battle. Due to its emphasis on individual battle prowess instead of strategy, adhering to this faith blocks a drow from obtaining high positions in the military. Venerating him as an individual deity isn’t tolerated within Lolthite settlements.
+Yondalla's Children 
+The collective name for the halfling pantheon, which is led by the greater deity Yondalla known as the Protector and Provider, the Nurturing Matriarch, and the Blessed One. Yondalla's Children resided in Venya, the third layer of the Seven Heavens, which they named the Green Fields.
+
+
+* Yondalla: Goddess and the leader of the halfling pantheon. She was additionally a nature goddess.
+* Sheela Peryroyl: Goddess of agriculture, love, and weather. She temporarily took up leadership of the pantheon between the Spellplague and the Second Sundering.
+* Urogalan: Demigod of the earth, death, and the halfling dead.
+* Arvoreen: God of defense, guardians, and vigilance; he was often regarded by others as a war god.
+* Brandobaris: God of thievery, stealth, and curiosity.
+* Cyrrollalee: Goddess of friendship, trust, hospitality, and home.
+
+
+
+
+Appendix 1: Player List
+
+
+Alaria-Feudal Monarchy -LG- Mid-sized country based on classic fantasy medieval kingdoms. Home of many knightly orders and paladins
+
+
+Rohevan-Democratic Republic -NG- Small nation in which the ruler is an elected official selected by common vote. Rohevan is a nice place to live and guards the border to Morgaard
+ 
+Holy Primean Empire- N - With a reigning monarch that is elected to serve for life. The largest of the nations, composed of a mass of substates 
+
+
+Primean Papal States-LG-Theocracy - This smallish nation dominates the religion of several nations, and its ruler, the Matriarch is responsible for the souls of the members of all Primean nations (Alaria, Rohevan, Therendrim, Durus, The HPE, and theoretically the protestant Athasian League, as well as several minor powers).
+
+
+Therendraim-LN-Constitutional Monarchy - Middle sized nation that is heir to an ancient empire that once spanned the eastern half of the continent. Many nobles houses from the former empire still have power.
+
+
+Durus-LN-:Bureaucratic Ministries - LN - Medium-sized nation devoted to order and happiness. This nation is led by an appointed bureaucratic minister.  
+
+
+Athasian League-LG- Large nation composed of several city states led by a chairman, generally the best merchant among them. The Athasians are a major trade power. They are primean but do not recognize the authority of the Pope.
+
+
+Ti Vashni- Matriarchal Naturalists - NG - Medium nation that is physically and culturally isolated from its neighbors. Women are in charge here. They live in harmony with nature
+
+
+Celistark-Tribal Kingdom - CN - Large country composed of several fierce and proud tribes of warriors, poets, and sailors. They are known to raid their neighbors and there is a sizeable population of half elves.
+
+
+Morgaard-Cursed Kingdom - CE - Large nation culturally devoted to the greater evil.  The land is cursed and blighted. The citizens of Morgaard are sealed within its borders.
+
+
+Khazak-Dhur-Dwarven Thanedom - LG -   Most of the nation is beneath the mountains at the center of the continent. Home to crafters and warriors alike the people tend to keep to themselves. They are known for having a great mineral wealth.
+
+
+Stildar-Lizardfolk and Human Confederacy - NE - This large nation is a swamp filled land ruled by lizardfolk. This is also the home of Great Wyrm Black Dragon, who likes his swamp as it is.
+
+
+Voresh-Autocracy - LE - A slaver nation and major economic power. The country is a small, marshy nation built on the backs of the slave trade, and is a powerhouse of human capital.
+
+
+Ostwil-Trade Based City-State - N - Perhaps the greatest of the trading powers of the continent, this tiny nation has trades and contacts flung all over the known world. 
+
+
+Karanex-Pirate Kingdom (Kleptocracy) - CE - A tiny country run from the massive fortress Skull Mountain. They pillage and plunder the inner sea trade routes.
+
+
+Jurai-Satrapy-based Sultanate - LE - Once one of the most powerful nations in the world, massively cosmopolitan, the Jurai have hundreds of different peoples, languages, and customs within their borders, all owing fealty to their sultan. 
+
+
+Akhen-Absolute Theocratic Autocracy - NE - This small nation is ruled by a God-King.  The God-King’s rule is absolute.
+
+
+Korim-Tribal Confederacy - CN - The people of this mid sized nation view themselves through one lens alone, their holy duty to once per generation have their whole adult populace fight the greatest beast the world has ever known, the Tarrasque. 
+
+
+Karis-Messianic Tribal Monarchy - CN - This is a mid-sized desert nation ruled by a prophesied monarch who, it is said, will lead the people to a land of plenty.
+
+
+Ashen’gar-Goblinoid Hegemonic Stratocracy - LE - This large nation is home to many different sub fiefdoms of goblinoids. Ashen’gar is a major military power.
+
+
+Aelthar-This nation is the ancient home of the long-lived elven people. They are rich in magic, lore, and personal freedoms. The nation has just recently finished their recovery from the predations of the Mad King.
+
+
+Lycaeum-N - The Lycaeum is at its heart the home of the world’s guild of wizards, attempting to regulate the use of arcane power in the world. Many of the worlds wizards were trained at the Lycaeum.
+
+
+Tanaf-Genasi Caliphate - N - Distant cousins of the people of Jurai, the Tanafen are as much related to Geniekind as they are to humanity.  They are known for their ability to trade in rare and exotic goods.
+
+
+Afenthar-Nomadic Dictatorship - CE - A very large nation surrounding several smaller ones, the Horselords are some of the finest  warriors on horseback. The Afenthar constantly press the nearby peoples for tribute.  
+
+
+Gnomergnan-Gnomish Technocracy - CG - Small country of gnomes who are without a doubt the most technologically advanced people of the world. The gnomes are ruled by someone selected from their guildmasters to run the country and deal with the various extreme threats. 
+
+
+Veraxis-Draconic Gerontocratic Aristocracy - LE - While dragons don’t usually go around ruling countries, very few people are going to tell them that they can’t.  This small nation is ruled by a clan of blue dragons who consider the peoples of the nation part of their collective hoard. 
+
+
+Vrenzen-Hill Dwarven Plutocratic Monarchy - NG - A small but defensible country, the Hill Dwarves are a resilient people.  They tend to be more approachable than other dwarven peoples. 
+
+
+Prindar-Corporate Autocracy - N  - Having begun as an adventurer’s guild and staunchly neutral, they offer their services in problem solving and problem causing to other nations in exchange for large fees. 
+
+
+Kenhal-Libertarian Halfling Kingdom - NG - This small nation produces vast quantities of food that feeds many of the surrounding nations.  They are known for their friendliness and hospitality.
+
+
+Galicia-Merfolk Monarchy - N - After many years apart the two countries of Asturias and Leon have finally united under a new heir. They are known for their fierce warriors and cunning traders. 
+
+
+Ker’Zerak-Drow Spider Queen - CE - Cruel beyond belief, power beyond measure, and a will to dominate everyone. They traditionally live in the underdark.  The Drow as of late have been keeping their word and been dialing back on cruelty.  It is unknown whether this is a regime change or fad.
+
+
+Levain-Tribal Gerontocracy - N - This smallish country is ruled by its eldest member. They are a tribal society of animists and spiritualists.
+
+
+Malim (Wild Island Centaurs) (Spirit Worship) - CG Centaurs are a strong and proud race. Despite a desire for balance with nature centaurs have to eat a lot to fuel their large bodies and are known to overindulge, especially with wine and ale. 
+Although some ware solitary, centaurs generally live in tribal hunter-gatherer societies. 
+They have a good relations with elves, being as they are both creatures of the forest. They generally despise humans and dwarves but aren’t actively hostile toward them and tolerate gnomes and halflings.
+
+
+Seldur (Elves and Fey) (Elven Pantheon) N- When man began to rise to power some elves knew that their time was coming to a end and while some elves took the fight to the humans the elves of Seldur had another plan. Here they built one of the greatest temples to the elven gods and spend their time returning to nature.
+
+
+Appendix 2: NPC Nation Descriptions
+
+
+Baktu Horde (Orcs) (Spirit Worship)
+The Orcish hordes have been held together by a cunning leader.  This is the first city that the Orcs have establish and many wonder if this is a turning point for the nomadic warriors.
+
+
+Jewel Cities (Humans) (The Twelve)
+The Jewel Cities are home to the most decadent members of the former Jura i empire.  They believe that everything should be tried and everything is for sale.
+
+
+Erinhall (Giants) (No religion)
+The home of the giants is a land of wonder and danger. The giants have no use for anyone and will defend their land to the death to keep people away.
+
+
+Illugrem (llithid) (The Lords of Darkness) 
+They subjugated and consequently warped whole races of humanoid slaves. Conjoined by a collective consciousness, the illithids hatch plots as far-reaching and evil as their fathomless minds can conceive.
+
+
+Karstak (Humans) (Primean Faith)
+The home of the royal house that once ruled the lands of the Athasian League.  When the Merchant house threw them down for running the kingdom into the ground the last member of the house fled to Karstak. Since then they have tried to hold onto the last of their power.
+
+
+Abhorsen (Yuan-ti and Humans) (The Lords of Darkness)
+Yuan-ti are devious serpent folk devoid of compassion. From remote temples in jungles, swamps, and deserts, the Yuan-ti  plot to supplant and dominate all other races and to make
+themselves gods.
+
+
+Emridar (Humans) (Primean Faith) 
+This small nation is the home of the knights of primus and they train for the day that the emperor returns.They have a good relationship with those around them and will often lend aid to those in trouble.
+
+
+
+
+Sholosen (Humans) (Primean Faith, The Twelve) 
+The home of free slaves that have escaped from all over the world, but mostly from Voresh. The small country lives in the shadow of the primen nations and tries to stay out of politics whenever possible.  
+
+
+Makt (Dueregar) (Dwarven Pantheon)
+Duergar are at heart a grim and bitter race, pessimistic of their future and deeply cynical regarding the motives of others.  They spend most of their days working hours that their more moderate cousins believe to be harsh.
+
+
+Shai (Half Elves and Humans) (Elven Pantheon)
+The small country of Shai was founded by the Elves who were looking into rumors that humans had moved in the Elder forest. However the younger races fascinated the elves and one thing led to another and the Half elves were the result. Many of the worlds rangers and bards come to this small country to learn at the feet of masters.
+
+
+Thelanas (Elves) (Elven Pantheon)
+Aelthar is the seat of elvan power and the heart of its people but Thelanas was where the elves became a true power. Some of the greatest rulers were born here and this is where the Mad King was born. Since the fall of the Mad King Thelanas has pulled back from world politics, many believe it is recovering from the damage that the insane ruler caused.
+
+
+Durendal (Humans) (Druidic Faith, Primean)
+Durendal is home to the free men of the Amazon. Those who found living in the country to be to oppressive broke away and founded their own city. They do engage in trade with their neighbors but also have worry for the day they are forced back into the fold.
+
+
+Kostinar (Humans) Lake city (The Twelve) 
+The Kostinar are glass blowers of some renown.  Many of the great churches on the continent come looking for for their expertise in the craft.  
+
+
+
+
+
+
+Aloken (Humans) Lake City (The Twelve) 
+ Aloken is the seat of power for the lake cities and the home to the council that runs the cities.  A new leader is chosen to sit the council every 13 years. 
+
+
+Ventris (Humans) Lake City (The Twelve) 
+Years ago one of the horse lords of Afenthar broke away from the sky father and formed the city of Ventris. Sadly he did not rule long as the horde sacked the city and put his head on pike for his sins. The city slowly over the year has came back and joined the lake cities as a power.
+
+
+Alectar (Humans) Lake City (The Twelve)
+Alectar is the home of the great temple of Morgan, Lord of the City. The city is a marvel of construction with the temple as a centerpiece.  Alectar also houses the school of Tar which one of the few place you can learn the art of city construction. 
+
+
+Banath (Humans) Lake City (The Twelve)
+Banath is a simple city but the people are known for their good cheer. This city is also where the great festival of Venaportha is held. It is a week spent in celebration and drunken wildness.
+
+
+Flensova (Beholders) (No Gods)
+Xenophobic and vicious creatures, beholders are quick to attack enemies, including anyone they deemed not "like themselves." This is made all the more complicated since more than one variety of beholder existed, each believing itself to be the pinnacle of bodily perfection and they viewed other beholders who differed from this image in even the most minute details as loathsome enemies and inferiors. Beholders, as a rule, are violent and greedy, hungering for both wealth and power over others. 
+
+
+Pallenia (Humans) (Primean Faith)
+Pallenia works closely with the leader of the Primean religion and houses one the the largest store of knowledge about the history of continent and the founding of the church. Only those chosen by Primus are allowed in.
+
+
+Sendovar (Giants) (No Gods)
+The giants of this Island have had good relations with those around them.  They have been know to engage in trade and will work with those they find entertaining.  In the last few decades they have taken to the seas looking for adventure and seeking new knowledge.
+
+
+Eshendar (Humans) (Druidic Faith/Spirit Worship)
+A kingdom of seafaring peoples who worship their island’s volcano spirit. Their relationship with the merfolk has gotten worse within the last generation after the merfolk tried to invade the island.
+
+
+Shan (Human) (Spirit Worship)
+The people exiled from Korim who believe killing the Tarrasque is wrong.  When the signs of the Tarrasque awakening begin they send a warrior to challenge the leader of Korim to a duel to take command but they have never won.
+
+
+Tanith (Genasi and Humans) (The Twelve)
+Tanith is home to a group of Genasi and Humans that spend their lives farming and fishing the sea. They are normally standoffish and don't like when people come and bother them.  
+
+
+Appendix 3: NPC Nation Trading
+
+
+Baktu Horde (Orcs) 
+need:  food, wood, and Iron
+willing to trade: copper
+
+
+Jewel Cities (Gold)
+Need: Cocoa, Coffee, Diamonds, medicine, silk, and salt
+willing to trade: Gems, alcohol, fish , and (g)
+
+
+Erinhall (Frost Giants)
+Need: Marble
+willing to trade: crops and linite (cold)
+
+
+Illugrem (llithid)
+Need: Copper
+ willing to trade: crops
+
+
+Karstak (silver)
+Need: Jewelry, Iron, and crops
+They will trade: dyes and fish and (g)
+
+
+Abhorsen (Yuan-ti/Gold)
+Need: Darkwood, Honey, and Narcotics
+Willing to trade: cocoa, game, and slaves
+
+
+Emridar (Gold)
+Need: 
+willing to trade: and crops
+
+
+
+
+Sholosen (Copper)
+Need: Steel, scrolls, healing potions, and medicine
+willing to trade: (G), fruit, and textiles
+
+
+Makt (Dueregar) (only Dwarfs)
+Need: Mithral, Obsidian, Olives, and Glass
+willing to trade: Cinnabar, silver, and Iron
+
+
+Shai ( Half elves and Human) 
+Need: Wax
+Willing to trade: (G) and fruit
+
+
+Thelanas (Elves) 
+Need: waterwood and Eternium
+willing to trade: (G), fish and spices 
+
+
+Durendal 
+Need: holystone, Alcohol, Healing Potions and greenwood
+willing to trade: coal, sugar, and (g)
+
+
+Kostinar  Lake city
+Need: Marble and Ivory 
+willing to trade: (g) and livestock
+
+
+Aloken  Lake City
+Need: Brass and Glass
+willing to trade: jewelry, (g) and crops
+
+
+Ventris  Lake City
+Need: whipwood, steel and Lead
+willing to trade: porcelain, fish, and (g)
+
+
+Alectar  Lake City
+need: Deathstone 
+willing to trade: (G)
+
+
+Banath  Lake City
+Need: Diamonds and Incense
+willing to trade: Narcotics, (g) and crops
+
+
+Flensova (Beholders)
+Flensova has no need of anything from lesser creatures
+
+
+Pallenia (Humans)
+Need: Residuum and bloodstone
+willing to trade: fish and holystone
+
+
+Sendovar (Giants)
+Need: Residuum
+willing to trade: (g)
+
+
+Eshendar (Humans)
+Need: Textiles, waterwood, and Phlogiston  
+willing to trade: hardwood, obsidian, and (g)
+
+
+Shan (Human)
+Need riding animals and Onyx
+willing to trade: Ironwood and fish
+
+
+Tanith-(Genasi and Humans)
+Need: peat, whales, and tin
+willing to trade: dyes, pearls, fish, and iron 
+
+
+Appendix 4: Map
+
+
+  
+
+
+
+Appendix 5: Resource Exploitation
+
+
+Exploiting Surface Resources:
+Tier 1:
+1-5
+	Great success, twice the normal result!
+	
+
+	11-60
+	Success!
+	
+
+	61-80
+	Success, but cannot be used next turn.
+	Ex: When the soil is taxed too heavily it must lie fallow before useful crops will grow again.
+	81-95
+	Failure.
+	
+
+	96-100
+	Failure, and cannot be used next turn.
+	
+
+	101+
+	Failure, and monsters come forth! 
+	
+
+	
+
+Tier 2: 
+1-5
+	Great success, twice the normal result!
+	
+
+	9-50
+	Success!
+	
+
+	41-70
+	Success, but cannot be used next 2 turns.
+	
+
+	71-80
+	Failure
+	
+
+	81-90
+	Failure, and cannot be used next turn.
+	
+
+	91-99
+	Success, but monsters awakened! 
+	Monsters related to the resource. Ex: When a Cocoa resource is exploited chocoholic dire apes may become irritated.
+	100
+	Failure, and resource is depleted.
+	
+
+	101-125
+	Failure, and monsters come forth! 
+	
+
+	125+
+	Failure, resource depleted, but rare treasure found.
+	
+
+	
+
+Tier 3:
+1-2
+	Great success, twice the normal result!
+	
+
+	3-45
+	Success!
+	
+
+	46-70
+	Success, but cannot be used next 2 turns.
+	
+
+	71-80
+	Failure
+	
+
+	81-90
+	Failure, and cannot be used next turn.
+	
+
+	91-99
+	Success, but monsters awakened! 
+	
+
+	100-105
+	Failure, and resource is depleted.
+	
+
+	106-125
+	Failure, and monsters come forth! 
+	
+
+	125+
+	Failure, resource depleted, but very rare treasure found.
+	
+
+	
+
+
+
+Appendix 6: Action Template
+
+
+The following is the template/examples for someone with 3 actions.
+
+
+
+
+1. Highest priority action: A short description of what it is you are doing and what your goal is. Include primary stat and a secondary stat you would like to use. 
+The primary stat pertains to the nature or overall goal of the action.  The secondary stat represents how you would like to facilitate the action or what direction you would it to take.  The secondary stat does not have to be the same each turn for the same project. For more on this please see stat descriptions (coming soon.) Each stat can only be used twice per turn except for politics which can’t be used in actions.
+1. Advisor/specialty? You can use each advisor as many times per turn as you would like, but only 1 advisor per action.
+2. Resources? Required for most projects, particularly building projects and almost always adds a bonus.
+3. Currency? Required for most projects and almost always adds a bonus.
+2. Second highest priority: A short description of what it is you are doing and what your goal is. Include primary stat and a secondary stat you would like to use.
+   1. Advisor/specialty? You can use each advisor as many times per turn as you would like, but only 1 advisor per action.
+   2. Resources? Required for most projects, particularly building projects and almost always adds a bonus.
+   3. Currency? Required for most projects and almost always adds a bonus.
+3. Third highest priority: A short description of what it is you are doing and what your goal is.Include primary stat and a secondary stat you would like to use.
+   1. Advisor/specialty? You can use each advisor as many times per turn as you would like, but only 1 advisor per action.
+   2. Resources? Required for most projects, particularly building projects and almost always adds a bonus.
+   3. Currency? Required for most projects and almost always adds a bonus.
+4. Non-Actions aka Free Actions
+   1. Store: Maximum capacity is (highest stat + second highest stat) x 10. There is no maximum storage for currency.
+   2. Sell internally
+      1. Through cities: Luxuries sell for their Tier + 1 in cities, while Food and Strategic resources sell for their tier in cities. You may sell 1 unit of resources per city.
+      2. Through towns: You may sell 1 unit of Tier 1 or Tier 2 resources per town at their tier value. You can’t sell Tier 3 resources in towns, except whales.  You may sell 1 unit of resources per town.
+   3. Mint Currency: Copper, silver, and gold can be converted to currency (g) for free.
+   4. Maintenance: This is really just a yes or no.  That way we know whether you considered something else higher priority or if there was just a clerical error or something. This is usually equal (unless you are told otherwise by the staff) to twice your nation’s Size in (g) and total tiers of food resources.
+NOTE: Resources not traded, sold or otherwise used directly by the player will be used by the people of the nation. This will avert grumpiness and may slowly increase stats.
+   5. Changing Goods Traded on a Mature Trade Route: This is a free action, but does require the agreement of all parties trading.
+   6. Misc: Ex: recording a contract or agreement, confirming a trade route, etc., questions with readily available answers such as “When are my religion’s high holy days?”  You can also put any unique costs to your country here.
+
+
+Example Action Set
+
+
+1. Highest priority action: I need more food so I would like to cultivate crops.  Last turn I found arable land, I want to plant vegetables in it now.  I will use Economy + Technology.
+   1. Advisor/specialty? My Technology advisor, specialty in agriculture.
+   2. Resources? 1 Iron to make plows and 1 crops for seeds and feeding the laborers.  Food is particularly important for actions requiring intense manual labor and is sometimes used to pay unskilled laborers.
+   3. Currency? 2g.  Before planting this player had to find arable land, for which they paid 1(g).  To finish planting they will need another 1 iron and 2 crops and 1(g).
+
+
+                So the whole project costs this much: 
+ 4(g) = 1(g) exploration [previous turn] + 2(g) initial planting and clearing [this turn] + 1(g) finishing planting [next turn]  
+2 iron = 1 iron planting and clearing [this turn] + 1 iron finishing planting [next turn]
+3 crops = 1 crop planting and clearing [this turn] + 2 crops finishing planting [next turn].
+
+
+In theory the player could pay all of this at the beginning and then wait for the laborers to finish, but if you have (or only want to spend) 1 iron per turn that’s fine.  The crops will be ready once everything is paid and the laborers have finished working.
+
+
+2. Second highest priority: I don’t want people to know about the monsters in my basement, until it is time, muahaha! I will use mind blank and such to prevent people finding out.  Espionage + Arcane.  This is a counterintelligence action.
+   1. Advisor/specialty? My Espionage advisor, no specialty.
+   2. Resources? Residuum
+   3. Currency? 3g
+The minimum for this project is the Residuum (or an equivalent) and 2(g) or theoretically an equivalent.  Because the player is paying 3(g) they get a bonus.
+ 
+5. Third highest priority: Grow society.  I will start this by combing through all my libraries and museums (do I have museums?) throughout the land for great history and awesome artifacts.  Society + Size.
+   1. Advisor/specialty? My Society advisor, specialty in history.
+   2. Resources? None.
+   3. Currency? 1(g)
+
+
+This is phase 1 of a larger project.  The whole project will cost more.  How much more depends on how high the Society is beforehand.  With larger projects like this there can also be discussions about how and what types of resources to be spent.  Ex: A dwarven nation might want to use more metals than say a human nation would because dwarves like sturdy materials and the metal and stone aesthetic.
+ 
+6. Non-Actions aka Free Actions
+   1. Store: Store 1 unit of pearls, glass, and truffles.
+   2. Sell internally
+      1. Through cities: None.
+      2. Through towns: Incense for 1(g)
+   3. Mint Currency: 1 copper to 1(g)
+   4. Maintenance: Yes
+   5. Misc: 
+      1. Confirm trade route with Karstak, my 1(g) for their 1 crop.
+      2. Cancel trade route with Pallenia, am not informing them, just dicking them over.
+
+
+Appendix 7: Errata
+
+
+* Clarified the role of cities in selling goods: Cities allow for the sale of any scale of good of that good’s teir in (g) or tier +1 if that good is a luxury.
+* Removed statement about ideal nation income as a development artifact.
+* Removed all old references to months, changed to seasons.
+* Removed CR references from exploitation table.
+* Consolidated the Special Forces tables
+*

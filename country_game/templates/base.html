@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Therendrim Game Database{% endblock %}</title>
+    <title>{% block title %}Country Game{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -25,7 +25,13 @@
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
-                <a class="navbar-brand" href="/">Therendrim Game</a>
+                <a class="navbar-brand" href="/">
+                    The Country Game
+                    {% if current_country %}
+                    <span class="badge bg-secondary">{{ current_country.name }}</span>
+                    <a href="{{ url_for('clear_country') }}" class="badge bg-danger" title="Clear country selection">×</a>
+                    {% endif %}
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -34,22 +40,89 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/">Home</a>
                         </li>
+
+                        {% if session.get('username') %}
+                            {% if session.get('is_staff') %}
+                                <!-- Staff Navigation -->
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/staff_dashboard">Staff Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/users">User Management</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/stats">Stats</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/resources">Resources</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/actions">Actions</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/projects">Projects</a>
+                                </li>
+                            {% else %}
+                                <!-- Player Navigation -->
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/player_dashboard">Player Dashboard</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/stats">View Stats</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/resources">View Resources</a>
+                                </li>
+                            {% endif %}
+                        {% endif %}
+
                         <li class="nav-item">
-                            <a class="nav-link" href="/stats">Stats</a>
+                            <a class="nav-link" href="/create_country">Create Country</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/resources">Resources</a>
+                            <a class="nav-link" href="/countries">Select Country</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/actions">Actions</a>
+                            <a class="nav-link" href="/rules">Game Rules</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        {% if session.get('username') %}
+                        <li class="nav-item">
+                            <span class="nav-link">
+                                Welcome, {{ session.get('username') }}
+                                {% if session.get('is_staff') %}
+                                <span class="badge bg-warning">Staff</span>
+                                {% else %}
+                                <span class="badge bg-info">Player</span>
+                                {% endif %}
+                            </span>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/projects">Projects</a>
+                            <a class="nav-link" href="/logout">Logout</a>
                         </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
         </nav>
+
+        <!-- Flash Messages -->
+        <div class="row">
+            <div class="col-md-12">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-md-12">

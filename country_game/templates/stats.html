@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}Stats - Therendrim Game Database{% endblock %}
+{% block title %}Stats - Country Game{% endblock %}
 
 {% block content %}
 <h1>Stats</h1>
-<p>View and manage character stats for the Therendrim game.</p>
+<p>View and manage character stats for the Country Game.</p>
 
 {% if message %}
 <div class="alert alert-{{ message_type }}">{{ message }}</div>
 {% endif %}
 
+{% if session.get('is_staff') %}
 <div class="card mb-4">
     <div class="card-header">
         <h5>Add New Stat</h5>
@@ -52,6 +53,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 <div class="table-responsive">
     <table class="table table-striped">
@@ -76,11 +78,15 @@
                 <td>{{ stat.notes }}</td>
                 <td>{{ stat.advisor }}</td>
                 <td>
+                    {% if session.get('is_staff') %}
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ stat.id }}">Edit</button>
                     <a href="/stats/delete/{{ stat.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this stat?')">Delete</a>
+                    {% else %}
+                    <span class="text-muted">View only</span>
+                    {% endif %}
                 </td>
             </tr>
-            
+
             <!-- Edit Modal -->
             <div class="modal fade" id="editModal{{ stat.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ stat.id }}" aria-hidden="true">
                 <div class="modal-dialog">

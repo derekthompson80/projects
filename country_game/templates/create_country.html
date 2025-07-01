@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Country - Country Game{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Create New Country</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('create_country') }}">
+                {% if default_countries %}
+                <div class="mb-3">
+                    <label for="default_country" class="form-label">Select Default Country</label>
+                    <select class="form-select" id="default_country" name="default_country">
+                        <option value="">-- Select a default country --</option>
+                        {% for country in default_countries %}
+                        <option value="{{ country }}">{{ country }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Select a default country to use as a template, or create a custom country below.</div>
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label for="country_name" class="form-label">Country Name</label>
+                    <input type="text" class="form-control" id="country_name" name="country_name" required>
+                    <div class="form-text">This will be used to create a new database for your country.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="ruler_name" class="form-label">Ruler Name</label>
+                    <input type="text" class="form-control" id="ruler_name" name="ruler_name" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="government_type" class="form-label">Government Type</label>
+                    <select class="form-select" id="government_type" name="government_type">
+                        <option value="Monarchy">Monarchy</option>
+                        <option value="Republic">Republic</option>
+                        <option value="Democracy">Democracy</option>
+                        <option value="Dictatorship">Dictatorship</option>
+                        <option value="Oligarchy">Oligarchy</option>
+                        <option value="Theocracy">Theocracy</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Country Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+
+                <h3 class="mt-4 mb-3">Initial Stats</h3>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="politics" class="form-label">Politics</label>
+                        <input type="number" class="form-control" id="politics" name="politics" value="5" min="1" max="10">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="military" class="form-label">Military</label>
+                        <input type="number" class="form-control" id="military" name="military" value="5" min="1" max="10">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="economics" class="form-label">Economics</label>
+                        <input type="number" class="form-control" id="economics" name="economics" value="5" min="1" max="10">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="culture" class="form-label">Culture</label>
+                        <input type="number" class="form-control" id="culture" name="culture" value="5" min="1" max="10">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create Country</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-populate the country name when a default country is selected
+    document.getElementById('default_country').addEventListener('change', function() {
+        const selectedCountry = this.value;
+        if (selectedCountry) {
+            document.getElementById('country_name').value = selectedCountry;
+        }
+    });
+</script>
+{% endblock %}

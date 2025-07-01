@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}Actions - Therendrim Game Database{% endblock %}
+{% block title %}Actions - Country Game{% endblock %}
 
 {% block content %}
 <h1>Actions</h1>
-<p>View and manage player actions for the Therendrim game.</p>
+<p>View and manage player actions for the Country Game.</p>
 
 {% if message %}
 <div class="alert alert-{{ message_type }}">{{ message }}</div>
 {% endif %}
 
+{% if session.get('is_staff') %}
 <div class="card mb-4">
     <div class="card-header">
         <h5>Add New Action</h5>
@@ -75,14 +76,53 @@
                 <div class="col-md-12">
                     <div class="form-group">
                         <label for="resources_used">Resources Used (comma separated)</label>
-                        <input type="text" class="form-control" id="resources_used" name="resources_used">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="resources_used" name="resources_used">
+                            <select class="form-control" id="all_resources_add">
+                                <option value="">-- Select a resource --</option>
+                                {% if all_resources %}
+                                    {% for resource in all_resources %}
+                                        <option value="{{ resource.name }}">{{ resource.name }} ({{ resource.type }}, Tier: {{ resource.tier }})</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option disabled>No resources available in CSV</option>
+                                {% endif %}
+                            </select>
+                            <button class="btn btn-outline-secondary" type="button" id="add_resource_btn_add">Add</button>
+                        </div>
+                        <small class="form-text text-muted">Select resources from the dropdown and click "Add" to add them to the list. Separate multiple resources with commas.</small>
                     </div>
                 </div>
             </div>
+
+            <script>
+                document.getElementById('add_resource_btn_add').addEventListener('click', function() {
+                    const resourceSelect = document.getElementById('all_resources_add');
+                    const resourceName = resourceSelect.value;
+                    const resourcesInput = document.getElementById('resources_used');
+
+                    if (resourceName) {
+                        // Add the resource to the input field
+                        if (resourcesInput.value) {
+                            // If there are already resources, add a comma and the new resource
+                            resourcesInput.value += ', ' + resourceName;
+                        } else {
+                            // If the input is empty, just add the resource
+                            resourcesInput.value = resourceName;
+                        }
+
+                        // Reset the dropdown
+                        resourceSelect.selectedIndex = 0;
+                    } else {
+                        alert('Please select a resource first.');
+                    }
+                });
+            </script>
             <button type="submit" class="btn btn-primary mt-3">Add Action</button>
         </form>
     </div>
 </div>
+{% endif %}
 
 <div class="table-responsive">
     <table class="table table-striped">
@@ -115,11 +155,15 @@
                 <td>{{ action.resources_used }}</td>
                 <td>{{ action.gold_spent }}</td>
                 <td>
+                    {% if session.get('is_staff') %}
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ action.id }}">Edit</button>
                     <a href="/actions/delete/{{ action.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this action?')">Delete</a>
+                    {% else %}
+                    <span class="text-muted">View only</span>
+                    {% endif %}
                 </td>
             </tr>
-            
+
             <!-- Edit Modal -->
             <div class="modal fade" id="editModal{{ action.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ action.id }}" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
@@ -183,8 +227,46 @@
                                 </div>
                                 <div class="form-group mt-3">
                                     <label for="edit_resources_used{{ action.id }}">Resources Used (comma separated)</label>
-                                    <input type="text" class="form-control" id="edit_resources_used{{ action.id }}" name="resources_used" value="{{ action.resources_used }}">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="edit_resources_used{{ action.id }}" name="resources_used" value="{{ action.resources_used }}">
+                                        <select class="form-control" id="all_resources_edit{{ action.id }}">
+                                            <option value="">-- Select a resource --</option>
+                                            {% if all_resources %}
+                                                {% for resource in all_resources %}
+                                                    <option value="{{ resource.name }}">{{ resource.name }} ({{ resource.type }}, Tier: {{ resource.tier }})</option>
+                                                {% endfor %}
+                                            {% else %}
+                                                <option disabled>No resources available in CSV</option>
+                                            {% endif %}
+                                        </select>
+                                        <button class="btn btn-outline-secondary" type="button" id="add_resource_btn_edit{{ action.id }}">Add</button>
+                                    </div>
+                                    <small class="form-text text-muted">Select resources from the dropdown and click "Add" to add them to the list. Separate multiple resources with commas.</small>
                                 </div>
+
+                                <script>
+                                    document.getElementById('add_resource_btn_edit{{ action.id }}').addEventListener('click', function() {
+                                        const resourceSelect = document.getElementById('all_resources_edit{{ action.id }}');
+                                        const resourceName = resourceSelect.value;
+                                        const resourcesInput = document.getElementById('edit_resources_used{{ action.id }}');
+
+                                        if (resourceName) {
+                                            // Add the resource to the input field
+                                            if (resourcesInput.value) {
+                                                // If there are already resources, add a comma and the new resource
+                                                resourcesInput.value += ', ' + resourceName;
+                                            } else {
+                                                // If the input is empty, just add the resource
+                                                resourcesInput.value = resourceName;
+                                            }
+
+                                            // Reset the dropdown
+                                            resourceSelect.selectedIndex = 0;
+                                        } else {
+                                            alert('Please select a resource first.');
+                                        }
+                                    });
+                                </script>
                                 <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
                             </form>
                         </div>
