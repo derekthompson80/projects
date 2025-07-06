@@ -6,7 +6,7 @@ import csv
 # MySQL connection parameters
 config = {
     'user': 'root',
-    'password': 'Beholder3',
+    'password': 'Beholder30',
     'host': 'localhost',
     'raise_on_warnings': True
 }
