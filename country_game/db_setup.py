@@ -50,7 +50,7 @@ def create_database():
 
         if not admin_user:
             # Create admin user with specified credentials
-            hashed_password = generate_password_hash('Beholder3')
+            hashed_password = generate_password_hash('Beholder30')
             cursor.execute(
                 "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
                 ('Derek.Thompson', hashed_password, 'staff')

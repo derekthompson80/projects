@@ -34,7 +34,7 @@ def staff_required(f):
 # MySQL connection parameters
 config = {
     'user': 'root',
-    'password': 'Beholder3',
+    'password': 'Beholder30',
     'host': 'localhost',
     'database': 'county_game_server',
     'raise_on_warnings': True
