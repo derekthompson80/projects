@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}Country Descriptions - Country Game{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Map Section -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">World Map</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="{{ url_for('static', filename=map_image) }}" alt="World Map" class="img-fluid" style="max-width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Country Descriptions Content -->
+        <div class="col-md-8">
+            <h1 class="mb-4">Country Descriptions</h1>
+
+            <!-- Introduction -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <p>There are a number of different nations to play as the ruler of, each with its own unique challenges and advantages. Each nation speaks best to certain styles of play. Below is a list of nations, short descriptions, and notations as to who is playing them. These are not the only nations on the continent, but all other nations are minor powers and not balanced for play.</p>
+                </div>
+            </div>
+
+            <!-- Filtering Controls -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Filter Countries</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="alignment-filter" class="form-label">Alignment</label>
+                            <select id="alignment-filter" class="form-select">
+                                <option value="">All Alignments</option>
+                                {% for alignment in alignments %}
+                                <option value="{{ alignment }}">{{ alignment }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="government-filter" class="form-label">Government Type</label>
+                            <select id="government-filter" class="form-select">
+                                <option value="">All Government Types</option>
+                                {% for gov_type in government_types %}
+                                <option value="{{ gov_type }}">{{ gov_type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="availability-filter" class="form-label">Availability</label>
+                            <select id="availability-filter" class="form-select">
+                                <option value="">All Countries</option>
+                                <option value="available">Available Countries</option>
+                                <option value="assigned">Assigned Countries</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <button id="reset-filters" class="btn btn-secondary">Reset Filters</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Table of Contents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for description in descriptions %}
+                        <div class="col-md-6 country-toc-item" 
+                             data-alignment="{{ description.alignment }}" 
+                             data-government="{{ description.government_type }}"
+                             data-availability="{{ 'assigned' if description.player_assigned else 'available' }}">
+                            <a href="#country-{{ description.number }}" class="text-decoration-none">
+                                <div class="mb-2">
+                                    {{ description.number }}. {{ description.name }}
+                                    {% if description.player_assigned %}
+                                    <span class="badge bg-info">Played by {{ description.player_assigned }}</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Available</span>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Country Descriptions -->
+            {% for description in descriptions %}
+            <div class="card mb-4 country-card" 
+                 id="country-{{ description.number }}"
+                 data-alignment="{{ description.alignment }}" 
+                 data-government="{{ description.government_type }}"
+                 data-availability="{{ 'assigned' if description.player_assigned else 'available' }}">
+                <div class="card-header">
+                    <h5>{{ description.number }}. {{ description.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Government Type:</strong> {{ description.government_type }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Alignment:</strong> {{ description.alignment }}
+                    </div>
+                    {% if description.player_assigned %}
+                    <div class="mb-3">
+                        <strong>Played by:</strong> <span class="badge bg-info">{{ description.player_assigned }}</span>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <strong>Status:</strong> <span class="badge bg-success">Available</span>
+                    </div>
+                    {% endif %}
+                    <p>{{ description.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Legend Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px; max-height: 80vh; overflow-y: auto;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0 small">Alignment & Government Legend</h5>
+                </div>
+                <div class="card-body py-2">
+                    <h6 class="small">Alignment Codes</h6>
+                    <ul class="list-group list-group-flush mb-3 small">
+                        <li class="list-group-item py-1"><strong>LG</strong> - Lawful Good</li>
+                        <li class="list-group-item py-1"><strong>NG</strong> - Neutral Good</li>
+                        <li class="list-group-item py-1"><strong>CG</strong> - Chaotic Good</li>
+                        <li class="list-group-item py-1"><strong>LN</strong> - Lawful Neutral</li>
+                        <li class="list-group-item py-1"><strong>N</strong> - True Neutral</li>
+                        <li class="list-group-item py-1"><strong>CN</strong> - Chaotic Neutral</li>
+                        <li class="list-group-item py-1"><strong>LE</strong> - Lawful Evil</li>
+                        <li class="list-group-item py-1"><strong>NE</strong> - Neutral Evil</li>
+                        <li class="list-group-item py-1"><strong>CE</strong> - Chaotic Evil</li>
+                    </ul>
+
+                    <h6 class="small">Government Types</h6>
+                    <p class="text-muted small mb-2">The game features various government types:</p>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item py-1">Monarchy (Feudal, Constitutional, etc.)</li>
+                        <li class="list-group-item py-1">Republic (Democratic, etc.)</li>
+                        <li class="list-group-item py-1">Theocracy</li>
+                        <li class="list-group-item py-1">Tribal Systems</li>
+                        <li class="list-group-item py-1">Autocracy</li>
+                        <li class="list-group-item py-1">And many more...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Country filtering functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const alignmentFilter = document.getElementById('alignment-filter');
+        const governmentFilter = document.getElementById('government-filter');
+        const availabilityFilter = document.getElementById('availability-filter');
+        const resetButton = document.getElementById('reset-filters');
+
+        const countryCards = document.querySelectorAll('.country-card');
+        const countryTocItems = document.querySelectorAll('.country-toc-item');
+
+        // Function to apply filters
+        function applyFilters() {
+            const alignmentValue = alignmentFilter.value;
+            const governmentValue = governmentFilter.value;
+            const availabilityValue = availabilityFilter.value;
+
+            // Filter country cards
+            countryCards.forEach(card => {
+                const cardAlignment = card.getAttribute('data-alignment');
+                const cardGovernment = card.getAttribute('data-government');
+                const cardAvailability = card.getAttribute('data-availability');
+
+                const alignmentMatch = !alignmentValue || cardAlignment === alignmentValue;
+                const governmentMatch = !governmentValue || cardGovernment === governmentValue;
+                const availabilityMatch = !availabilityValue || cardAvailability === availabilityValue;
+
+                if (alignmentMatch && governmentMatch && availabilityMatch) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Filter table of contents items
+            countryTocItems.forEach(item => {
+                const itemAlignment = item.getAttribute('data-alignment');
+                const itemGovernment = item.getAttribute('data-government');
+                const itemAvailability = item.getAttribute('data-availability');
+
+                const alignmentMatch = !alignmentValue || itemAlignment === alignmentValue;
+                const governmentMatch = !governmentValue || itemGovernment === governmentValue;
+                const availabilityMatch = !availabilityValue || itemAvailability === availabilityValue;
+
+                if (alignmentMatch && governmentMatch && availabilityMatch) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Add event listeners to filters
+        alignmentFilter.addEventListener('change', applyFilters);
+        governmentFilter.addEventListener('change', applyFilters);
+        availabilityFilter.addEventListener('change', applyFilters);
+
+        // Reset filters
+        resetButton.addEventListener('click', function() {
+            alignmentFilter.value = '';
+            governmentFilter.value = '';
+            availabilityFilter.value = '';
+
+            // Show all countries
+            countryCards.forEach(card => {
+                card.style.display = '';
+            });
+
+            countryTocItems.forEach(item => {
+                item.style.display = '';
+            });
+        });
+    });
+</script>
+{% endblock %}

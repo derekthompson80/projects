@@ -100,38 +100,12 @@ def inject_current_country():
 
 @app.route('/')
 def index():
-    """Home page"""
-    country_info = get_current_country_info()
-
-    # If a country is selected, get additional information
-    if country_info:
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor(dictionary=True)
-
-            try:
-                # Get stats summary
-                cursor.execute("SELECT * FROM stats")
-                stats = cursor.fetchall()
-
-                # Get resources summary
-                cursor.execute("SELECT COUNT(*) as count FROM resources")
-                resources_count = cursor.fetchone()['count']
-
-                # Add additional info to country_info
-                country_info['stats'] = stats
-                country_info['resources_count'] = resources_count
-            except mysql.connector.Error as err:
-                print(f"Error fetching country details: {err}")
-
-            cursor.close()
-            conn.close()
-
-    return render_template('index.html', country_info=country_info)
+    """Home page - redirects to login page"""
+    return redirect(url_for('login'))
 
 # Stats routes
 @app.route('/stats')
-@login_required
+@staff_required
 def stats():
     """Display all stats"""
     conn = get_db_connection()
@@ -508,13 +482,38 @@ def add_project():
         total_needed = int(request.form['total_needed']) if 'total_needed' in request.form and request.form['total_needed'].strip() else 0
         total_progress = int(request.form['total_progress']) if 'total_progress' in request.form and request.form['total_progress'].strip() else 0
         turn_started = int(request.form['turn_started']) if 'turn_started' in request.form and request.form['turn_started'].strip() else None
+        winter_storage = request.form.get('winter_storage') == '1'
+
+        # Check if it's winter and there's no winter storage project
+        if not winter_storage:
+            try:
+                conn = get_db_connection()
+                if conn:
+                    cursor = conn.cursor(dictionary=True)
+
+                    # Check if it's currently winter
+                    cursor.execute("SELECT * FROM seasons WHERE current = TRUE AND name = 'Winter' LIMIT 1")
+                    current_winter = cursor.fetchone()
+
+                    if current_winter:
+                        # Check if there's already a winter storage project
+                        cursor.execute("SELECT COUNT(*) as count FROM projects WHERE winter_storage = TRUE")
+                        winter_project_count = cursor.fetchone()['count']
+
+                        if winter_project_count == 0:
+                            flash('Warning: It is currently winter. Consider marking this as a winter food storage project or creating one.', 'warning')
+
+                    cursor.close()
+            except:
+                # If seasons table doesn't exist yet, just continue
+                pass
 
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO projects (name, effect, cost, resources, status, progress_per_turn, total_needed, total_progress, turn_started) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (name, effect, cost, resources, status, progress_per_turn, total_needed, total_progress, turn_started)
+                "INSERT INTO projects (name, effect, cost, resources, status, progress_per_turn, total_needed, total_progress, turn_started, winter_storage) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (name, effect, cost, resources, status, progress_per_turn, total_needed, total_progress, turn_started, winter_storage)
             )
             conn.commit()
             cursor.close()
@@ -539,13 +538,42 @@ def edit_project(id):
         total_needed = int(request.form['total_needed']) if 'total_needed' in request.form and request.form['total_needed'].strip() else 0
         total_progress = int(request.form['total_progress']) if 'total_progress' in request.form and request.form['total_progress'].strip() else 0
         turn_started = int(request.form['turn_started']) if 'turn_started' in request.form and request.form['turn_started'].strip() else None
+        winter_storage = request.form.get('winter_storage') == '1'
+
+        # Check if this is the only winter storage project and it's being unmarked during winter
+        if not winter_storage:
+            try:
+                conn = get_db_connection()
+                if conn:
+                    cursor = conn.cursor(dictionary=True)
+
+                    # Check if it's currently winter
+                    cursor.execute("SELECT * FROM seasons WHERE current = TRUE AND name = 'Winter' LIMIT 1")
+                    current_winter = cursor.fetchone()
+
+                    if current_winter:
+                        # Check if this is the only winter storage project
+                        cursor.execute("SELECT COUNT(*) as count FROM projects WHERE winter_storage = TRUE AND id != %s", (id,))
+                        other_winter_projects = cursor.fetchone()['count']
+
+                        # Check if this project was previously marked as winter storage
+                        cursor.execute("SELECT winter_storage FROM projects WHERE id = %s", (id,))
+                        current_project = cursor.fetchone()
+
+                        if current_project and current_project['winter_storage'] and other_winter_projects == 0:
+                            flash('Warning: This is the only winter food storage project and it is currently winter. Consider keeping it marked as a winter storage project or creating another one.', 'warning')
+
+                    cursor.close()
+            except:
+                # If seasons table doesn't exist yet, just continue
+                pass
 
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE projects SET name = %s, effect = %s, cost = %s, resources = %s, status = %s, progress_per_turn = %s, total_needed = %s, total_progress = %s, turn_started = %s WHERE id = %s",
-                (name, effect, cost, resources, status, progress_per_turn, total_needed, total_progress, turn_started, id)
+                "UPDATE projects SET name = %s, effect = %s, cost = %s, resources = %s, status = %s, progress_per_turn = %s, total_needed = %s, total_progress = %s, turn_started = %s, winter_storage = %s WHERE id = %s",
+                (name, effect, cost, resources, status, progress_per_turn, total_needed, total_progress, turn_started, winter_storage, id)
             )
             conn.commit()
             cursor.close()
@@ -575,29 +603,61 @@ def delete_project(id):
 
 # Country routes
 def get_default_countries():
-    """Get a list of default countries from the 'countries_templates' directory"""
+    """Get a list of default countries from the CG5_Country_Descriptions.txt file"""
     countries = []
     try:
-        # Get all .csv files in the 'countries_templates' directory
+        # Read the country descriptions file
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        countries_dir = os.path.join(script_dir, 'countries_templates')
-        country_files = glob.glob(os.path.join(countries_dir, '*.csv'))
-        print(f"Script directory: {script_dir}")
-        print(f"Countries templates directory: {countries_dir}")
-        print(f"Found {len(country_files)} country template files")
+        file_path = os.path.join(script_dir, 'CG5_Country_Descriptions.txt')
 
-        # Extract country names from filenames
-        for file_path in country_files:
-            # Get the filename without path and extension
-            filename = os.path.basename(file_path)
-            # Remove the " (Staff) - Template.csv" suffix
-            country_name = filename.replace(' (Staff) - Template.csv', '')
-            countries.append(country_name)
+        with open(file_path, 'r') as file:
+            content = file.readlines()
+
+        # Parse the content to extract country names
+        for line in content:
+            line = line.strip()
+            if not line or line.startswith('There are'):
+                continue
+
+            # Check if this is a country entry (starts with a number followed by a period)
+            if re.match(r'^\d+\.', line):
+                # Extract country name
+                parts = line.split(' - ')
+                if len(parts) >= 1:
+                    country_info = parts[0].split(' ', 1)
+                    if len(country_info) > 1:
+                        country_name = country_info[1].strip()
+                        # Only add if not already in the list (remove duplicates)
+                        if country_name not in countries:
+                            countries.append(country_name)
 
         # Sort countries alphabetically
         countries.sort()
+        print(f"Found {len(countries)} countries in CG5_Country_Descriptions.txt")
+
     except Exception as e:
         print(f"Error getting default countries: {e}")
+        # Fallback to the old method if there's an error
+        try:
+            # Get all .csv files in the 'countries_templates' directory
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            countries_dir = os.path.join(script_dir, 'countries_templates')
+            country_files = glob.glob(os.path.join(countries_dir, '*.csv'))
+
+            # Extract country names from filenames
+            for file_path in country_files:
+                # Get the filename without path and extension
+                filename = os.path.basename(file_path)
+                # Remove the " (Staff) - Template.csv" suffix
+                country_name = filename.replace(' (Staff) - Template.csv', '')
+                if country_name not in countries:  # Avoid duplicates
+                    countries.append(country_name)
+
+            # Sort countries alphabetically
+            countries.sort()
+            print(f"Fallback: Found {len(country_files)} country template files")
+        except Exception as inner_e:
+            print(f"Error in fallback method: {inner_e}")
 
     return countries
 
@@ -707,6 +767,17 @@ def create_country():
         economics = int(request.form['economics'])
         culture = int(request.form['culture'])
 
+        # Get random resources if provided
+        random_resources_json = request.form.get('random_resources', '')
+        random_resources = []
+
+        if random_resources_json:
+            try:
+                import json
+                random_resources = json.loads(random_resources_json)
+            except Exception as e:
+                print(f"Error parsing random resources JSON: {e}")
+
         # Override with template data if available
         if template_data:
             # Only override ruler_name, government_type, and description if they're empty in the form
@@ -744,6 +815,9 @@ def create_country():
                     # Import resources from template if available
                     if template_data and 'resources' in template_data and template_data['resources']:
                         import_resources_from_template(db_name, template_data['resources'])
+                    # Import random resources if available
+                    elif random_resources:
+                        import_resources_from_template(db_name, random_resources)
 
                     # Store the current country database in session
                     session['current_country_db'] = db_name
@@ -1135,6 +1209,112 @@ def rules():
 
     return render_template('rules.html', sections=sections, suggestions=suggestions)
 
+@app.route('/country_descriptions')
+def country_descriptions():
+    """Display country descriptions from CG5_Country_Descriptions.txt"""
+    try:
+        # Read the country descriptions file
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, 'CG5_Country_Descriptions.txt')
+
+        with open(file_path, 'r') as file:
+            content = file.readlines()
+
+        # Parse the content into a structured format
+        descriptions = []
+        current_description = None
+        seen_countries = set()  # To track and prevent duplicate countries
+
+        for line in content:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check if this is a country entry (starts with a number followed by a period)
+            if re.match(r'^\d+\.', line):
+                # Extract country information
+                parts = line.split(' - ')
+                if len(parts) >= 3:
+                    country_info = parts[0].split(' ', 1)
+                    country_number = country_info[0].rstrip('.')
+                    country_name = country_info[1]
+
+                    # Skip if we've already seen this country
+                    if country_name in seen_countries:
+                        current_description = None
+                        continue
+
+                    seen_countries.add(country_name)
+                    alignment = parts[1]
+
+                    # The government type might contain additional hyphens
+                    government_type = ' - '.join(parts[2:-1]) if len(parts) > 3 else parts[2]
+
+                    # The description is the last part
+                    description = parts[-1] if len(parts) > 3 else ""
+
+                    current_description = {
+                        'number': country_number,
+                        'name': country_name,
+                        'alignment': alignment,
+                        'government_type': government_type,
+                        'description': description,
+                        'player_assigned': None  # Initialize player assignment as None
+                    }
+                    descriptions.append(current_description)
+            elif current_description and not line.startswith('There are'):
+                # Append to the description of the current country
+                if current_description['description']:
+                    current_description['description'] += ' ' + line
+                else:
+                    current_description['description'] = line
+
+        # Renumber countries sequentially
+        for i, desc in enumerate(descriptions, 1):
+            desc['number'] = str(i)
+
+        # Fetch player assignments from the database
+        conn = mysql.connector.connect(**config)
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT u.username, u.country_db 
+                FROM users u 
+                WHERE u.country_db IS NOT NULL
+            """)
+            player_assignments = cursor.fetchall()
+            cursor.close()
+            conn.close()
+
+            # Map country_db to player username
+            country_assignments = {}
+            for assignment in player_assignments:
+                if assignment['country_db']:
+                    # Extract country name from the database name (e.g., "country_game_karis" -> "Karis")
+                    country_name = assignment['country_db'].replace('country_game_', '').title()
+                    country_assignments[country_name] = assignment['username']
+
+            # Update descriptions with player assignments
+            for desc in descriptions:
+                if desc['name'] in country_assignments:
+                    desc['player_assigned'] = country_assignments[desc['name']]
+
+        # Get unique alignments and government types for filtering
+        alignments = sorted(list(set(desc['alignment'] for desc in descriptions)))
+        government_types = sorted(list(set(desc['government_type'] for desc in descriptions)))
+
+    except Exception as e:
+        flash(f'Error loading country descriptions: {str(e)}', 'danger')
+        descriptions = []
+        alignments = []
+        government_types = []
+
+    return render_template('country_descriptions.html', 
+                          descriptions=descriptions, 
+                          map_image='CG5_basic_map.png',
+                          alignments=alignments,
+                          government_types=government_types)
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     """Handle user registration"""
@@ -1451,36 +1631,96 @@ def player_dashboard():
     # Initialize all_resources list
     all_resources = []
 
-    # Load all resources from CSV file
-    try:
-        import csv
-        with open('staff_sheet_templete.csv', 'r') as file:
-            reader = csv.reader(file)
-            rows = list(reader)
+    # Get resources from the player's country database
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
 
-            # Find resources section (starting at row 31)
-            for i in range(31, len(rows)):
-                if i < len(rows) and len(rows[i]) >= 4:
-                    name = rows[i][3].strip()
-                    # Process rows with resource names
-                    if name and name != "Name" and name != "":
-                        resource_type = rows[i][4] if len(rows[i]) > 4 else ""
-                        tier = rows[i][5] if len(rows[i]) > 5 else ""
+        # Get resources from the database
+        cursor.execute("SELECT * FROM resources")
+        db_resources = cursor.fetchall()
 
-                        # Add to all_resources list
-                        all_resources.append({
-                            'name': name,
-                            'type': resource_type,
-                            'tier': tier
-                        })
+        # Convert to the format expected by the template
+        for resource in db_resources:
+            all_resources.append({
+                'name': resource['name'],
+                'type': resource['type'],
+                'tier': resource['tier']
+            })
 
-                    # Stop when we reach the "Committed in Detail" section
-                    if name == "Committed in Detail":
-                        break
-    except Exception as e:
-        print(f"Error loading resources from CSV: {e}")
+        cursor.close()
+        conn.close()
 
-    return render_template('player_dashboard.html', actions=actions, messages=messages, max_actions=max_actions, politics_rating=politics_rating, all_resources=all_resources)
+    # If no resources found in database, fall back to CSV (for backward compatibility)
+    if not all_resources:
+        try:
+            import csv
+            with open('staff_sheet_templete.csv', 'r') as file:
+                reader = csv.reader(file)
+                rows = list(reader)
+
+                # Find resources section (starting at row 31)
+                for i in range(31, len(rows)):
+                    if i < len(rows) and len(rows[i]) >= 4:
+                        name = rows[i][3].strip()
+                        # Process rows with resource names
+                        if name and name != "Name" and name != "":
+                            resource_type = rows[i][4] if len(rows[i]) > 4 else ""
+                            tier = rows[i][5] if len(rows[i]) > 5 else ""
+
+                            # Add to all_resources list
+                            all_resources.append({
+                                'name': name,
+                                'type': resource_type,
+                                'tier': tier
+                            })
+
+                        # Stop when we reach the "Committed in Detail" section
+                        if name == "Committed in Detail":
+                            break
+        except Exception as e:
+            print(f"Error loading resources from CSV: {e}")
+
+    # Get all stats for dropdown
+    stats = []
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM stats")
+        stats = cursor.fetchall()
+
+        # Get current season
+        current_season = None
+        try:
+            cursor.execute("SELECT * FROM seasons WHERE current = TRUE LIMIT 1")
+            current_season = cursor.fetchone()
+        except:
+            # Table might not exist yet
+            pass
+
+        # Get country achievements
+        achievements = []
+        try:
+            country_id = session.get('country_db')
+            if country_id:
+                cursor.execute("SELECT * FROM achievements WHERE country_id = %s", (country_id,))
+                achievements = cursor.fetchall()
+        except:
+            # Table might not exist yet
+            pass
+
+        cursor.close()
+        conn.close()
+
+    return render_template('player_dashboard.html', 
+                          actions=actions, 
+                          messages=messages, 
+                          max_actions=max_actions, 
+                          politics_rating=politics_rating, 
+                          all_resources=all_resources, 
+                          stats=stats,
+                          current_season=current_season,
+                          achievements=achievements)
 
 @app.route('/submit_player_action', methods=['POST'])
 @login_required
@@ -1494,12 +1734,13 @@ def submit_player_action():
         action_number = int(request.form['action_number']) if request.form['action_number'].strip() else 0
         description = request.form['description'] if 'description' in request.form else None
         stat1 = request.form['stat1'] if 'stat1' in request.form else None
-        stat1_value = int(request.form['stat1_value']) if 'stat1_value' in request.form and request.form['stat1_value'].strip() else None
+        stat1_value = None
         stat2 = request.form['stat2'] if 'stat2' in request.form else None
-        stat2_value = int(request.form['stat2_value']) if 'stat2_value' in request.form and request.form['stat2_value'].strip() else None
+        stat2_value = None
         advisor_used = request.form['advisor_used'] == '1' if 'advisor_used' in request.form else False
         resources_used = request.form['resources_used'] if 'resources_used' in request.form else None
         gold_spent = int(request.form['gold_spent']) if 'gold_spent' in request.form and request.form['gold_spent'].strip() else 0
+        is_free = request.form['is_free'] == '1' if 'is_free' in request.form else False
 
         # Check if action number is valid based on politics rating
         politics_rating = 0
@@ -1520,8 +1761,49 @@ def submit_player_action():
                 elif politics_rating >= 3:
                     max_actions = 3
 
-            # Check if action number is valid
-            if action_number > max_actions:
+            # Get stat values from database if stat names are provided
+            if stat1:
+                cursor.execute("SELECT rating FROM stats WHERE name = %s", (stat1,))
+                stat_result = cursor.fetchone()
+                if stat_result:
+                    stat1_value = stat_result['rating']
+
+            if stat2:
+                cursor.execute("SELECT rating FROM stats WHERE name = %s", (stat2,))
+                stat_result = cursor.fetchone()
+                if stat_result:
+                    stat2_value = stat_result['rating']
+
+            # Check for stat usage limits (each stat can only be used twice per turn)
+            if stat1 or stat2:
+                # Get current actions to check stat usage
+                cursor.execute("SELECT stat1, stat2 FROM actions WHERE is_free = 0")
+                current_actions = cursor.fetchall()
+
+                # Count stat usage
+                stat_usage = {}
+                for action in current_actions:
+                    if action['stat1']:
+                        stat_usage[action['stat1']] = stat_usage.get(action['stat1'], 0) + 1
+                    if action['stat2']:
+                        stat_usage[action['stat2']] = stat_usage.get(action['stat2'], 0) + 1
+
+                # Check if adding this action would exceed the limit
+                if not is_free:  # Only check for non-free actions
+                    if stat1 and stat_usage.get(stat1, 0) >= 2:
+                        flash(f'You have already used {stat1} twice this turn. Each stat can only be used twice per turn.', 'danger')
+                        cursor.close()
+                        conn.close()
+                        return redirect(url_for('player_dashboard'))
+
+                    if stat2 and stat_usage.get(stat2, 0) >= 2:
+                        flash(f'You have already used {stat2} twice this turn. Each stat can only be used twice per turn.', 'danger')
+                        cursor.close()
+                        conn.close()
+                        return redirect(url_for('player_dashboard'))
+
+            # Check if action number is valid for non-free actions
+            if not is_free and action_number > max_actions:
                 flash(f'Invalid action number. You can only submit up to {max_actions} actions with your current Politics rating of {politics_rating}.', 'danger')
                 cursor.close()
                 conn.close()
@@ -1534,15 +1816,15 @@ def submit_player_action():
             if action_count > 0:
                 # Action with this number already exists, allow update
                 cursor.execute(
-                    "UPDATE actions SET description = %s, stat1 = %s, stat1_value = %s, stat2 = %s, stat2_value = %s, advisor_used = %s, resources_used = %s, gold_spent = %s WHERE action_number = %s",
-                    (description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, action_number)
+                    "UPDATE actions SET description = %s, stat1 = %s, stat1_value = %s, stat2 = %s, stat2_value = %s, advisor_used = %s, resources_used = %s, gold_spent = %s, is_free = %s WHERE action_number = %s",
+                    (description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, is_free, action_number)
                 )
                 flash('Action updated successfully', 'success')
             else:
                 # New action
                 cursor.execute(
-                    "INSERT INTO actions (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent)
+                    "INSERT INTO actions (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, is_free) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, is_free)
                 )
                 flash('Action submitted successfully', 'success')
 
@@ -2073,6 +2355,54 @@ def update_country(db_name):
             flash(f'Error updating country info: {err}', 'danger')
 
     return redirect(url_for('staff_dashboard'))
+
+@app.route('/player_actions')
+@staff_required
+def player_actions():
+    """View all player actions and respond to them"""
+    player_actions = []
+
+    # Connect to country database for game data
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+
+        # Get all player actions
+        cursor.execute("SELECT * FROM actions ORDER BY id DESC")
+        player_actions = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+    return render_template('player_actions.html', player_actions=player_actions)
+
+@app.route('/respond_to_action/<int:action_id>', methods=['POST'])
+@staff_required
+def respond_to_action(action_id):
+    """Respond to a player action"""
+    if request.method == 'POST':
+        response = request.form['response']
+
+        # Connect to country database
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+
+            # Update the action with the staff response
+            cursor.execute(
+                "UPDATE actions SET staff_response = %s, response_date = CURRENT_TIMESTAMP WHERE id = %s",
+                (response, action_id)
+            )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            flash('Response submitted successfully', 'success')
+        else:
+            flash('Database connection error', 'danger')
+
+    return redirect(url_for('player_actions'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5006)

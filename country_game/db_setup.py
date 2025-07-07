@@ -50,12 +50,12 @@ def create_database():
 
         if not admin_user:
             # Create admin user with specified credentials
-            hashed_password = generate_password_hash('Beholder30')
+            hashed_password = generate_password_hash('Beholder3')
             cursor.execute(
                 "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
                 ('Derek.Thompson', hashed_password, 'staff')
             )
-            print("Created admin user (username: Derek.Thompson, password: Beholder3)")
+            print("Created admin user (username: Derek.Thompson, password: Beholder30")
 
         conn.commit()
         cursor.close()
@@ -133,7 +133,10 @@ def create_tables(cursor):
         stat2_value INT,
         advisor_used BOOLEAN DEFAULT FALSE,
         resources_used TEXT,
-        gold_spent INT DEFAULT 0
+        gold_spent INT DEFAULT 0,
+        is_free BOOLEAN DEFAULT FALSE,
+        staff_response TEXT,
+        response_date TIMESTAMP NULL
     )
     """)
 
@@ -149,7 +152,60 @@ def create_tables(cursor):
         progress_per_turn INT DEFAULT 0,
         total_needed INT DEFAULT 0,
         total_progress INT DEFAULT 0,
-        turn_started INT
+        turn_started INT,
+        winter_storage BOOLEAN DEFAULT FALSE
+    )
+    """)
+
+    # Seasons table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS seasons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name ENUM('Spring', 'Summer', 'Fall', 'Winter') NOT NULL,
+        year INT NOT NULL,
+        current BOOLEAN DEFAULT FALSE,
+        start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        end_date TIMESTAMP,
+        effects TEXT
+    )
+    """)
+
+    # Achievements table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS achievements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        country_id VARCHAR(100) NOT NULL,
+        description TEXT NOT NULL,
+        progress INT DEFAULT 0,
+        total_needed INT DEFAULT 100,
+        completed BOOLEAN DEFAULT FALSE
+    )
+    """)
+
+    # Events table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS events (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        description TEXT NOT NULL,
+        region VARCHAR(100),
+        affected_countries TEXT,
+        start_season_id INT,
+        duration INT DEFAULT 1,
+        effects TEXT,
+        active BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY (start_season_id) REFERENCES seasons(id)
+    )
+    """)
+
+    # Country exceptions table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS country_exceptions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        country_id VARCHAR(100) NOT NULL,
+        rule_type VARCHAR(50) NOT NULL,
+        description TEXT NOT NULL,
+        effect TEXT
     )
     """)
 

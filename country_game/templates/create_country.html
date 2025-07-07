@@ -53,27 +53,44 @@
 
                 <h3 class="mt-4 mb-3">Initial Stats</h3>
 
+                {% if session.get('is_staff') %}
+                <div class="mb-3">
+                    <button type="button" id="randomStatsBtn" class="btn btn-secondary">Generate Random Stats</button>
+                    <button type="button" id="rerollStatsBtn" class="btn btn-outline-secondary">Reroll Stats</button>
+                </div>
+
+                <h3 class="mt-4 mb-3">Initial Resources</h3>
+                <div class="mb-3">
+                    <button type="button" id="randomResourcesBtn" class="btn btn-secondary">Generate Random Resources</button>
+                    <button type="button" id="rerollResourcesBtn" class="btn btn-outline-secondary">Reroll Resources</button>
+                    <input type="hidden" id="random_resources" name="random_resources" value="">
+                    <div id="resourcesList" class="mt-3">
+                        <p class="text-muted">Click "Generate Random Resources" to assign random resources to this country.</p>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="politics" class="form-label">Politics</label>
-                        <input type="number" class="form-control" id="politics" name="politics" value="5" min="1" max="10">
+                        <input type="number" class="form-control" id="politics" name="politics" value="5" min="1" max="5">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="military" class="form-label">Military</label>
-                        <input type="number" class="form-control" id="military" name="military" value="5" min="1" max="10">
+                        <input type="number" class="form-control" id="military" name="military" value="5" min="1" max="5">
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="economics" class="form-label">Economics</label>
-                        <input type="number" class="form-control" id="economics" name="economics" value="5" min="1" max="10">
+                        <input type="number" class="form-control" id="economics" name="economics" value="5" min="1" max="5">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="culture" class="form-label">Culture</label>
-                        <input type="number" class="form-control" id="culture" name="culture" value="5" min="1" max="10">
+                        <input type="number" class="form-control" id="culture" name="culture" value="5" min="1" max="5">
                     </div>
                 </div>
 
@@ -92,4 +109,94 @@
         }
     });
 </script>
+
+{% if session.get('is_staff') %}
+<script>
+    // Random stats generation for staff
+    function generateRandomStats() {
+        // Generate random values between 1 and 5
+        document.getElementById('politics').value = Math.floor(Math.random() * 5) + 1;
+        document.getElementById('military').value = Math.floor(Math.random() * 5) + 1;
+        document.getElementById('economics').value = Math.floor(Math.random() * 5) + 1;
+        document.getElementById('culture').value = Math.floor(Math.random() * 5) + 1;
+    }
+
+    // Sample resources for random generation
+    const allResources = [
+        { name: "Iron", type: "Metal", tier: 1 },
+        { name: "Copper", type: "Metal", tier: 1 },
+        { name: "Gold", type: "Precious Metal", tier: 2 },
+        { name: "Silver", type: "Precious Metal", tier: 2 },
+        { name: "Wheat", type: "Food", tier: 1 },
+        { name: "Rice", type: "Food", tier: 1 },
+        { name: "Cattle", type: "Livestock", tier: 1 },
+        { name: "Horses", type: "Livestock", tier: 2 },
+        { name: "Timber", type: "Wood", tier: 1 },
+        { name: "Exotic Wood", type: "Wood", tier: 2 },
+        { name: "Coal", type: "Fuel", tier: 1 },
+        { name: "Oil", type: "Fuel", tier: 2 },
+        { name: "Gems", type: "Luxury", tier: 3 },
+        { name: "Spices", type: "Luxury", tier: 2 },
+        { name: "Wine", type: "Luxury", tier: 2 },
+        { name: "Silk", type: "Textile", tier: 2 },
+        { name: "Cotton", type: "Textile", tier: 1 },
+        { name: "Stone", type: "Building Material", tier: 1 },
+        { name: "Marble", type: "Building Material", tier: 2 },
+        { name: "Fish", type: "Food", tier: 1 }
+    ];
+
+    // Random resources generation for staff
+    function generateRandomResources() {
+        // Generate a random number of resources (between 3 and 7)
+        const numResources = Math.floor(Math.random() * 5) + 3;
+
+        // Shuffle the resources array
+        const shuffledResources = [...allResources].sort(() => 0.5 - Math.random());
+
+        // Take the first numResources
+        const selectedResources = shuffledResources.slice(0, numResources);
+
+        // Display the selected resources
+        const resourcesList = document.getElementById('resourcesList');
+        resourcesList.innerHTML = '<h5>Assigned Resources:</h5><ul class="list-group">';
+
+        // Create a JSON string to store in the hidden input
+        const resourcesData = [];
+
+        selectedResources.forEach(resource => {
+            // Generate random values for natively_produced and trade
+            const nativelyProduced = Math.floor(Math.random() * 3) + 1; // 1-3
+            const trade = Math.floor(Math.random() * 2); // 0-1
+
+            resourcesList.innerHTML += `
+                <li class="list-group-item">
+                    ${resource.name} (${resource.type}, Tier: ${resource.tier})
+                    <span class="badge bg-success ms-2">Native: ${nativelyProduced}</span>
+                    <span class="badge bg-info ms-2">Trade: ${trade}</span>
+                </li>
+            `;
+
+            // Add to resources data
+            resourcesData.push({
+                name: resource.name,
+                type: resource.type,
+                tier: resource.tier,
+                natively_produced: nativelyProduced,
+                trade: trade
+            });
+        });
+
+        resourcesList.innerHTML += '</ul>';
+
+        // Store the resources data in the hidden input
+        document.getElementById('random_resources').value = JSON.stringify(resourcesData);
+    }
+
+    // Add event listeners to the buttons
+    document.getElementById('randomStatsBtn').addEventListener('click', generateRandomStats);
+    document.getElementById('rerollStatsBtn').addEventListener('click', generateRandomStats);
+    document.getElementById('randomResourcesBtn').addEventListener('click', generateRandomResources);
+    document.getElementById('rerollResourcesBtn').addEventListener('click', generateRandomResources);
+</script>
+{% endif %}
 {% endblock %}

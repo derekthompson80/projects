@@ -396,23 +396,27 @@
             <h5 class="mb-0">Recent Player Actions</h5>
         </div>
         <div class="card-body">
+            <div class="mb-3">
+                <a href="{{ url_for('player_actions') }}" class="btn btn-primary">View All Player Actions</a>
+                <p class="mt-2">Click the button above to view all player actions and respond to them.</p>
+            </div>
+
             {% if player_actions %}
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Player</th>
                                 <th>Action #</th>
                                 <th>Description</th>
                                 <th>Stats Used</th>
                                 <th>Resources Used</th>
                                 <th>Gold Spent</th>
+                                <th>Staff Response</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for action in player_actions %}
                                 <tr>
-                                    <td>{{ action.username }}</td>
                                     <td>{{ action.action_number }}</td>
                                     <td>{{ action.description }}</td>
                                     <td>
@@ -421,6 +425,13 @@
                                     </td>
                                     <td>{{ action.resources_used }}</td>
                                     <td>{{ action.gold_spent }}</td>
+                                    <td>
+                                        {% if action.staff_response %}
+                                            <div class="text-success">Responded</div>
+                                        {% else %}
+                                            <div class="text-danger">No response</div>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

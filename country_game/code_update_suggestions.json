@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Country Filtering System",
+    "description": "Add a filtering system to the country descriptions page to allow users to filter countries by alignment, government type, or other attributes. This would help players find countries that match their preferred playstyle.",
+    "rule_reference": "Each nation speaks best to certain styles of play.",
+    "implementation_hint": "Add filter controls to country_descriptions.html and implement JavaScript filtering functionality."
+  },
+  {
+    "title": "Country Assignment Tracking",
+    "description": "Enhance the country descriptions page to show which countries are currently assigned to players. This would help new players identify available countries.",
+    "rule_reference": "Below is a list of nations, short descriptions, and notations as to who is playing them.",
+    "implementation_hint": "Modify the country_descriptions() route to fetch player assignments from the database and display this information in the template."
+  },
+  {
+    "title": "Seasonal Effects Implementation",
+    "description": "Implement a system to track game seasons and apply seasonal effects to actions and projects automatically.",
+    "rule_reference": "Each 2 real life weeks is one season in game. Every four seasons in game is one year.",
+    "implementation_hint": "Create a seasons table in the database and update the action resolution logic to account for seasonal effects."
+  },
+  {
+    "title": "Resource Management for Winter",
+    "description": "Add a special project type for winter food storage that becomes mandatory during winter seasons.",
+    "rule_reference": "Winter: Invasions are more challenging due to the cold, especially in more northern climates. Players must engage a project that will store food for the winter.",
+    "implementation_hint": "Add a winter_storage boolean field to the projects table and implement validation to ensure winter storage projects exist during winter seasons."
+  },
+  {
+    "title": "Country Achievement Tracking",
+    "description": "Implement a system to track progress toward country-specific achievements and display this information on the player dashboard.",
+    "rule_reference": "Each country will receive three goals personalized for that country. You the player have no obligation to pursue them, but we hope you will at least find them inspiring.",
+    "implementation_hint": "Create an achievements table with country_id, description, and progress fields, and add an achievements section to the player dashboard."
+  },
+  {
+    "title": "Action Bonus Calculator",
+    "description": "Add a calculator that shows the bonus a player will receive based on the amount of gold spent on an action.",
+    "rule_reference": "Throwing money at a problem always helps.",
+    "implementation_hint": "Add JavaScript to the action submission form that calculates and displays the bonus based on the gold input field."
+  },
+  {
+    "title": "Free Actions Implementation",
+    "description": "Add support for 'free actions' that don't count against a player's action limit.",
+    "rule_reference": "Some actions don't actually take up one of your actions, but you do need to submit in writing that you're doing it.",
+    "implementation_hint": "Add a boolean field to the actions table to mark actions as 'free' and update the action counting logic."
+  },
+  {
+    "title": "Stat Usage Tracking",
+    "description": "Implement tracking of stat usage to enforce the rule that a single stat can only be used twice per turn.",
+    "rule_reference": "You may use a single stat only twice per turn for an action.",
+    "implementation_hint": "Add validation to the action submission process to check and enforce stat usage limits."
+  },
+  {
+    "title": "Regional Events System",
+    "description": "Create a system for staff to define and trigger regional events that affect multiple countries.",
+    "rule_reference": "Each year at least one large regional event will happen somewhere on the continent.",
+    "implementation_hint": "Create an events table and admin interface for managing events, and implement logic to apply event effects to relevant countries."
+  },
+  {
+    "title": "Country-Specific Exceptions",
+    "description": "Implement a system to define and apply country-specific rule exceptions.",
+    "rule_reference": "The strictures here apply to countries in general, but specific countries may have exceptions. Exceptions will be specified on the country's sheet.",
+    "implementation_hint": "Add a country_exceptions table to store rule exceptions for specific countries and integrate this with the relevant game mechanics."
+  }
+]

@@ -79,6 +79,15 @@
                     </div>
                 </div>
             </div>
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="winter_storage" name="winter_storage" value="1">
+                        <label class="form-check-label" for="winter_storage">Winter Food Storage Project</label>
+                        <small class="form-text text-muted">Mark this project as a winter food storage project. Required during winter seasons.</small>
+                    </div>
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary mt-3">Add Project</button>
         </form>
     </div>
@@ -228,6 +237,15 @@
                                         <div class="form-group">
                                             <label for="edit_turn_started{{ project.id }}">Turn Started</label>
                                             <input type="number" class="form-control" id="edit_turn_started{{ project.id }}" name="turn_started" value="{{ project.turn_started }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="edit_winter_storage{{ project.id }}" name="winter_storage" value="1" {% if project.winter_storage %}checked{% endif %}>
+                                            <label class="form-check-label" for="edit_winter_storage{{ project.id }}">Winter Food Storage Project</label>
+                                            <small class="form-text text-muted">Mark this project as a winter food storage project. Required during winter seasons.</small>
                                         </div>
                                     </div>
                                 </div>

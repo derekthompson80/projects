@@ -10,6 +10,18 @@
     <div class="alert alert-{{ message_type }}">{{ message }}</div>
     {% endif %}
 
+    {% if current_season %}
+    <div class="alert alert-info">
+        <strong>Current Season:</strong> {{ current_season.name }} of Year {{ current_season.year }}
+        {% if current_season.name == 'Winter' %}
+        <div class="mt-2">
+            <strong>Winter Notice:</strong> During winter, invasions are more challenging due to the cold, especially in more northern climates. 
+            Players must engage a project that will store food for the winter.
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     <div class="row">
         <!-- Action Updates Section -->
         <div class="col-md-6">
@@ -39,19 +51,29 @@
                         </div>
                         <div class="form-group mb-3">
                             <label for="stat1">Primary Stat</label>
-                            <input type="text" class="form-control" id="stat1" name="stat1">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="stat1_value">Primary Stat Value</label>
-                            <input type="number" class="form-control" id="stat1_value" name="stat1_value">
+                            <select class="form-control" id="stat1" name="stat1">
+                                <option value="">-- Select a stat --</option>
+                                {% if stats %}
+                                    {% for stat in stats %}
+                                        <option value="{{ stat.name }}">{{ stat.name }} (Rating: {{ stat.rating }})</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option disabled>No stats available</option>
+                                {% endif %}
+                            </select>
                         </div>
                         <div class="form-group mb-3">
                             <label for="stat2">Secondary Stat</label>
-                            <input type="text" class="form-control" id="stat2" name="stat2">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="stat2_value">Secondary Stat Value</label>
-                            <input type="number" class="form-control" id="stat2_value" name="stat2_value">
+                            <select class="form-control" id="stat2" name="stat2">
+                                <option value="">-- Select a stat --</option>
+                                {% if stats %}
+                                    {% for stat in stats %}
+                                        <option value="{{ stat.name }}">{{ stat.name }} (Rating: {{ stat.rating }})</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option disabled>No stats available</option>
+                                {% endif %}
+                            </select>
                         </div>
                         <div class="form-check mb-3">
                             <input type="checkbox" class="form-check-input" id="advisor_used" name="advisor_used" value="1">
@@ -101,9 +123,63 @@
                         </script>
                         <div class="form-group mb-3">
                             <label for="gold_spent">Gold Spent</label>
-                            <input type="number" class="form-control" id="gold_spent" name="gold_spent" value="0">
+                            <input type="number" class="form-control" id="gold_spent" name="gold_spent" value="0" min="0">
+                            <div id="gold_bonus_calculator" class="mt-2 p-2 border rounded bg-light">
+                                <h6>Gold Bonus Calculator</h6>
+                                <p class="mb-1">Throwing money at a problem always helps!</p>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Gold</th>
+                                                    <th>Bonus</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr><td>50g</td><td>+1</td></tr>
+                                                <tr><td>100g</td><td>+2</td></tr>
+                                                <tr><td>200g</td><td>+3</td></tr>
+                                                <tr><td>500g</td><td>+4</td></tr>
+                                                <tr><td>1000g</td><td>+5</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="alert alert-info">
+                                            <strong>Your Bonus: <span id="calculated_bonus">+0</span></strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="is_free" name="is_free" value="1">
+                            <label class="form-check-label" for="is_free">Free Action (doesn't count against action limit)</label>
                         </div>
                         <button type="submit" class="btn btn-primary">Submit Action</button>
+
+                        <script>
+                            // Gold bonus calculator
+                            document.getElementById('gold_spent').addEventListener('input', function() {
+                                const goldSpent = parseInt(this.value) || 0;
+                                let bonus = 0;
+
+                                if (goldSpent >= 1000) {
+                                    bonus = 5;
+                                } else if (goldSpent >= 500) {
+                                    bonus = 4;
+                                } else if (goldSpent >= 200) {
+                                    bonus = 3;
+                                } else if (goldSpent >= 100) {
+                                    bonus = 2;
+                                } else if (goldSpent >= 50) {
+                                    bonus = 1;
+                                }
+
+                                document.getElementById('calculated_bonus').textContent = '+' + bonus;
+                            });
+                        </script>
                     </form>
                 </div>
             </div>
@@ -180,6 +256,7 @@
                                 <th>Stats Used</th>
                                 <th>Resources Used</th>
                                 <th>Gold Spent</th>
+                                <th>Staff Response</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -193,6 +270,18 @@
                                     </td>
                                     <td>{{ action.resources_used }}</td>
                                     <td>{{ action.gold_spent }}</td>
+                                    <td>
+                                        {% if action.staff_response %}
+                                            <div class="p-2 bg-light border rounded">
+                                                {{ action.staff_response }}
+                                                <small class="d-block text-muted mt-1">
+                                                    Responded on: {{ action.response_date.strftime('%Y-%m-%d %H:%M') if action.response_date else 'N/A' }}
+                                                </small>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">Awaiting staff response</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -200,6 +289,44 @@
                 </div>
             {% else %}
                 <p class="text-muted">No actions submitted yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Country Achievements Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Country Achievements</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Each country receives three goals personalized for that country. You have no obligation to pursue them, but we hope you will at least find them inspiring.</p>
+
+            {% if achievements %}
+                <div class="row">
+                    {% for achievement in achievements %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100 {% if achievement.completed %}border-success{% else %}border-primary{% endif %}">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        {% if achievement.completed %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% endif %}
+                                        Achievement {{ loop.index }}
+                                    </h6>
+                                    <p class="card-text">{{ achievement.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Progress:</span>
+                                        <span class="badge bg-primary">{{ achievement.progress }} / {{ achievement.total_needed }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    No achievements have been set for your country yet. Please contact the game master.
+                </div>
             {% endif %}
         </div>
     </div>

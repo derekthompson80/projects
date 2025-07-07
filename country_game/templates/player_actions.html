@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Player Actions - Country Game{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Player Actions</h1>
+    
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <a href="{{ url_for('staff_dashboard') }}" class="btn btn-secondary">Back to Staff Dashboard</a>
+        </div>
+    </div>
+
+    {% if message %}
+    <div class="alert alert-{{ message_type }}">{{ message }}</div>
+    {% endif %}
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">All Player Actions</h5>
+        </div>
+        <div class="card-body">
+            {% if player_actions %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Action #</th>
+                                <th>Description</th>
+                                <th>Stats Used</th>
+                                <th>Resources Used</th>
+                                <th>Gold Spent</th>
+                                <th>Staff Response</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for action in player_actions %}
+                                <tr>
+                                    <td>{{ action.id }}</td>
+                                    <td>{{ action.action_number }}</td>
+                                    <td>{{ action.description }}</td>
+                                    <td>
+                                        {% if action.stat1 %}{{ action.stat1 }} ({{ action.stat1_value }}){% endif %}
+                                        {% if action.stat2 %}<br>{{ action.stat2 }} ({{ action.stat2_value }}){% endif %}
+                                    </td>
+                                    <td>{{ action.resources_used }}</td>
+                                    <td>{{ action.gold_spent }}</td>
+                                    <td>
+                                        {% if action.staff_response %}
+                                            <div class="mb-2">
+                                                {{ action.staff_response }}
+                                                <small class="d-block text-muted">
+                                                    Responded on: {{ action.response_date.strftime('%Y-%m-%d %H:%M') if action.response_date else 'N/A' }}
+                                                </small>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">No response yet</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#responseModal{{ action.id }}">
+                                            {% if action.staff_response %}Update Response{% else %}Respond{% endif %}
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Response Modal -->
+                                <div class="modal fade" id="responseModal{{ action.id }}" tabindex="-1" aria-labelledby="responseModalLabel{{ action.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="responseModalLabel{{ action.id }}">Respond to Action</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form action="{{ url_for('respond_to_action', action_id=action.id) }}" method="post">
+                                                    <div class="mb-3">
+                                                        <label for="actionDescription{{ action.id }}" class="form-label">Action Description:</label>
+                                                        <div class="p-2 bg-light border rounded">{{ action.description }}</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="response{{ action.id }}" class="form-label">Your Response:</label>
+                                                        <textarea class="form-control" id="response{{ action.id }}" name="response" rows="4" required>{{ action.staff_response or '' }}</textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">Submit Response</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No player actions submitted yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
