@@ -20,9 +20,9 @@ import csv
 # 'host': 'spade605.mysql.pythonanywhere-services.com',
 # 'port': 3306,
 config = {
-    'user': 'root',  # Default MySQL user for local development
-    'password': 'password',  # Change this to your local MySQL password
-    'host': 'localhost',
+    'user': 'spade605',
+    'password': 'Beholder30',
+    'host': 'spade605.mysql.pythonanywhere-services.com',
     'port': 3306,
     'raise_on_warnings': True
 }
@@ -66,7 +66,7 @@ def create_database():
 
         if not admin_user:
             # Create admin user with specified credentials
-            hashed_password = generate_password_hash('Beholder3')
+            hashed_password = generate_password_hash('Beholder30')
             cursor.execute(
                 "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
                 ('Derek.Thompson', hashed_password, 'staff')
