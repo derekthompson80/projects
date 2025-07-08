@@ -37,6 +37,7 @@ config = {
     'user': 'spade605',
     'password': 'Beholder30',
     'host': 'spade605.mysql.pythonanywhere-services.com',
+    'port': 3306,
     'database': 'spade605$county_game_server',
     'raise_on_warnings': True
 }
