@@ -666,9 +666,83 @@ def get_default_countries():
 @app.route('/create_country')
 @login_required
 def create_country_form():
-    """Display the country creation form"""
+    """Display the country creation form and country management"""
     default_countries = get_default_countries()
-    return render_template('create_country.html', default_countries=default_countries)
+
+    # Get list of countries for management (similar to staff_dashboard)
+    countries = []
+
+    # Only staff members should see country management
+    if session.get('is_staff'):
+        try:
+            # Connect to MySQL server for country list
+            conn_config = config.copy()
+            if 'database' in conn_config:
+                del conn_config['database']
+
+            conn = mysql.connector.connect(**conn_config)
+            cursor = conn.cursor(dictionary=True)
+
+            # Get all databases that start with 'country_'
+            cursor.execute("SHOW DATABASES LIKE 'country_%'")
+            # When using dictionary=True, we need to get the first value from each dictionary
+            country_dbs = [list(db.values())[0] for db in cursor.fetchall()]
+
+            # For each country database, get the country info
+            for db_name in country_dbs:
+                # Connect to the country database
+                cursor.execute(f"USE {db_name}")
+
+                # Get country info
+                try:
+                    cursor.execute("SELECT * FROM country_info LIMIT 1")
+                    country_data = cursor.fetchone()
+
+                    if country_data:
+                        # Create a dictionary with country info
+                        country = {
+                            'name': country_data['name'],
+                            'ruler_name': country_data['ruler_name'],
+                            'government_type': country_data['government_type'],
+                            'description': country_data['description'] if 'description' in country_data else '',
+                            'db_name': db_name,
+                            'assigned_player': None,
+                            'is_open_for_selection': True
+                        }
+                        countries.append(country)
+                except mysql.connector.Error as err:
+                    print(f"Error fetching country info from {db_name}: {err}")
+
+            # Get player assignments for countries
+            try:
+                # Switch back to the main database
+                cursor.execute("USE spade605$county_game_server")
+
+                # Get all users with assigned countries
+                cursor.execute("SELECT id, username, country_db FROM users WHERE country_db IS NOT NULL AND country_db != ''")
+                assigned_countries = cursor.fetchall()
+
+                # Update country objects with player information
+                for assignment in assigned_countries:
+                    for country in countries:
+                        if country['db_name'] == assignment['country_db']:
+                            country['assigned_player'] = {
+                                'id': assignment['id'],
+                                'username': assignment['username']
+                            }
+                            country['is_open_for_selection'] = False
+                            break
+            except mysql.connector.Error as err:
+                print(f"Error fetching country assignments: {err}")
+
+            cursor.close()
+            conn.close()
+
+        except mysql.connector.Error as err:
+            print(f"Error preparing country management: {err}")
+            flash(f'Error preparing country management: {err}', 'danger')
+
+    return render_template('create_country.html', default_countries=default_countries, countries=countries)
 
 def parse_country_template(template_name):
     """Parse a country template CSV file and extract relevant data"""
