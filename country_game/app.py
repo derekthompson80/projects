@@ -34,9 +34,9 @@ def staff_required(f):
 
 # MySQL connection parameters
 config = {
-    'user': 'root',
+    'user': 'spade605',
     'password': 'Beholder30',
-    'host': 'localhost',
+    'host': 'spade605.mysql.pythonanywhere-services.com',
     'database': 'county_game_server',
     'raise_on_warnings': True
 }

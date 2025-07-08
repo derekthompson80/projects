@@ -5,9 +5,9 @@ import csv
 
 # MySQL connection parameters
 config = {
-    'user': 'root',
+    'user': 'spade605',
     'password': 'Beholder30',
-    'host': 'localhost',
+    'host': 'spade605.mysql.pythonanywhere-services.com',
     'raise_on_warnings': True
 }
 
