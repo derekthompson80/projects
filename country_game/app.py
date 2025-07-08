@@ -2060,6 +2060,26 @@ def staff_dashboard():
     messages = []
     player_actions = []
 
+    # Get CPU quota info from PythonAnywhere API
+    cpu_quota_info = None
+    try:
+        import requests
+        username = 'spade605'
+        token = 'ba0f3dd3208247412bfe2457bda6a756616e852d'
+
+        response = requests.get(
+            'https://www.pythonanywhere.com/api/v0/user/{username}/cpu/'.format(
+                username=username
+            ),
+            headers={'Authorization': 'Token {token}'.format(token=token)}
+        )
+        if response.status_code == 200:
+            cpu_quota_info = response.json()
+        else:
+            print('Got unexpected status code {}: {!r}'.format(response.status_code, response.content))
+    except Exception as e:
+        print(f"Error fetching CPU quota info: {e}")
+
     try:
         # Connect to MySQL server for user data
         conn = mysql.connector.connect(**config)
@@ -2233,7 +2253,8 @@ def staff_dashboard():
                           resources=resources,
                           all_resources=all_resources,
                           messages=messages,
-                          player_actions=player_actions)
+                          player_actions=player_actions,
+                          cpu_quota_info=cpu_quota_info)
 
 @app.route('/delete_country/<db_name>')
 @staff_required
