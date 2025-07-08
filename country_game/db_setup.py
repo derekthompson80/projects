@@ -35,11 +35,11 @@ def create_database():
         cursor = conn.cursor()
 
         # Create database
-        cursor.execute("CREATE DATABASE IF NOT EXISTS county_game_server")
+        cursor.execute("CREATE DATABASE IF NOT EXISTS spade605$county_game_server")
         print("Database created successfully")
 
         # Use the database
-        cursor.execute("USE county_game_server")
+        cursor.execute("USE spade605$county_game_server")
 
         # Create tables
         create_tables(cursor)
@@ -231,7 +231,7 @@ def import_data():
     """Import data from CSV files into the database"""
     try:
         # Connect to the database
-        conn = mysql.connector.connect(**config, database='county_game_server')
+        conn = mysql.connector.connect(**config, database='spade605$county_game_server')
         cursor = conn.cursor()
 
         # Import stats from player sheet

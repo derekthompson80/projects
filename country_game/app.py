@@ -37,7 +37,7 @@ config = {
     'user': 'spade605',
     'password': 'Beholder30',
     'host': 'spade605.mysql.pythonanywhere-services.com',
-    'database': 'county_game_server',
+    'database': 'spade605$county_game_server',
     'raise_on_warnings': True
 }
 
@@ -56,11 +56,11 @@ def get_db_connection():
         return None
 
 def get_main_db_connection():
-    """Get a connection to the main database (county_game_server)"""
+    """Get a connection to the main database (spade605$county_game_server)"""
     try:
         # Always connect to the main database
         conn_config = config.copy()
-        conn_config['database'] = 'county_game_server'  # Ensure we connect to the main database
+        conn_config['database'] = 'spade605$county_game_server'  # Ensure we connect to the main database
 
         conn = mysql.connector.connect(**conn_config)
         return conn
@@ -2211,7 +2211,7 @@ def staff_dashboard():
         # Get player assignments for countries
         try:
             # Switch back to the main database
-            cursor.execute("USE county_game_server")
+            cursor.execute("USE spade605$county_game_server")
 
             # Get all users with assigned countries
             cursor.execute("SELECT id, username, country_db FROM users WHERE country_db IS NOT NULL AND country_db != ''")
