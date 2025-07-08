@@ -1118,7 +1118,7 @@ def login():
         password = request.form['password']
 
         # Connect to the database
-        conn = mysql.connector.connect(**config)
+        conn = get_main_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
 
@@ -1138,7 +1138,7 @@ def login():
                     # Send message to staff
                     try:
                         # Reopen connection to send message
-                        conn = mysql.connector.connect(**config)
+                        conn = get_main_db_connection()
                         cursor = conn.cursor(dictionary=True)
 
                         # Find a staff user to send the message to
@@ -1275,7 +1275,7 @@ def country_descriptions():
             desc['number'] = str(i)
 
         # Fetch player assignments from the database
-        conn = mysql.connector.connect(**config)
+        conn = get_main_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
             cursor.execute("""
@@ -1340,7 +1340,7 @@ def register():
             return render_template('register.html')
 
         # Connect to the database
-        conn = mysql.connector.connect(**config)
+        conn = get_main_db_connection()
         if conn:
             cursor = conn.cursor()
 
@@ -1376,7 +1376,7 @@ def register():
 @staff_required
 def users():
     """Display all users"""
-    conn = mysql.connector.connect(**config)
+    conn = get_main_db_connection()
     users = []
     countries = []
 
@@ -1446,7 +1446,7 @@ def add_user():
             flash('Username and password are required', 'danger')
             return redirect(url_for('users'))
 
-        conn = mysql.connector.connect(**config)
+        conn = get_main_db_connection()
         if conn:
             cursor = conn.cursor()
 
@@ -1496,7 +1496,7 @@ def edit_user(id):
         role = request.form['role']
         country_db = request.form['country_db'] if 'country_db' in request.form else None
 
-        conn = mysql.connector.connect(**config)
+        conn = get_main_db_connection()
         if conn:
             cursor = conn.cursor()
 
@@ -1552,7 +1552,7 @@ def delete_user(id):
         flash('You cannot delete your own account', 'danger')
         return redirect(url_for('users'))
 
-    conn = mysql.connector.connect(**config)
+    conn = get_main_db_connection()
     if conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM users WHERE id = %s", (id,))
@@ -1853,7 +1853,7 @@ def send_message():
             recipient_id = int(request.form['recipient_id'])
         else:
             # Player sending to staff (get first staff user)
-            conn = mysql.connector.connect(**config)
+            conn = get_main_db_connection()
             cursor = conn.cursor(dictionary=True)
             cursor.execute("SELECT id FROM users WHERE role = 'staff' LIMIT 1")
             staff = cursor.fetchone()
@@ -1868,7 +1868,7 @@ def send_message():
 
         # Insert the message
         try:
-            conn = mysql.connector.connect(**config)
+            conn = get_main_db_connection()
             if conn:
                 cursor = conn.cursor()
                 try:
@@ -2082,7 +2082,7 @@ def staff_dashboard():
 
     try:
         # Connect to MySQL server for user data
-        conn = mysql.connector.connect(**config)
+        conn = get_main_db_connection()
         cursor = conn.cursor(dictionary=True)
 
         # Get all non-staff users (players)
