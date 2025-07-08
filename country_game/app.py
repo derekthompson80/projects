@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import mysql.connector
 import os
 import re
+import random
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import glob
@@ -1896,6 +1897,157 @@ def send_message():
             return redirect(url_for('player_dashboard'))
 
 # Staff routes
+@app.route('/create_countries_from_descriptions')
+@staff_required
+def create_countries_from_descriptions():
+    """Create countries based on descriptions in CG5_Country_Descriptions.txt"""
+    try:
+        # Read the country descriptions file
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, 'CG5_Country_Descriptions.txt')
+
+        with open(file_path, 'r') as file:
+            content = file.readlines()
+
+        # Parse the content into a structured format
+        descriptions = []
+        current_description = None
+        seen_countries = set()  # To track and prevent duplicate countries
+
+        for line in content:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check if this is a country entry (starts with a number followed by a period)
+            if re.match(r'^\d+\.', line):
+                # Extract country information
+                parts = line.split(' - ')
+                if len(parts) >= 3:
+                    country_info = parts[0].split(' ', 1)
+                    country_number = country_info[0].rstrip('.')
+                    country_name = country_info[1]
+
+                    # Skip if we've already seen this country
+                    if country_name in seen_countries:
+                        current_description = None
+                        continue
+
+                    seen_countries.add(country_name)
+                    alignment = parts[1]
+
+                    # The government type might contain additional hyphens
+                    government_type = ' - '.join(parts[2:-1]) if len(parts) > 3 else parts[2]
+
+                    # The description is the last part
+                    description = parts[-1] if len(parts) > 3 else ""
+
+                    current_description = {
+                        'number': country_number,
+                        'name': country_name,
+                        'alignment': alignment,
+                        'government_type': government_type,
+                        'description': description,
+                    }
+                    descriptions.append(current_description)
+            elif current_description and not line.startswith('There are'):
+                # Append to the description of the current country
+                if current_description['description']:
+                    current_description['description'] += ' ' + line
+                else:
+                    current_description['description'] = line
+
+        # Create countries from descriptions
+        created_countries = []
+        for desc in descriptions:
+            # Create database name (lowercase for consistency)
+            country_name = desc['name']
+            db_name = f"country_{country_name.lower().replace(' ', '_')}"
+
+            # Check if country already exists
+            conn_config = config.copy()
+            if 'database' in conn_config:
+                del conn_config['database']
+
+            conn = mysql.connector.connect(**conn_config)
+            cursor = conn.cursor()
+
+            cursor.execute("SHOW DATABASES LIKE %s", (db_name,))
+            if cursor.fetchone():
+                # Country already exists, skip
+                cursor.close()
+                conn.close()
+                continue
+
+            # Create the database and tables
+            if create_country_database(db_name):
+                # Generate random stats between 1-3
+                politics = random.randint(1, 3)
+                military = random.randint(1, 3)
+                economics = random.randint(1, 3)
+                culture = random.randint(1, 3)
+
+                # Save country info
+                if save_country_info(db_name, country_name, f"Ruler of {country_name}", desc['government_type'], desc['description']):
+                    # Save initial stats
+                    if save_initial_stats(db_name, politics, military, economics, culture):
+                        # Generate random resources between 5-12
+                        import json
+
+                        # Sample resources for random generation
+                        all_resources = [
+                            { "name": "Iron", "type": "Metal", "tier": 1 },
+                            { "name": "Copper", "type": "Metal", "tier": 1 },
+                            { "name": "Gold", "type": "Precious Metal", "tier": 2 },
+                            { "name": "Silver", "type": "Precious Metal", "tier": 2 },
+                            { "name": "Wheat", "type": "Food", "tier": 1 },
+                            { "name": "Rice", "type": "Food", "tier": 1 },
+                            { "name": "Cattle", "type": "Livestock", "tier": 1 },
+                            { "name": "Horses", "type": "Livestock", "tier": 2 },
+                            { "name": "Timber", "type": "Wood", "tier": 1 },
+                            { "name": "Exotic Wood", "type": "Wood", "tier": 2 },
+                            { "name": "Coal", "type": "Fuel", "tier": 1 },
+                            { "name": "Oil", "type": "Fuel", "tier": 2 },
+                            { "name": "Gems", "type": "Luxury", "tier": 3 },
+                            { "name": "Spices", "type": "Luxury", "tier": 2 },
+                            { "name": "Wine", "type": "Luxury", "tier": 2 },
+                            { "name": "Silk", "type": "Textile", "tier": 2 },
+                            { "name": "Cotton", "type": "Textile", "tier": 1 },
+                            { "name": "Stone", "type": "Building Material", "tier": 1 },
+                            { "name": "Marble", "type": "Building Material", "tier": 2 },
+                            { "name": "Fish", "type": "Food", "tier": 1 }
+                        ]
+
+                        # Generate a random number of resources (between 5 and 12)
+                        num_resources = random.randint(5, 12)
+
+                        # Shuffle the resources array
+                        random.shuffle(all_resources)
+
+                        # Take the first num_resources
+                        selected_resources = all_resources[:num_resources]
+
+                        # Generate random values for natively_produced and trade
+                        for resource in selected_resources:
+                            resource["natively_produced"] = random.randint(1, 3)
+                            resource["trade"] = random.randint(0, 1)
+
+                        # Import resources
+                        import_resources_from_template(db_name, selected_resources)
+
+                        created_countries.append(country_name)
+
+        if created_countries:
+            flash(f'Successfully created {len(created_countries)} countries from descriptions: {", ".join(created_countries)}', 'success')
+        else:
+            flash('No new countries were created. All countries from descriptions may already exist.', 'info')
+
+        return redirect(url_for('staff_dashboard'))
+
+    except Exception as e:
+        flash(f'Error creating countries from descriptions: {str(e)}', 'danger')
+        return redirect(url_for('staff_dashboard'))
+
 @app.route('/staff_dashboard')
 @staff_required
 def staff_dashboard():
