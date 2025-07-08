@@ -4,10 +4,26 @@ import os
 import csv
 
 # MySQL connection parameters
+# Note: PythonAnywhere databases are only accessible from within the PythonAnywhere environment.
+# For local development, use a local MySQL server.
+# 
+# LOCAL DEVELOPMENT SETUP:
+# 1. Install MySQL on your local machine if not already installed
+# 2. Create a user or use the default 'root' user
+# 3. Set the password below to match your local MySQL password
+# 4. Make sure MySQL service is running on your machine
+#
+# PYTHONANYWHERE DEPLOYMENT:
+# When deploying to PythonAnywhere, change these settings back to:
+# 'user': 'spade605',
+# 'password': 'Beholder30',
+# 'host': 'spade605.mysql.pythonanywhere-services.com',
+# 'port': 3306,
 config = {
-    'user': 'spade605',
-    'password': 'Beholder30',
-    'host': 'spade605.mysql.pythonanywhere-services.com',
+    'user': 'root',  # Default MySQL user for local development
+    'password': 'password',  # Change this to your local MySQL password
+    'host': 'localhost',
+    'port': 3306,
     'raise_on_warnings': True
 }
 
