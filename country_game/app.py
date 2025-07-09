@@ -2145,6 +2145,148 @@ def create_countries_from_descriptions():
         flash(f'Error creating countries from descriptions: {str(e)}', 'danger')
         return redirect(url_for('staff_dashboard'))
 
+@app.route('/create_starting_countries')
+@staff_required
+def create_starting_countries():
+    """Create countries based on all default countries"""
+    try:
+        # Get the list of default countries
+        default_countries = get_default_countries()
+
+        # Track how many countries were created
+        created_count = 0
+
+        # Create a country for each default country
+        for country_name in default_countries:
+            # Create database name (lowercase for consistency)
+            db_name = f"country_starting_{country_name.lower().replace(' ', '_')}"
+
+            # Check if country already exists
+            conn_config = config.copy()
+            if 'database' in conn_config:
+                del conn_config['database']
+
+            conn = mysql.connector.connect(**conn_config)
+            cursor = conn.cursor()
+
+            cursor.execute("SHOW DATABASES LIKE %s", (db_name,))
+            if cursor.fetchone():
+                # Country already exists, skip
+                cursor.close()
+                conn.close()
+                continue
+
+            # Create the database and tables
+            if create_country_database(db_name):
+                # Generate random stats between 1-3
+                politics = random.randint(1, 3)
+                military = random.randint(1, 3)
+                economics = random.randint(1, 3)
+                culture = random.randint(1, 3)
+
+                # Save country info
+                if save_country_info(db_name, country_name, f"Ruler of {country_name}", "Default", f"Starting country based on {country_name}"):
+                    # Save initial stats
+                    if save_initial_stats(db_name, politics, military, economics, culture):
+                        # Generate random resources between 5-12
+                        num_resources = random.randint(5, 12)
+
+                        # Shuffle the resources array
+                        all_resources_copy = [
+                            { "name": "Iron", "type": "Metal", "tier": 1 },
+                            { "name": "Copper", "type": "Metal", "tier": 1 },
+                            { "name": "Gold", "type": "Precious Metal", "tier": 2 },
+                            { "name": "Silver", "type": "Precious Metal", "tier": 2 },
+                            { "name": "Wheat", "type": "Food", "tier": 1 },
+                            { "name": "Rice", "type": "Food", "tier": 1 },
+                            { "name": "Cattle", "type": "Livestock", "tier": 1 },
+                            { "name": "Horses", "type": "Livestock", "tier": 2 },
+                            { "name": "Timber", "type": "Wood", "tier": 1 },
+                            { "name": "Exotic Wood", "type": "Wood", "tier": 2 },
+                            { "name": "Coal", "type": "Fuel", "tier": 1 },
+                            { "name": "Oil", "type": "Fuel", "tier": 2 },
+                            { "name": "Gems", "type": "Luxury", "tier": 3 },
+                            { "name": "Spices", "type": "Luxury", "tier": 2 },
+                            { "name": "Wine", "type": "Luxury", "tier": 2 },
+                            { "name": "Silk", "type": "Textile", "tier": 2 },
+                            { "name": "Cotton", "type": "Textile", "tier": 1 },
+                            { "name": "Stone", "type": "Building Material", "tier": 1 },
+                            { "name": "Marble", "type": "Building Material", "tier": 2 },
+                            { "name": "Fish", "type": "Food", "tier": 1 }
+                        ]
+                        shuffled_resources = sorted(all_resources_copy, key=lambda k: random.random())
+
+                        # Take the first numResources
+                        selected_resources = shuffled_resources[:num_resources]
+
+                        # Save resources
+                        for resource in selected_resources:
+                            # Generate random values for natively_produced and trade
+                            natively_produced = random.randint(1, 3)
+                            trade = random.randint(0, 1)
+
+                            # Save resource
+                            save_resource(db_name, resource["name"], resource["type"], resource["tier"], natively_produced, trade)
+
+                        created_count += 1
+
+        if created_count > 0:
+            flash(f'Successfully created {created_count} starting countries based on default countries', 'success')
+        else:
+            flash('No new starting countries were created. All starting countries may already exist.', 'info')
+
+        return redirect(url_for('create_country_form'))
+
+    except Exception as e:
+        flash(f'Error creating starting countries: {str(e)}', 'danger')
+        return redirect(url_for('create_country_form'))
+
+@app.route('/delete_starting_countries')
+@staff_required
+def delete_starting_countries():
+    """Delete all starting countries"""
+    try:
+        # Connect to MySQL server (without specifying a database)
+        conn_config = config.copy()
+        if 'database' in conn_config:
+            del conn_config['database']
+
+        conn = mysql.connector.connect(**conn_config)
+        cursor = conn.cursor()
+
+        # Get all databases that start with 'country_starting_'
+        cursor.execute("SHOW DATABASES LIKE 'country\\_starting\\_%'")
+        starting_country_dbs = [list(db.values())[0] for db in cursor.fetchall()]
+
+        # Track how many countries were deleted
+        deleted_count = 0
+
+        # Delete each starting country
+        for db_name in starting_country_dbs:
+            # Drop the database
+            cursor.execute(f"DROP DATABASE {db_name}")
+
+            # If this was the current country, clear the selection
+            if session.get('current_country_db') == db_name:
+                session.pop('current_country_db', None)
+
+            deleted_count += 1
+
+        cursor.close()
+        conn.close()
+
+        if deleted_count > 0:
+            flash(f'Successfully deleted {deleted_count} starting countries', 'success')
+        else:
+            flash('No starting countries were found to delete', 'info')
+
+        return redirect(url_for('create_country_form'))
+
+    except mysql.connector.Error as err:
+        print(f"Error deleting starting countries: {err}")
+        flash(f'Error deleting starting countries: {err}', 'danger')
+        return redirect(url_for('create_country_form'))
+
 @app.route('/staff_dashboard')
 @staff_required
 def staff_dashboard():
