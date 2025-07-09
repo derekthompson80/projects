@@ -6,9 +6,15 @@ import random
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import glob
+from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = 'country_game_secret_key'
+# Configure session to be more persistent
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Session lasts for 24 hours
 
 # Authentication decorators
 def login_required(f):
@@ -1236,6 +1242,8 @@ def login():
                     flash('You do not have a country assigned. Please contact staff.', 'danger')
                     return redirect(url_for('login'))
 
+                # Make session permanent so it persists across tabs and browser sessions
+                session.permanent = True
                 session['username'] = user['username']
                 session['user_id'] = user['id']
                 session['is_staff'] = (user['role'] == 'staff')
