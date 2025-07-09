@@ -42,7 +42,7 @@
                             <select id="alignment-filter" class="form-select">
                                 <option value="">All Alignments</option>
                                 {% for alignment in alignments %}
-                                <option value="{{ alignment }}">{{ alignment }}</option>
+                                <option value="{{ alignment }}">{{ alignment_mapping.get(alignment, alignment) }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -115,7 +115,7 @@
                         <strong>Government Type:</strong> {{ description.government_type }}
                     </div>
                     <div class="mb-3">
-                        <strong>Alignment:</strong> {{ description.alignment }}
+                        <strong>Alignment:</strong> {{ alignment_mapping.get(description.alignment, description.alignment) }} ({{ description.alignment }})
                     </div>
                     {% if description.player_assigned %}
                     <div class="mb-3">

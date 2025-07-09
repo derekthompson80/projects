@@ -1383,6 +1383,19 @@ def country_descriptions():
                 if desc['name'] in country_assignments:
                     desc['player_assigned'] = country_assignments[desc['name']]
 
+        # Define alignment code to full name mapping
+        alignment_mapping = {
+            'LG': 'Lawful Good',
+            'NG': 'Neutral Good',
+            'CG': 'Chaotic Good',
+            'LN': 'Lawful Neutral',
+            'N': 'True Neutral',
+            'CN': 'Chaotic Neutral',
+            'LE': 'Lawful Evil',
+            'NE': 'Neutral Evil',
+            'CE': 'Chaotic Evil'
+        }
+
         # Get unique alignments and government types for filtering
         alignments = sorted(list(set(desc['alignment'] for desc in descriptions)))
         government_types = sorted(list(set(desc['government_type'] for desc in descriptions)))
@@ -1397,7 +1410,8 @@ def country_descriptions():
                           descriptions=descriptions, 
                           map_image='CG5_basic_map.png',
                           alignments=alignments,
-                          government_types=government_types)
+                          government_types=government_types,
+                          alignment_mapping=alignment_mapping)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
