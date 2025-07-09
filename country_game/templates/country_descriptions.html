@@ -65,10 +65,10 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Government Type:</strong> {{ description.government_type }}
+                        <strong>Alignment:</strong> {{ description.government_type }}
                     </div>
                     <div class="mb-3">
-                        <strong>Alignment:</strong> {{ alignment_mapping.get(description.alignment, description.alignment) }} ({{ description.alignment }})
+                        <strong>Government Type:</strong> {{ alignment_mapping.get(description.alignment, description.alignment) }} ({{ description.alignment }})
                     </div>
                     {% if description.player_assigned %}
                     <div class="mb-3">
