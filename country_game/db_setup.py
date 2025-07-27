@@ -1,7 +1,9 @@
 import mysql.connector
-import pandas as pd
 import os
 import csv
+
+# Get the directory where the script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # MySQL connection parameters
 # Note: PythonAnywhere databases are only accessible from within the PythonAnywhere environment.
@@ -19,10 +21,15 @@ import csv
 # 'password': 'Beholder30',
 # 'host': 'spade605.mysql.pythonanywhere-services.com',
 # 'port': 3306,
+# DATABASE_NAME: 'spade605$county_game_server',
+
+# Database name
+DATABASE_NAME = 'county_game_local'
+
 config = {
-    'user': 'spade605',
+    'user': 'root',
     'password': 'Beholder30',
-    'host': 'spade605.mysql.pythonanywhere-services.com',
+    'host': '127.0.0.1',
     'port': 3306,
     'raise_on_warnings': True
 }
@@ -39,18 +46,20 @@ def create_database():
         cursor = conn.cursor()
 
         # Check if database exists
-        cursor.execute("SHOW DATABASES LIKE 'spade605$county_game_server'")
+        cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
         db_exists = cursor.fetchone()
 
-        if not db_exists:
-            # Create database if it doesn't exist
-            cursor.execute("CREATE DATABASE spade605$county_game_server")
-            print("Database created successfully")
-        else:
-            print("Database 'spade605$county_game_server' already exists")
+        if db_exists:
+            # Drop the database if it exists
+            cursor.execute(f"DROP DATABASE {DATABASE_NAME}")
+            print(f"Database '{DATABASE_NAME}' dropped")
+            
+        # Create database
+        cursor.execute(f"CREATE DATABASE {DATABASE_NAME}")
+        print("Database created successfully")
 
         # Use the database
-        cursor.execute("USE spade605$county_game_server")
+        cursor.execute(f"USE {DATABASE_NAME}")
 
         # Create tables
         create_tables(cursor)
@@ -82,7 +91,7 @@ def create_database():
                 "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
                 ('Derek.Thompson', hashed_password, 'staff')
             )
-            print("Created admin user (username: Derek.Thompson, password: Beholder30")
+            print("Created admin user (username: Derek.Thompson, password: Beholder30)")
 
         conn.commit()
         cursor.close()
@@ -236,6 +245,29 @@ def create_tables(cursor):
     )
     """)
 
+    # Religions table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS religions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        code VARCHAR(10),
+        description TEXT,
+        parent_religion_id INT,
+        FOREIGN KEY (parent_religion_id) REFERENCES religions(id)
+    )
+    """)
+
+    # Religion deities/entities table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS religion_entities (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        religion_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        FOREIGN KEY (religion_id) REFERENCES religions(id)
+    )
+    """)
+
     print("Tables created successfully")
 
 def import_data():
@@ -243,14 +275,14 @@ def import_data():
     try:
         # Connect to the database
         conn_config = config.copy()
-        conn_config['database'] = 'spade605$county_game_server'
+        conn_config['database'] = DATABASE_NAME
 
         conn = mysql.connector.connect(**conn_config)
         cursor = conn.cursor(dictionary=True)
 
         # Check if tables exist
         cursor.execute("SHOW TABLES")
-        tables = [table['Tables_in_spade605$county_game_server'] for table in cursor.fetchall()]
+        tables = [table[f'Tables_in_{DATABASE_NAME}'] for table in cursor.fetchall()]
 
         if 'stats' not in tables or 'users' not in tables or 'resources' not in tables:
             print("Required tables don't exist. Creating tables first...")
@@ -268,7 +300,7 @@ def import_data():
             print("Importing stats data...")
             # Import stats from player sheet
             try:
-                with open('player_sheet_templete.csv', 'r') as file:
+                with open(os.path.join(SCRIPT_DIR, 'player_sheet_templete.csv'), 'r') as file:
                     reader = csv.reader(file)
                     rows = list(reader)
 
@@ -299,7 +331,7 @@ def import_data():
             print("Importing resources data...")
             # Import resources from player sheet
             try:
-                with open('player_sheet_templete.csv', 'r') as file:
+                with open(os.path.join(SCRIPT_DIR, 'player_sheet_templete.csv'), 'r') as file:
                     reader = csv.reader(file)
                     rows = list(reader)
 
@@ -311,26 +343,58 @@ def import_data():
                             break
 
                     # Extract resources
-                    if resource_start > 0:
-                        for i in range(resource_start, len(rows)):
-                            if i < len(rows) and len(rows[i]) >= 8:
-                                name = rows[i][0].strip()
-                                if name and name != "Name" and name != "":
-                                    resource_type = rows[i][1] if len(rows[i]) > 1 else None
-                                    tier = int(rows[i][2]) if len(rows[i]) > 2 and rows[i][2].isdigit() else 0
-                                    natively_produced = int(rows[i][3]) if len(rows[i]) > 3 and rows[i][3].isdigit() else 0
-                                    trade = int(rows[i][4]) if len(rows[i]) > 4 and rows[i][4].isdigit() else 0
-                                    committed = int(rows[i][5]) if len(rows[i]) > 5 and rows[i][5].isdigit() else 0
-                                    not_developed = int(rows[i][6]) if len(rows[i]) > 6 and rows[i][6].isdigit() else 0
-                                    available = int(rows[i][7]) if len(rows[i]) > 7 and rows[i][7].isdigit() else 0
+                    if resource_start > 0 and resource_start < len(rows):
+                        try:
+                            for i in range(resource_start, len(rows)):
+                                if i < len(rows) and len(rows[i]) >= 8:
+                                    try:
+                                        name = rows[i][0].strip() if rows[i][0] is not None else ""
+                                        if name and name != "Name" and name != "":
+                                            resource_type = rows[i][1] if len(rows[i]) > 1 and rows[i][1] is not None else None
+                                            
+                                            # Safely convert values to integers with proper error handling
+                                            try:
+                                                tier = int(rows[i][2]) if len(rows[i]) > 2 and rows[i][2] is not None and rows[i][2].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                tier = 0
+                                                
+                                            try:
+                                                natively_produced = int(rows[i][3]) if len(rows[i]) > 3 and rows[i][3] is not None and rows[i][3].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                natively_produced = 0
+                                                
+                                            try:
+                                                trade = int(rows[i][4]) if len(rows[i]) > 4 and rows[i][4] is not None and rows[i][4].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                trade = 0
+                                                
+                                            try:
+                                                committed = int(rows[i][5]) if len(rows[i]) > 5 and rows[i][5] is not None and rows[i][5].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                committed = 0
+                                                
+                                            try:
+                                                not_developed = int(rows[i][6]) if len(rows[i]) > 6 and rows[i][6] is not None and rows[i][6].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                not_developed = 0
+                                                
+                                            try:
+                                                available = int(rows[i][7]) if len(rows[i]) > 7 and rows[i][7] is not None and rows[i][7].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                available = 0
 
-                                    cursor.execute("""
-                                    INSERT INTO resources (name, type, tier, natively_produced, trade, committed, not_developed, available)
-                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                                    """, (name, resource_type, tier, natively_produced, trade, committed, not_developed, available))
+                                            cursor.execute("""
+                                            INSERT INTO resources (name, type, tier, natively_produced, trade, committed, not_developed, available)
+                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                                            """, (name, resource_type, tier, natively_produced, trade, committed, not_developed, available))
+                                    except IndexError as e:
+                                        print(f"Warning: Error processing resource row {i}: {e}")
+                                        continue
 
                                     if i >= resource_start + 30:  # Limit to a reasonable number of resources
                                         break
+                        except Exception as e:
+                            print(f"Warning: Error processing resources: {e}")
             except FileNotFoundError:
                 print("Warning: player_sheet_templete.csv not found. Skipping resources import.")
         else:
@@ -344,50 +408,85 @@ def import_data():
             print("Importing actions data...")
             # Import actions from player sheet
             try:
-                with open('player_sheet_templete.csv', 'r') as file:
+                with open(os.path.join(SCRIPT_DIR, 'player_sheet_templete.csv'), 'r') as file:
                     reader = csv.reader(file)
                     rows = list(reader)
 
                     # Find action sections
-                    for action_num in range(1, 5):  # Assuming up to 4 actions
-                        action_start = 0
-                        for i, row in enumerate(rows):
-                            if len(row) > 0 and row[0] == f"Action {action_num}":
-                                action_start = i
-                                break
+                    try:
+                        for action_num in range(1, 5):  # Assuming up to 4 actions
+                            try:
+                                action_start = 0
+                                for i, row in enumerate(rows):
+                                    if len(row) > 0 and row[0] == f"Action {action_num}":
+                                        action_start = i
+                                        break
 
-                        if action_start > 0:
-                            # Extract action description
-                            description = ""
-                            if action_start + 1 < len(rows) and len(rows[action_start + 1]) > 1:
-                                description = rows[action_start + 1][1]
+                                if action_start > 0 and action_start < len(rows):
+                                    # Extract action description
+                                    description = ""
+                                    try:
+                                        if action_start + 1 < len(rows) and len(rows[action_start + 1]) > 1:
+                                            description = rows[action_start + 1][1] if rows[action_start + 1][1] is not None else ""
+                                    except IndexError:
+                                        print(f"Warning: Error extracting description for Action {action_num}")
+                                        description = ""
 
-                            # Extract stats and resources
-                            stats_row = 0
-                            for i in range(action_start, len(rows)):
-                                if len(rows[i]) > 0 and rows[i][0] == "Stat 1":
-                                    stats_row = i + 1
-                                    break
+                                    # Extract stats and resources
+                                    stats_row = 0
+                                    try:
+                                        for i in range(action_start, min(action_start + 10, len(rows))):  # Limit search to 10 rows
+                                            if i < len(rows) and len(rows[i]) > 0 and rows[i][0] == "Stat 1":
+                                                stats_row = i + 1
+                                                break
+                                    except IndexError:
+                                        print(f"Warning: Error finding stats row for Action {action_num}")
+                                        stats_row = 0
 
-                            if stats_row > 0 and stats_row < len(rows):
-                                stat1 = rows[stats_row][0] if len(rows[stats_row]) > 0 else None
-                                stat1_value = int(rows[stats_row][1]) if len(rows[stats_row]) > 1 and rows[stats_row][1].isdigit() else 0
-                                stat2 = rows[stats_row][2] if len(rows[stats_row]) > 2 else None
-                                stat2_value = int(rows[stats_row][3]) if len(rows[stats_row]) > 3 and rows[stats_row][3].isdigit() else 0
-                                advisor_used = True if len(rows[stats_row]) > 4 and rows[stats_row][4] == "Yes" else False
+                                    if stats_row > 0 and stats_row < len(rows):
+                                        try:
+                                            # Safely extract and convert values with proper error handling
+                                            stat1 = rows[stats_row][0] if len(rows[stats_row]) > 0 and rows[stats_row][0] is not None else None
+                                            
+                                            try:
+                                                stat1_value = int(rows[stats_row][1]) if len(rows[stats_row]) > 1 and rows[stats_row][1] is not None and rows[stats_row][1].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                stat1_value = 0
+                                                
+                                            stat2 = rows[stats_row][2] if len(rows[stats_row]) > 2 and rows[stats_row][2] is not None else None
+                                            
+                                            try:
+                                                stat2_value = int(rows[stats_row][3]) if len(rows[stats_row]) > 3 and rows[stats_row][3] is not None and rows[stats_row][3].isdigit() else 0
+                                            except (ValueError, AttributeError):
+                                                stat2_value = 0
+                                                
+                                            advisor_used = True if len(rows[stats_row]) > 4 and rows[stats_row][4] is not None and rows[stats_row][4] == "Yes" else False
 
-                                # Collect resources used
-                                resources_used = []
-                                for j in range(5, 10):
-                                    if len(rows[stats_row]) > j and rows[stats_row][j]:
-                                        resources_used.append(rows[stats_row][j])
+                                            # Collect resources used
+                                            resources_used = []
+                                            try:
+                                                for j in range(5, 10):
+                                                    if len(rows[stats_row]) > j and rows[stats_row][j] is not None and rows[stats_row][j]:
+                                                        resources_used.append(rows[stats_row][j])
+                                            except IndexError:
+                                                print(f"Warning: Error collecting resources for Action {action_num}")
+                                                
+                                            try:
+                                                gold_spent = int(rows[stats_row][10]) if len(rows[stats_row]) > 10 and rows[stats_row][10] is not None and rows[stats_row][10].isdigit() else 0
+                                            except (ValueError, AttributeError, IndexError):
+                                                gold_spent = 0
 
-                                gold_spent = int(rows[stats_row][10]) if len(rows[stats_row]) > 10 and rows[stats_row][10].isdigit() else 0
-
-                                cursor.execute("""
-                                INSERT INTO actions (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                                """, (action_num, description, stat1, stat1_value, stat2, stat2_value, advisor_used, ','.join(resources_used), gold_spent))
+                                            cursor.execute("""
+                                            INSERT INTO actions (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent)
+                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                            """, (action_num, description, stat1, stat1_value, stat2, stat2_value, advisor_used, ','.join(resources_used), gold_spent))
+                                        except Exception as e:
+                                            print(f"Warning: Error processing stats for Action {action_num}: {e}")
+                            except Exception as e:
+                                print(f"Warning: Error processing Action {action_num}: {e}")
+                                continue
+                    except Exception as e:
+                        print(f"Warning: Error processing actions: {e}")
             except FileNotFoundError:
                 print("Warning: player_sheet_templete.csv not found. Skipping actions import.")
         else:
@@ -401,7 +500,7 @@ def import_data():
             print("Importing projects data...")
             # Import projects from staff sheet
             try:
-                with open('staff_sheet_templete.csv', 'r') as file:
+                with open(os.path.join(SCRIPT_DIR, 'staff_sheet_templete.csv'), 'r') as file:
                     reader = csv.reader(file)
                     rows = list(reader)
 
@@ -412,18 +511,23 @@ def import_data():
                             project_start = i
                             break
 
-                    if project_start > 0:
-                        # Find column indices
-                        header_row = rows[project_start]
-                        name_col = header_row.index("Project A") if "Project A" in header_row else -1
-                        effect_col = header_row.index("Effect") if "Effect" in header_row else -1
-                        cost_col = header_row.index("Cost (g)") if "Cost (g)" in header_row else -1
-                        resources_col = header_row.index("Resource(s)") if "Resource(s)" in header_row else -1
-                        status_col = header_row.index("(O)ngoing (U)nfinished (S)uspended") if "(O)ngoing (U)nfinished (S)uspended" in header_row else -1
-                        progress_col = header_row.index("Progress Per Turn") if "Progress Per Turn" in header_row else -1
-                        needed_col = header_row.index("Total Needed") if "Total Needed" in header_row else -1
-                        total_col = header_row.index("Total Progress") if "Total Progress" in header_row else -1
-                        turn_col = header_row.index("Turn Started") if "Turn Started" in header_row else -1
+                    if project_start > 0 and project_start < len(rows):
+                        try:
+                            # Find column indices
+                            header_row = rows[project_start]
+                            name_col = header_row.index("Project A") if "Project A" in header_row else -1
+                            effect_col = header_row.index("Effect") if "Effect" in header_row else -1
+                            cost_col = header_row.index("Cost (g)") if "Cost (g)" in header_row else -1
+                            resources_col = header_row.index("Resource(s)") if "Resource(s)" in header_row else -1
+                            status_col = header_row.index("(O)ngoing (U)nfinished (S)uspended") if "(O)ngoing (U)nfinished (S)uspended" in header_row else -1
+                            progress_col = header_row.index("Progress Per Turn") if "Progress Per Turn" in header_row else -1
+                            needed_col = header_row.index("Total Needed") if "Total Needed" in header_row else -1
+                            total_col = header_row.index("Total Progress") if "Total Progress" in header_row else -1
+                            turn_col = header_row.index("Turn Started") if "Turn Started" in header_row else -1
+                        except (ValueError, IndexError) as e:
+                            print(f"Warning: Error finding project columns: {e}")
+                            # Set all columns to -1 to skip processing
+                            name_col = effect_col = cost_col = resources_col = status_col = progress_col = needed_col = total_col = turn_col = -1
 
                         # Extract projects
                         for i in range(project_start + 1, project_start + 9):  # Assuming up to 8 projects
@@ -446,6 +550,82 @@ def import_data():
                 print("Warning: staff_sheet_templete.csv not found. Skipping projects import.")
         else:
             print(f"Projects table already has {projects_count} records. Skipping import.")
+
+        # Check if religions table has data
+        cursor.execute("SELECT COUNT(*) FROM religions")
+        religions_count = cursor.fetchone()[0]
+
+        if religions_count == 0:
+            print("Importing religions data...")
+            try:
+                with open(os.path.join(SCRIPT_DIR, 'CG5 Major religions .txt'), 'r', encoding='utf-8', errors='replace') as file:
+                    lines = file.readlines()
+
+                    religion_name = ""
+                    religion_code = ""
+                    religion_description = ""
+                    current_religion_id = None
+
+                    i = 0
+                    while i < len(lines):
+                        line = lines[i].strip()
+
+                        # Check if this is a religion header line (contains name and code in parentheses)
+                        if line and "(" in line and ")" in line and not line.startswith("*"):
+                            # Save previous religion if exists
+                            if religion_name:
+                                cursor.execute("""
+                                INSERT INTO religions (name, code, description, parent_religion_id)
+                                VALUES (%s, %s, %s, %s)
+                                """, (religion_name, religion_code, religion_description, None))
+                                current_religion_id = cursor.lastrowid
+                                religion_description = ""
+
+                            # Parse new religion
+                            parts = line.split("(")
+                            religion_name = parts[0].strip()
+                            religion_code = parts[1].split(")")[0].strip()
+
+                            # Collect description from following lines
+                            i += 1
+                            while i < len(lines) and not (lines[i].strip() and "(" in lines[i] and ")" in lines[i] and not lines[i].strip().startswith("*")):
+                                if lines[i].strip() and not lines[i].strip().startswith("*"):
+                                    religion_description += lines[i].strip() + " "
+                                # Check if this is an entity line
+                                elif lines[i].strip().startswith("*"):
+                                    # Only process entity if we have a valid religion_id
+                                    if current_religion_id is not None:
+                                        entity_line = lines[i].strip()[1:].strip()  # Remove the * and leading/trailing whitespace
+
+                                        # Parse entity name and description
+                                        if "-" in entity_line:
+                                            entity_parts = entity_line.split("-", 1)
+                                            entity_name = entity_parts[0].strip()
+                                            entity_description = entity_parts[1].strip() if len(entity_parts) > 1 else ""
+
+                                            cursor.execute("""
+                                            INSERT INTO religion_entities (religion_id, name, description)
+                                            VALUES (%s, %s, %s)
+                                            """, (current_religion_id, entity_name, entity_description))
+
+                                i += 1
+                            
+                            # No need to decrement i, as we want to move to the next line
+                        else:
+                            i += 1
+
+                    # Save the last religion if exists
+                    if religion_name:
+                        cursor.execute("""
+                        INSERT INTO religions (name, code, description, parent_religion_id)
+                        VALUES (%s, %s, %s, %s)
+                        """, (religion_name, religion_code, religion_description, None))
+                        current_religion_id = cursor.lastrowid
+
+            except FileNotFoundError:
+                print("Warning: CG5 Major religions .txt not found. Skipping religions import.")
+        else:
+            print(f"Religions table already has {religions_count} records. Skipping import.")
 
         conn.commit()
         cursor.close()

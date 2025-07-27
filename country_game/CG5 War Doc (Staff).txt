@@ -1,0 +1,185 @@
+﻿Words 2713
+
+
+Everything rounds up.
+Ties go to the defender.
+
+
+Basics
+Your military stat represents the highest rating among your army, navy, or air force. Army, Navy, and Air Forces may be referred to as branches in this document. Your military also factors into how many forts you can have. You can have up to your size times military in fortifications. Fortified towns and cities count. If you want to improve your army, navy, or air force you must work on them separately. If one of them is raised about your current military stat your military stat goes up by 1. Improving a force to 4 or 5 is very difficult and you need a good plan.
+
+
+Raiding is a good way to get more resources and injure your rivals. Raiding requires an action to but needs no other resources. If you don’t specify where you’re going and what you’re looking for your people will pick a random valid target nearby. This could be a trade route, a country, a specific urban center, or resource. Most people do not consider simple raiding as an act of war but some do. It wouldn’t be hard to turn raids into a valid reason to go to war against the aggressor. Fortifications provide a small bonus against raiding for their tile and adjacent tiles.
+
+
+There is a penalty for military operations based on distance. The further away the place you want to attack the larger the penalties. Having a willing ally en route to assist with logistics or raiding reduce distance penalties. The ally in question must acknowledge the aid as a free action.
+
+
+You cannot invade or otherwise engage in any military action outside of your country greater than raiding without spending an action and a turn to prepare your forces. The cost to prepare your entire military is 2g, 1 strategic resource, and 1 food. You can prepare up to your military stat in times before declaring war. You get a +1 bonus on the first turn of the invasion for each turn you prepared beforehand. Preparations are lost if you do not invade or prepare on the next turn. You cannot prepare and invade on the same turn. You do not have to prepare in order to mount a defense of your country but you can prepare to get the bonus if you know the invasion is coming.
+
+
+When engaging in war your military stat and branches will start to take damage. They take damage every military stat in turns engaged in war (even if this is higher than the branches stat). Losing a battle counts as an extra turn. Taking damage causes a 5+ to go to a 5, a 5 goes to a 5-, and a 5- goes to a 4+, ect. 
+
+
+War is expensive, in addition to the costs of preparing you spend your branches rating in (g) and 1 food each turn you are declaring the invade action. You only need to spend ½ your military in (g) and 1 food each turn to mount a defence. You can pay less than this but you will not be using your full military force. You get what you pay for. Mobilizing your military to defend your country costs an action every turn you want to do it. If you don’t actively defend your country your people will still defend themselves but less effectively (military +1). 
+
+
+You can use more than one branch of your military on any active conflict. By spending a second action, ½ the second military branches rating in (g), and 1 extra food you will be less reliant on luck. You can also send in extra special forces (more on that later). You also then get to roll twice and take the better result on your war roll that turn 
+
+
+How large a country's military is is mostly dependant on its size stat. When engaging in full scale war smaller countries will take a -1 penalty.
+
+
+If you are fighting a war against multiple opponents you must declare a separate action to fight each one. If you don’t spend the action you either don’t attack that country or you defend with your military stat +1 that turn. You cannot use any stat more than twice each turn.
+
+
+You will take territory along the border between your forces and the enemies based on how well you do. First you take non-fort tiles in the border line, then you take fort tiles, and after that the line moves over one hex and repeat.
+
+
+After you conquer territory you’ll need to integrate it into your country before you get access to the resource production, urban centers, and fortifications. This is a mix of repairs and convincing the locals to fall in line. Assimilating territory is a social action that costs 1g and 1 luxury resource each turn. 
+
+
+
+
+Special Forces
+Your nations will have special forces divisions. These divisions can be deployed as part of another action or can be deployed as their own action. Deploying special forces costs 1g and 1 food for the project. Special forces grant a +1 bonus to that action, and an additional +1 if the action uses the listed stat. Also they have their own special effects. These effects will last until project end or if they are recalled early. Recalling special forces is a free action but they cannot be redeployed again until the next turn. Actions can only have 1 special forces group deployed with them at a time. The exception is war. In war you can deploy up to your ½  your relevant branches' stat in special forces. If you use a second branch you can assign special forces to that branch too. You must pay separately for each one deployed. 
+
+
+Special forces can be lost or damaged. This only happens when violence or sabotage is involved. There is risk of damage anytime your special forces engage in violence. Losing makes this much more likely to happen. When you win or tie a battle a D20 is rolled. On a 1 a random unit is damaged and another D20 is rolled. If this is also a 1 the unit is shattered and will have to be built back up from scratch. Damaged units lose many of their benefits and bonuses and risk being shattered if you roll poorly. When you lose a battle you roll a D20 for each point of rollover the enemy had on you.
+
+
+Here are some examples of basic special forces. New special forces will be about this powerful. Stronger and more advanced forces exist. A project will be unlocked to improve a special forces unit after it has gotten enough field experience. Being part of completed projects from beginning to end and participating in war give experience. Advancing a special force will require both experience in war and projects. Raiding does not give field experience by default.
+
+
+Examples:
+Name
+	Stat
+	Terrain
+	Special
+	Druids
+	Religion
+	All
+	Does not cost food or gold to deploy
+	Clerics
+	Religion
+	Land/Sea
+	Reduce your penalties by 1
+	Wizards
+	Arcane
+	All
+	Gives a -1 penalty to enemy forces
+	Cavalry
+	Military
+	Land
+	Causes a -2 penalty to enemy forces instead of giving a bonus to your army
+	Siege
+	Military
+	Land
+	Negates 1 point of fortification bonus each turn (cumulative). Resets as you take forts.
+	Marines
+	Military
+	Land/Sea
+	Reduces the penalty for amphibious invasions
+	Close Air Support
+	Military
+	All
+	Negates 2 points of enemy bonuses
+	Spec-Ops
+	Espionage
+	All
+	Nullify one enemy special forces unit. Does not grant a bonus if they do this.
+	Rangers
+	Military
+	Land
+	Nullify the penalties for fighting in forested tiles
+	Engineers
+	Technology
+	Land/Sea
+	Reduce your enemies fortification bonus by 1 or increase your by 1
+	Merchant Marines
+	Military/Trade
+	Sea
+	A trade route started with merchant marines attached is automatically defended (even if this force is reassigned)
+	Priveteers
+	Military
+	Sea
+	+1 on raids and they gain experience from raiding.
+	
+
+
+
+Name
+	Stat
+	Terrain
+	Cost
+	Special
+	
+
+	Military
+	Land
+	1g, 1 food
+	
+
+	
+
+
+
+Example
+Stoney, King of the Belves wants to invade the forests of the Sheepenthar and reclaim the Belves ancestral lands. He has a military stat of 5 with an army of 4, navy of 5, and an air force of 2. Both nations are size 4 so no bonuses or penalties there. Unfortunately this battle will be entirely land based so Stoney can’t use his navy. Stoney spends the 1st turn preparing his forces. He is spending resources based on his army of 4. He spends 2g, 1 crops, and 1 iron on this. 
+Unfortunately Gregory, the Lord of the Sheepenthar gets word of this mobilization using the passive espionage system. He doesn’t know if the Belves are going to invade next turn or keep preparing. He could either declare his next turn’s action to prepare or defend. He decides it’s not worth the risk and declares an action on the 2nd turn to defend against an invasion. The Sheepenfar have a Military of 3. They have an army of 3 and no airforce. Gregory uses his arcane of 4 as his secondary stat by supplying his army with wizardly support. He also assigns 2 special forces units, the cavalry/siege unit known as The Dire Ram Horns (this is an experienced unit) and a wizard unit called Dan the Magnificent’s Mages (this is a basic unit). Here are their stats:
+
+
+Gregory, Lord of the Sheepenthar
+	Name
+	Stat
+	Terrain
+	Special
+	The Dire Ram Horns
+	Military
+	Land
+	Gives no bonus, instead gives a -2 penalty to enemy forces and negates 2 points of enemy fortification bonuses.
+	Dan the Magnificent’s Mages
+	Arcane
+	All
+	Gives a -1 penalty to enemy forces
+	 
+The total cost for this defence and the special forces units is 4g, and 3 food. 2g and 1 food from the defence itself, and 1g and 1 food for each special forces units. Gergory also has 2 forts along his border with the Belves. This gives him a +2 on his defence and Dan the Magnificent’s Mages will give him another +2 since he’s using arcane as one of his stats. The Dire Ram Horns don’t give a bonus because of their special abilities. Gregory also has an Army: Raiding adviser, Josepher the Swift. While it’s not his area of expertise Josepher will still help. Between his forts, special forces, and adviser Gregory has a bonus of +5. He has his army 3 + arcane 4 + adviser 1 + forts 2 + special force 2 for a total of 12. Not bad Gregory, lets see what Stoney is doing with his second action. 
+Stoney is invading. He’s in it to win it so he’s spending 2 actions to invade. The first is with his army and the second one is to coordinate his air force with it. He will also be deploying 3 sets of special forces, 2 with his army and 1 with his air force. The first force is the Super Arrow Force, a group of arcane archer rangers (this is an experienced force). The next is 1st Siege Division, they are a basic siege force. The last group are the Belves prestigious dragon knight corp, Los Caballeros de la Vid Llameante (this is a peak special forces unit). Here are their stats:
+
+
+Stoney, King of the Belves
+	Name
+	Stat
+	Terrain
+	Special
+	Super Arrow Force
+	Arcane/Military
+	All
+	Nullify the penalties for fighting in forested tiles and gives a -1 penalty to enemy forces
+	1st Siege Division
+	Military
+	Land
+	Negates 1 point of fortification bonus each turn (cumulative). Resets as you take forts.
+	Los Caballeros de la Vid Llameante
+	Military
+	All
+	Gives a -2 penalty to enemy force and negates 2 points of their bonuses. Costs 1 extra (g)
+	
+
+Stoney’s going to be spending a lot on this. He is spending 5g and 2 food between invading with his army (4g, 1 food) and his air force (1g, 1 food). He’s also spending 4g and 3 food between his special forces for a total of 9g and 5 food. He has an army of 4, an air force of 2, and he’s using his nations advanced technology and metallurgy to fuel his war machine so he’ll use his technology stat of 4 as his second stat. He has no military adviser and gets a +1 this turn for his preparations. These bonuses equal +8 but first we take off 3 points from the penalties provided by the sheepenthar special forces. This brings it down to +5. He gets his army 4 + technology 4 + air 1 + special forces 6 + preparation 1 + enemy special forces -3 = 13. We’re also going to have to now factor in the penalties Gregory is now getting from Stoney’s special forces. They are giving Gregory’s forces -3 and negating 2 points of their bonuses. This takes Gregory from a 12 to a 7. This does not look good for Gregory. As a note on bonuses and penalties. Anything that is not your primary and secondary stats are considered bonuses or penalties. You are capped at a net +/- 5 after all factors for bonuses.
+        Gregory gets lucky and mounts a heroic defence but still gets pushed back. The border is 5 hexes long and has 2 forts on Gregory’s side. Stoney takes 2 tiles, since there are 3 non fort tiles he takes from those first. No special forces took damage in this leg of the war.
+They will declare the same actions on turn 3. The only difference is that Stoney’s preparation bonus wears off. He’ll make this up by spending 1g and 1 unit of gems to pay bonuses to well performing squads in the form of sheep bounties. This will give him a +1 and replace the lost preparation bonus. Gregory gets very unlucky and some poorly relayed messages cause his right flank to collapse. Stoney takes 5 tiles this turn. He first takes the tile in the line without a fort, then the 2 tiles with forts. The line moves over one hex (there are no forts in the new line of battle) and Stoney takes another 2 tiles. With his forts gone Gregory is in a pickle. Also Dan the Magnificent's Mages have taken terrible casualties and will be much less effective. Luckily Gregory has an ace up his sleeve. His special forces unit Counting Sheep (an experienced spec-ops unit) has just arrived after he recalled them from another assignment this turn. They will be ready to deploy on turn 4. 
+
+
+Gregory, Lord of the Sheepenthar
+	Name
+	Stat
+	Terrain
+	Special
+	Counting Sheep
+	Military/Espionage
+	All
+	Nullify one enemy special forces unit. Also grants the normal bonus.
+	
+
+Gregory with be switching out Dan the Magnificent Mages with Counting Sheep. Let’s go over the scores again. Gregory is using his Military 3-, Arcane 4, Special Forces bonuses 2, Adviser bonus 1 for a total of 10. He will negate Stoney’s dragon riders and give Stoney’s forces -2. Stoney can’t afford to keep paying sheep bounties so he’ll drop that extra funding. Stoney’s score will consist of his military of 4, technology of 4, special forces bonus 4, air force support 1 for a total of 13. He’s losing 2 points form the Dire Rams Horns which takes him to 11. He’s also giving a -1 penalty to Gregory so Gregory’s score will be 9. At a 9 vs 11 Gregory is still at a disadvantage but it’s much less bad than before. Gregory does well and manages to stop Stoney’s advance. Since this is turn 4 and Stoney lost this turn his Military goes from a 5+ to 5, his army goes from 4+ to 4, and his air force goes from 2 to 2-. Since Gregory knows his Military stat will drop to a 2+ next turn he is going to try to negotiate. Stoney has recaptured most of the land that he wanted so he is open to negotiation. They negotiate so that Gregory gives another 3 tiles to the Belves and that the peace will be guaranteed by their mutual neighbor Steven the Blue of the Magma Dwarves. Stoney spent a total of 30g, 16 food, 1 iron, 1 gems, and 7 actions over 4 turns and he gained 11 tiles. Gregory spent 12g, 9 food, and 3 actions over 4 turns and lost 11 tiles.

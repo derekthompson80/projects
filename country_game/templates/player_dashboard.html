@@ -330,5 +330,68 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Major Religions Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Major Religions</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h6>Your Country's Religion</h6>
+                {% if user_religion %}
+                    <div class="alert alert-info">
+                        <p>Your country currently follows: <strong>{{ user_religion }}</strong></p>
+                        <form action="{{ url_for('remove_religion') }}" method="post" class="mt-2">
+                            <button type="submit" class="btn btn-danger btn-sm">Remove Religion</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="alert alert-secondary">
+                        <p>Your country does not currently have an official religion.</p>
+                        <form action="{{ url_for('assign_religion') }}" method="post" class="mt-2">
+                            <div class="input-group">
+                                <select class="form-select" name="religion" required>
+                                    <option value="">-- Select a religion --</option>
+                                    {% for religion in religions %}
+                                        <option value="{{ religion.abbreviation }}">{{ religion.name }} ({{ religion.abbreviation }})</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary">Assign Religion</button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+
+            <p class="text-muted">Information about the major religions in the game world.</p>
+
+            {% if religions %}
+                <div class="accordion" id="religionsAccordion">
+                    {% for religion in religions %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" 
+                                        aria-controls="collapse{{ loop.index }}">
+                                    {{ religion.name }} ({{ religion.abbreviation }})
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" 
+                                 aria-labelledby="heading{{ loop.index }}" data-bs-parent="#religionsAccordion">
+                                <div class="accordion-body">
+                                    <p>{{ religion.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    No religion information is available. Please contact the game master.
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

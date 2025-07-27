@@ -257,6 +257,7 @@
                             <tr>
                                 <th>Player</th>
                                 <th>Assigned Country</th>
+                                <th>Religion</th>
                                 <th>Country Database</th>
                             </tr>
                         </thead>
@@ -267,6 +268,13 @@
                                     <td>
                                         {% if player.country_name %}
                                             {{ player.country_name }}
+                                        {% else %}
+                                            <span class="text-muted">None</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if player.religion %}
+                                            <span class="badge bg-info">{{ player.religion }}</span>
                                         {% else %}
                                             <span class="text-muted">None</span>
                                         {% endif %}
@@ -338,6 +346,95 @@
                 </div>
             {% else %}
                 <p class="text-muted">No player actions submitted yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Major Religions Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Major Religions</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h6>Player Religion Management</h6>
+                <div class="alert alert-warning">
+                    <p>As a staff member, you can assign religions to player countries.</p>
+                    <form action="{{ url_for('staff_assign_religion') }}" method="post" class="mt-2">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <select class="form-select" name="player_id" required>
+                                    <option value="">-- Select a player --</option>
+                                    {% if players_with_countries %}
+                                        {% for player in players_with_countries %}
+                                            {% if player.country_db %}
+                                                <option value="{{ player.id }}">{{ player.username }} ({{ player.country_name }})</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <select class="form-select" name="religion" required>
+                                    <option value="">-- Select a religion --</option>
+                                    {% for religion in religions %}
+                                        <option value="{{ religion.abbreviation }}">{{ religion.name }} ({{ religion.abbreviation }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Assign</button>
+                            </div>
+                        </div>
+                    </form>
+                    <form action="{{ url_for('staff_remove_religion') }}" method="post" class="mt-2">
+                        <div class="row g-3">
+                            <div class="col-md-10">
+                                <select class="form-select" name="player_id" required>
+                                    <option value="">-- Select a player --</option>
+                                    {% if players_with_countries %}
+                                        {% for player in players_with_countries %}
+                                            {% if player.country_db %}
+                                                <option value="{{ player.id }}">{{ player.username }} ({{ player.country_name }}{% if player.religion %}, Religion: {{ player.religion }}{% endif %})</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-danger w-100">Remove</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <p class="text-muted">Information about the major religions in the game world.</p>
+
+            {% if religions %}
+                <div class="accordion" id="religionsAccordion">
+                    {% for religion in religions %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" 
+                                        aria-controls="collapse{{ loop.index }}">
+                                    {{ religion.name }} ({{ religion.abbreviation }})
+                                </button>
+                            </h2>
+                            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" 
+                                 aria-labelledby="heading{{ loop.index }}" data-bs-parent="#religionsAccordion">
+                                <div class="accordion-body">
+                                    <p>{{ religion.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    No religion information is available. Please contact the game master.
+                </div>
             {% endif %}
         </div>
     </div>

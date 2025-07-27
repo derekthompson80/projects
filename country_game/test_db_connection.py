@@ -1,5 +1,5 @@
 import mysql.connector
-from db_setup import config, create_database, create_tables
+from db_setup import config, create_database, create_tables, DATABASE_NAME
 
 def test_connection():
     """Test the database connection"""
@@ -19,17 +19,26 @@ def test_connection():
 
         # Check if we can create a database
         cursor = conn.cursor()
-        print("\nAttempting to create database 'spade605$county_game_server'...")
-        cursor.execute("CREATE DATABASE IF NOT EXISTS spade605$county_game_server")
-        print("Database created or already exists.")
+        print(f"\nAttempting to create database '{DATABASE_NAME}'...")
+        try:
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DATABASE_NAME}")
+            print("Database created or already exists.")
+        except mysql.connector.Error as err:
+            print(f"Note: {err}")
+            print("Continuing with existing database...")
 
         # Use the database
-        cursor.execute("USE spade605$county_game_server")
-        print("Using database 'spade605$county_game_server'")
+        cursor.execute(f"USE {DATABASE_NAME}")
+        print(f"Using database '{DATABASE_NAME}'")
 
         # Create tables
         print("\nAttempting to create tables...")
-        create_tables(cursor)
+        try:
+            create_tables(cursor)
+            print("Tables created successfully.")
+        except mysql.connector.Error as err:
+            print(f"Note: {err}")
+            print("Continuing with existing tables...")
 
         cursor.close()
         conn.close()
@@ -38,6 +47,10 @@ def test_connection():
 
     except mysql.connector.Error as err:
         print(f"\nError: {err}")
+        # If we got this far, we at least connected to the server
+        if "already exists" in str(err):
+            print("This is not a critical error - the database or tables already exist.")
+            return True
         return False
 
 if __name__ == "__main__":

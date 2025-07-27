@@ -11,10 +11,55 @@ from datetime import timedelta
 app = Flask(__name__)
 app.secret_key = 'country_game_secret_key'
 # Configure session to be more persistent
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_SECURE'] = True  # Set to True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Session lasts for 24 hours
+
+def get_religions_data():
+    """Read and parse the religions data from the text file"""
+    try:
+        # Read the religions file
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(script_dir, 'CG5 Major religions .txt')
+
+        with open(file_path, 'r') as file:
+            content = file.readlines()
+
+        # Parse the content into a structured format
+        religions = []
+        current_religion = None
+
+        for line in content:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check if this is a religion entry (name followed by abbreviation in parentheses)
+            if re.search(r'\([A-Za-z]+\)$', line):
+                # Extract religion name and abbreviation
+                match = re.match(r'(.*?)\s*\(([A-Za-z]+)\)\s*$', line)
+                if match:
+                    religion_name = match.group(1).strip()
+                    abbreviation = match.group(2).strip()
+
+                    current_religion = {
+                        'name': religion_name,
+                        'abbreviation': abbreviation,
+                        'description': ''
+                    }
+                    religions.append(current_religion)
+            elif current_religion:
+                # Append to the description of the current religion
+                if current_religion['description']:
+                    current_religion['description'] += ' ' + line
+                else:
+                    current_religion['description'] = line
+
+        return religions
+    except Exception as e:
+        print(f'Error loading religions data: {str(e)}')
+        return []
 
 # Authentication decorators
 def login_required(f):
@@ -40,11 +85,11 @@ def staff_required(f):
 
 # MySQL connection parameters
 config = {
-    'user': 'spade605',
+    'user': 'root',
     'password': 'Beholder30',
-    'host': 'spade605.mysql.pythonanywhere-services.com',
+    'host': '127.0.0.1',
     'port': 3306,
-    'database': 'spade605$county_game_server',
+    'database': 'county_game_local',
     'raise_on_warnings': True
 }
 
@@ -63,11 +108,11 @@ def get_db_connection():
         return None
 
 def get_main_db_connection():
-    """Get a connection to the main database (spade605$county_game_server)"""
+    """Get a connection to the main database (county_game_local)"""
     try:
         # Always connect to the main database
         conn_config = config.copy()
-        conn_config['database'] = 'spade605$county_game_server'  # Ensure we connect to the main database
+        conn_config['database'] = 'county_game_local'  # Ensure we connect to the local database
 
         conn = mysql.connector.connect(**conn_config)
         return conn
@@ -671,6 +716,7 @@ def get_default_countries():
 
 @app.route('/create_country')
 @login_required
+@staff_required
 def create_country_form():
     """Display the country creation form and country management"""
     default_countries = get_default_countries()
@@ -827,6 +873,7 @@ def parse_country_template(template_name):
 
 @app.route('/create_country', methods=['POST'])
 @login_required
+@staff_required
 def create_country():
     """Create a new country database and tables"""
     if request.method == 'POST':
@@ -994,6 +1041,7 @@ def create_country_database(db_name):
             ruler_name VARCHAR(100) NOT NULL,
             government_type VARCHAR(50),
             description TEXT,
+            religion VARCHAR(50),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
@@ -1007,7 +1055,7 @@ def create_country_database(db_name):
         print(f"Error creating country database: {err}")
         return False
 
-def save_country_info(db_name, country_name, ruler_name, government_type, description):
+def save_country_info(db_name, country_name, ruler_name, government_type, description, religion=None):
     """Save country information to the country_info table"""
     try:
         # Connect to the country database
@@ -1019,9 +1067,9 @@ def save_country_info(db_name, country_name, ruler_name, government_type, descri
 
         # Insert country info
         cursor.execute("""
-        INSERT INTO country_info (name, ruler_name, government_type, description)
-        VALUES (%s, %s, %s, %s)
-        """, (country_name, ruler_name, government_type, description))
+        INSERT INTO country_info (name, ruler_name, government_type, description, religion)
+        VALUES (%s, %s, %s, %s, %s)
+        """, (country_name, ruler_name, government_type, description, religion))
 
         conn.commit()
         cursor.close()
@@ -1104,6 +1152,8 @@ def import_resources_from_template(db_name, resources):
         return False
 
 @app.route('/countries')
+@login_required
+@staff_required
 def list_countries():
     """List all available country databases"""
     countries = []
@@ -1152,6 +1202,8 @@ def list_countries():
     return render_template('select_country.html', countries=countries)
 
 @app.route('/select_country/<db_name>')
+@login_required
+@staff_required
 def select_country(db_name):
     """Select a country database"""
     # Validate that the database exists and is a country database
@@ -1412,6 +1464,254 @@ def country_descriptions():
                           alignments=alignments,
                           government_types=government_types,
                           alignment_mapping=alignment_mapping)
+
+@app.route('/religions')
+def religions():
+    """Display major religions information and allow players to select their religion"""
+    # Get religions data
+    religions = get_religions_data()
+
+    # Get the current user's country database if they are logged in and have one assigned
+    user_country_db = None
+    user_religion = None
+
+    if session.get('username') and not session.get('is_staff') and session.get('current_country_db'):
+        user_country_db = session.get('current_country_db')
+
+        # Get the user's current religion if they have one
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            try:
+                # Check if the country_info table has a religion column
+                cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+                if cursor.fetchone():
+                    # Get the current religion
+                    cursor.execute("SELECT religion FROM country_info LIMIT 1")
+                    result = cursor.fetchone()
+                    if result and result['religion']:
+                        user_religion = result['religion']
+            except mysql.connector.Error as err:
+                print(f"Error fetching religion: {err}")
+            finally:
+                cursor.close()
+                conn.close()
+
+    # Get players list for staff
+    players = []
+    if session.get('is_staff'):
+        main_conn = get_main_db_connection()
+        if main_conn:
+            main_cursor = main_conn.cursor(dictionary=True)
+            main_cursor.execute("SELECT id, username, country_db FROM users WHERE role != 'staff'")
+            players = main_cursor.fetchall()
+            main_cursor.close()
+            main_conn.close()
+
+    return render_template('religions.html', 
+                          religions=religions,
+                          user_religion=user_religion,
+                          players=players)
+
+@app.route('/assign_religion', methods=['POST'])
+@login_required
+def assign_religion():
+    """Allow players to assign a religion to their country"""
+    if session.get('is_staff'):
+        flash('Staff members should use the staff religion management tools', 'warning')
+        return redirect(url_for('religions'))
+
+    if not session.get('current_country_db'):
+        flash('You do not have a country assigned', 'danger')
+        return redirect(url_for('religions'))
+
+    religion = request.form.get('religion')
+    if not religion:
+        flash('Please select a religion', 'danger')
+        return redirect(url_for('religions'))
+
+    # Update the country_info table with the selected religion
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            # Check if the country_info table has a religion column
+            cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+            if not cursor.fetchone():
+                # Add the religion column if it doesn't exist
+                cursor.execute("ALTER TABLE country_info ADD COLUMN religion VARCHAR(50)")
+                conn.commit()
+
+            # Update the religion
+            cursor.execute("""
+                UPDATE country_info 
+                SET religion = %s 
+                WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
+            """, (religion,))
+            conn.commit()
+            flash(f'Religion assigned successfully', 'success')
+        except mysql.connector.Error as err:
+            print(f"Error assigning religion: {err}")
+            flash(f'Error assigning religion: {str(err)}', 'danger')
+        finally:
+            cursor.close()
+            conn.close()
+    else:
+        flash('Database connection error', 'danger')
+
+    return redirect(url_for('religions'))
+
+@app.route('/remove_religion', methods=['POST'])
+@login_required
+def remove_religion():
+    """Allow players to remove a religion from their country"""
+    if session.get('is_staff'):
+        flash('Staff members should use the staff religion management tools', 'warning')
+        return redirect(url_for('religions'))
+
+    if not session.get('current_country_db'):
+        flash('You do not have a country assigned', 'danger')
+        return redirect(url_for('religions'))
+
+    # Update the country_info table to remove the religion
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            # Check if the country_info table has a religion column
+            cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+            if cursor.fetchone():
+                # Update the religion to NULL
+                cursor.execute("""
+                    UPDATE country_info 
+                    SET religion = NULL 
+                    WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
+                """)
+                conn.commit()
+                flash('Religion removed successfully', 'success')
+            else:
+                flash('Religion column does not exist', 'danger')
+        except mysql.connector.Error as err:
+            print(f"Error removing religion: {err}")
+            flash(f'Error removing religion: {str(err)}', 'danger')
+        finally:
+            cursor.close()
+            conn.close()
+    else:
+        flash('Database connection error', 'danger')
+
+    return redirect(url_for('religions'))
+
+@app.route('/staff_assign_religion', methods=['POST'])
+@staff_required
+def staff_assign_religion():
+    """Allow staff to assign a religion to a player's country"""
+    player_id = request.form.get('player_id')
+    religion = request.form.get('religion')
+
+    if not player_id or not religion:
+        flash('Please select a player and a religion', 'danger')
+        return redirect(url_for('religions'))
+
+    # Get the player's country database
+    main_conn = get_main_db_connection()
+    if main_conn:
+        main_cursor = main_conn.cursor(dictionary=True)
+        main_cursor.execute("SELECT country_db FROM users WHERE id = %s", (player_id,))
+        player = main_cursor.fetchone()
+        main_cursor.close()
+        main_conn.close()
+
+        if player and player['country_db']:
+            # Update the country_info table with the selected religion
+            conn_config = config.copy()
+            conn_config['database'] = player['country_db']
+
+            try:
+                conn = mysql.connector.connect(**conn_config)
+                cursor = conn.cursor()
+
+                # Check if the country_info table has a religion column
+                cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+                if not cursor.fetchone():
+                    # Add the religion column if it doesn't exist
+                    cursor.execute("ALTER TABLE country_info ADD COLUMN religion VARCHAR(50)")
+                    conn.commit()
+
+                # Update the religion
+                cursor.execute("""
+                    UPDATE country_info 
+                    SET religion = %s 
+                    WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
+                """, (religion,))
+                conn.commit()
+                cursor.close()
+                conn.close()
+
+                flash(f'Religion assigned to player successfully', 'success')
+            except mysql.connector.Error as err:
+                print(f"Error assigning religion to player: {err}")
+                flash(f'Error assigning religion to player: {str(err)}', 'danger')
+        else:
+            flash('Player does not have a country assigned', 'danger')
+    else:
+        flash('Database connection error', 'danger')
+
+    return redirect(url_for('religions'))
+
+@app.route('/staff_remove_religion', methods=['POST'])
+@staff_required
+def staff_remove_religion():
+    """Allow staff to remove a religion from a player's country"""
+    player_id = request.form.get('player_id')
+
+    if not player_id:
+        flash('Please select a player', 'danger')
+        return redirect(url_for('religions'))
+
+    # Get the player's country database
+    main_conn = get_main_db_connection()
+    if main_conn:
+        main_cursor = main_conn.cursor(dictionary=True)
+        main_cursor.execute("SELECT country_db FROM users WHERE id = %s", (player_id,))
+        player = main_cursor.fetchone()
+        main_cursor.close()
+        main_conn.close()
+
+        if player and player['country_db']:
+            # Update the country_info table to remove the religion
+            conn_config = config.copy()
+            conn_config['database'] = player['country_db']
+
+            try:
+                conn = mysql.connector.connect(**conn_config)
+                cursor = conn.cursor()
+
+                # Check if the country_info table has a religion column
+                cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+                if cursor.fetchone():
+                    # Update the religion to NULL
+                    cursor.execute("""
+                        UPDATE country_info 
+                        SET religion = NULL 
+                        WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
+                    """)
+                    conn.commit()
+                    flash('Religion removed from player successfully', 'success')
+                else:
+                    flash('Religion column does not exist', 'danger')
+
+                cursor.close()
+                conn.close()
+            except mysql.connector.Error as err:
+                print(f"Error removing religion from player: {err}")
+                flash(f'Error removing religion from player: {str(err)}', 'danger')
+        else:
+            flash('Player does not have a country assigned', 'danger')
+    else:
+        flash('Database connection error', 'danger')
+
+    return redirect(url_for('religions'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -1810,6 +2110,29 @@ def player_dashboard():
         cursor.close()
         conn.close()
 
+    # Get religions data
+    religions = get_religions_data()
+
+    # Get the user's current religion if they have one
+    user_religion = None
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            # Check if the country_info table has a religion column
+            cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+            if cursor.fetchone():
+                # Get the current religion
+                cursor.execute("SELECT religion FROM country_info LIMIT 1")
+                result = cursor.fetchone()
+                if result and result['religion']:
+                    user_religion = result['religion']
+        except mysql.connector.Error as err:
+            print(f"Error fetching religion: {err}")
+        finally:
+            cursor.close()
+            conn.close()
+
     return render_template('player_dashboard.html', 
                           actions=actions, 
                           messages=messages, 
@@ -1818,7 +2141,9 @@ def player_dashboard():
                           all_resources=all_resources, 
                           stats=stats,
                           current_season=current_season,
-                          achievements=achievements)
+                          achievements=achievements,
+                          religions=religions,
+                          user_religion=user_religion)
 
 @app.route('/submit_player_action', methods=['POST'])
 @login_required
@@ -2467,13 +2792,42 @@ def staff_dashboard():
                         country['is_open_for_selection'] = False
                         break
 
-            # Update players_with_countries list with country names
+            # Update players_with_countries list with country names and religions
             for player_info in players_with_countries:
                 if player_info['country_db']:
+                    # Get country name
                     for country in countries:
                         if country['db_name'] == player_info['country_db']:
                             player_info['country_name'] = country['name']
                             break
+
+                    # Get player's religion
+                    try:
+                        # Connect to the player's country database
+                        conn_config_player = config.copy()
+                        conn_config_player['database'] = player_info['country_db']
+
+                        conn_player = mysql.connector.connect(**conn_config_player)
+                        cursor_player = conn_player.cursor(dictionary=True)
+
+                        # Check if the country_info table has a religion column
+                        cursor_player.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+                        if cursor_player.fetchone():
+                            # Get the current religion
+                            cursor_player.execute("SELECT religion FROM country_info LIMIT 1")
+                            result = cursor_player.fetchone()
+                            if result and result['religion']:
+                                player_info['religion'] = result['religion']
+                            else:
+                                player_info['religion'] = None
+                        else:
+                            player_info['religion'] = None
+
+                        cursor_player.close()
+                        conn_player.close()
+                    except mysql.connector.Error as err:
+                        print(f"Error fetching religion for player {player_info['username']}: {err}")
+                        player_info['religion'] = None
         except mysql.connector.Error as err:
             print(f"Error fetching country assignments: {err}")
 
@@ -2484,6 +2838,9 @@ def staff_dashboard():
         print(f"Error preparing staff dashboard: {err}")
         flash(f'Error preparing staff dashboard: {err}', 'danger')
 
+    # Get religions data
+    religions = get_religions_data()
+
     return render_template('staff_dashboard.html', 
                           countries=countries,
                           players=players,
@@ -2493,7 +2850,8 @@ def staff_dashboard():
                           all_resources=all_resources,
                           messages=messages,
                           player_actions=player_actions,
-                          cpu_quota_info=cpu_quota_info)
+                          cpu_quota_info=cpu_quota_info,
+                          religions=religions)
 
 @app.route('/delete_country/<db_name>')
 @staff_required

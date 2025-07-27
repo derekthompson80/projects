@@ -12,20 +12,20 @@ def get_all_sections():
     Each key is a section title, and each value is a list of lines for that section.
     """
     sections = {}
-    
+
     # Add each section to the dictionary
-    sections["Introduction"] = get_introduction().__doc__.strip().split('\n')
-    sections["Country Achievements"] = get_country_achievements().__doc__.strip().split('\n')
-    sections["What to Expect"] = get_what_to_expect().__doc__.strip().split('\n')
-    sections["Actions, What They're Made of, How to Submit Them, Resolution, and More"] = get_actions().__doc__.strip().split('\n')
-    sections["Action-less Actions aka Free Actions"] = get_free_actions().__doc__.strip().split('\n')
-    sections["Tips"] = get_tips().__doc__.strip().split('\n')
-    
+    sections["Introduction"] = get_introduction.__doc__.strip().split('\n')
+    sections["Country Achievements"] = get_country_achievements.__doc__.strip().split('\n')
+    sections["What to Expect"] = get_what_to_expect.__doc__.strip().split('\n')
+    sections["Actions, What They're Made of, How to Submit Them, Resolution, and More"] = get_actions.__doc__.strip().split('\n')
+    sections["Action-less Actions aka Free Actions"] = get_free_actions.__doc__.strip().split('\n')
+    sections["Tips"] = get_tips.__doc__.strip().split('\n')
+
     # Clean up the sections (remove empty lines at the beginning)
     for section_name, lines in sections.items():
         while lines and not lines[0].strip():
             lines.pop(0)
-    
+
     return sections
 
 def get_introduction():

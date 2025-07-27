@@ -25,3 +25,9 @@ class Scoreboard(Turtle):
         self.score += 1
         self.clear()
         self.update_scoreboard()
+        
+    def reset(self):
+        self.score = 0
+        self.clear()
+        self.goto(0, 270)  # Reset position to top of screen
+        self.update_scoreboard()
