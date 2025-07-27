@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Major Religions - Country Game{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="mb-4">Major Religions</h1>
+
+            <!-- Introduction -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <p>The world of the Country Game features a diverse array of religions, each with its own unique beliefs, practices, and influence. Below is information about the major religions in the game world.</p>
+                    
+                    {% if session.get('username') %}
+                        {% if not session.get('is_staff') %}
+                            <div class="alert alert-info">
+                                <h5>Your Country's Religion</h5>
+                                {% if user_religion %}
+                                    <p>Your country currently follows: <strong>{{ user_religion }}</strong></p>
+                                    <form action="{{ url_for('remove_religion') }}" method="post" class="mt-2">
+                                        <button type="submit" class="btn btn-danger btn-sm">Remove Religion</button>
+                                    </form>
+                                {% else %}
+                                    <p>Your country does not currently have an official religion.</p>
+                                    <form action="{{ url_for('assign_religion') }}" method="post" class="mt-2">
+                                        <div class="input-group">
+                                            <select class="form-select" name="religion" required>
+                                                <option value="">-- Select a religion --</option>
+                                                {% for religion in religions %}
+                                                    <option value="{{ religion.abbreviation }}">{{ religion.name }} ({{ religion.abbreviation }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="btn btn-primary">Assign Religion</button>
+                                        </div>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% elif session.get('is_staff') %}
+                            <div class="alert alert-warning">
+                                <h5>Staff Religion Management</h5>
+                                <p>As a staff member, you can assign religions to player countries.</p>
+                                <form action="{{ url_for('staff_assign_religion') }}" method="post" class="mt-2">
+                                    <div class="row g-3">
+                                        <div class="col-md-5">
+                                            <select class="form-select" name="player_id" required>
+                                                <option value="">-- Select a player --</option>
+                                                <!-- This will be populated with player data from the backend -->
+                                                {% if players %}
+                                                    {% for player in players %}
+                                                        <option value="{{ player.id }}">{{ player.username }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <select class="form-select" name="religion" required>
+                                                <option value="">-- Select a religion --</option>
+                                                {% for religion in religions %}
+                                                    <option value="{{ religion.abbreviation }}">{{ religion.name }} ({{ religion.abbreviation }})</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-primary w-100">Assign</button>
+                                        </div>
+                                    </div>
+                                </form>
+                                <form action="{{ url_for('staff_remove_religion') }}" method="post" class="mt-2">
+                                    <div class="row g-3">
+                                        <div class="col-md-10">
+                                            <select class="form-select" name="player_id" required>
+                                                <option value="">-- Select a player --</option>
+                                                <!-- This will be populated with player data from the backend -->
+                                                {% if players %}
+                                                    {% for player in players %}
+                                                        <option value="{{ player.id }}">{{ player.username }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="submit" class="btn btn-danger w-100">Remove</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Table of Contents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for religion in religions %}
+                        <div class="col-md-6 religion-toc-item">
+                            <a href="#religion-{{ loop.index }}" class="text-decoration-none">
+                                <div class="mb-2">
+                                    {{ religion.name }} ({{ religion.abbreviation }})
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Religion Descriptions -->
+            {% for religion in religions %}
+            <div class="card mb-4 religion-card" id="religion-{{ loop.index }}">
+                <div class="card-header">
+                    <h5>{{ religion.name }} ({{ religion.abbreviation }})</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ religion.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px; max-height: 80vh; overflow-y: auto;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0 small">Religion Information</h5>
+                </div>
+                <div class="card-body py-2">
+                    <h6 class="small">About Religions</h6>
+                    <p class="text-muted small mb-2">Religions in the Country Game can provide various benefits:</p>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item py-1">Cultural identity and unity</li>
+                        <li class="list-group-item py-1">Diplomatic relations with countries of the same faith</li>
+                        <li class="list-group-item py-1">Access to special religious units</li>
+                        <li class="list-group-item py-1">Potential bonuses to certain stats</li>
+                        <li class="list-group-item py-1">Unique project opportunities</li>
+                    </ul>
+                    
+                    <h6 class="small mt-3">Religion Mechanics</h6>
+                    <p class="text-muted small mb-2">Important mechanics to know:</p>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item py-1">Countries can have one official religion</li>
+                        <li class="list-group-item py-1">Changing religions may have diplomatic consequences</li>
+                        <li class="list-group-item py-1">Religious conflicts can arise between nations of different faiths</li>
+                        <li class="list-group-item py-1">Some special forces units require specific religions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+{% endblock %}
