@@ -10,6 +10,7 @@ RIGHT = 0
 class Snake:
     def __init__(self):
         self.segments = []
+        self.current_color = "white"
         self.create_snake()
         self.head = self.segments[0]
         
@@ -29,10 +30,20 @@ class Snake:
 
     def add_segment(self, position):
         new_segment = Turtle("square")
-        new_segment.color("white")
+        new_segment.color(self.current_color)
         new_segment.penup()
         new_segment.goto(position)
         self.segments.append(new_segment)
+        
+    def change_color(self, new_color):
+        """Change the color of all snake segments"""
+        self.current_color = new_color
+        for segment in self.segments:
+            segment.color(new_color)
+            
+    def get_color(self):
+        """Return the current color of the snake"""
+        return self.current_color
 
     def extend(self):
         # Add a new segment to the snake

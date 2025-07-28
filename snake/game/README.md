@@ -33,4 +33,4 @@ To run the snake game locally:
 - The snake moves continuously in the direction it's facing
 - Eat food to grow longer and increase your score
 - Avoid hitting the walls or the snake's own tail
-- The game ends when the snake hits a wall or its own tail
+- The game ends when the snake hits a wall or its own tail or no more moves can be made
