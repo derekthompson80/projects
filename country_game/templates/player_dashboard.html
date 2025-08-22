@@ -40,6 +40,74 @@
                         {% endif %}
                     </div>
                     {% endif %}
+
+                    <!-- Default Actions Helper -->
+                    <div class="mb-3 p-2 border rounded bg-light">
+                        <h6 class="mb-2">Default Actions (from Staff List)</h6>
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-9">
+                                <label for="default_action_select" class="form-label">Choose a Default Action</label>
+                                <select id="default_action_select" class="form-control">
+                                    <option value="">-- Select a default action --</option>
+                                    {% if standard_actions %}
+                                        {% for a in standard_actions %}
+                                            <option value="{{ a.id }}"
+                                                data-project="{{ a.project }}"
+                                                data-stattype="{{ a.stat_type or '' }}"
+                                                data-pointscost="{{ a.points_cost or '' }}"
+                                                data-resourcecosts="{{ a.resource_costs or '' }}"
+                                                data-requirements="{{ a.requirements or '' }}"
+                                                data-benefits="{{ a.benefits or '' }}">
+                                                [{{ a.stat_type or 'Any' }}] {{ a.project }}{% if a.points_cost %} (Points: {{ a.points_cost }}){% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option disabled>No default actions available</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="prefill_from_default" class="btn btn-secondary w-100">Prefill Action Form</button>
+                            </div>
+                        </div>
+                        <small class="text-muted">Selecting a default action will prefill the action form below with description, resources, and stat type.</small>
+                    </div>
+
+                    <!-- Custom Action Template Helper -->
+                    <div class="mb-3 p-2 border rounded bg-light">
+                        <h6 class="mb-2">Custom Action Template</h6>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Project</label>
+                                <input type="text" id="custom_project" class="form-control" placeholder="e.g., Build a Town">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Stat Type</label>
+                                <input type="text" id="custom_stat_type" class="form-control" placeholder="e.g., Economy">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Points Cost</label>
+                                <input type="text" id="custom_points_cost" class="form-control" placeholder="e.g., 25">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Resource Costs (total)</label>
+                                <input type="text" id="custom_resource_costs" class="form-control" placeholder="e.g., 3g, 1 luxury, 2 food">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Requirements</label>
+                                <input type="text" id="custom_requirements" class="form-control" placeholder="Optional">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">Benefits</label>
+                                <input type="text" id="custom_benefits" class="form-control" placeholder="Optional">
+                            </div>
+                            <div class="col-md-12 mt-2">
+                                <button type="button" id="prefill_from_custom" class="btn btn-outline-secondary">Use In Action Form</button>
+                            </div>
+                        </div>
+                        <small class="text-muted">These fields mirror the default actions template. Clicking "Use In Action Form" will compose a description and fill the form below.</small>
+                    </div>
+
                     <form action="{{ url_for('submit_player_action') }}" method="post">
                         <div class="form-group mb-3">
                             <label for="action_number">Action Number</label>
@@ -118,6 +186,69 @@
                                     resourceSelect.selectedIndex = 0;
                                 } else {
                                     alert('Please select a resource first.');
+                                }
+                            });
+                        </script>
+
+                        <script>
+                            // Prefill from default actions dropdown
+                            document.getElementById('prefill_from_default').addEventListener('click', function() {
+                                const sel = document.getElementById('default_action_select');
+                                const opt = sel.options[sel.selectedIndex];
+                                if (!opt || !opt.value) { alert('Please select a default action first.'); return; }
+                                const project = opt.getAttribute('data-project') || '';
+                                const statType = opt.getAttribute('data-stattype') || '';
+                                const pointsCost = opt.getAttribute('data-pointscost') || '';
+                                const resourceCosts = opt.getAttribute('data-resourcecosts') || '';
+                                const reqs = opt.getAttribute('data-requirements') || '';
+                                const bens = opt.getAttribute('data-benefits') || '';
+
+                                const parts = [];
+                                if (project) parts.push(project);
+                                if (pointsCost) parts.push('Points Cost: ' + pointsCost);
+                                if (reqs) parts.push('Requirements: ' + reqs);
+                                if (bens) parts.push('Benefits: ' + bens);
+                                document.getElementById('description').value = parts.join(' | ');
+                                document.getElementById('resources_used').value = resourceCosts;
+
+                                // Try to select the stat in the stat1 dropdown
+                                const stat1Sel = document.getElementById('stat1');
+                                if (statType && stat1Sel) {
+                                    for (let i=0; i<stat1Sel.options.length; i++) {
+                                        if (stat1Sel.options[i].value.toLowerCase() === statType.toLowerCase()) {
+                                            stat1Sel.selectedIndex = i;
+                                            break;
+                                        }
+                                    }
+                                }
+                            });
+
+                            // Prefill from custom template inputs
+                            document.getElementById('prefill_from_custom').addEventListener('click', function() {
+                                const project = document.getElementById('custom_project').value.trim();
+                                const statType = document.getElementById('custom_stat_type').value.trim();
+                                const pointsCost = document.getElementById('custom_points_cost').value.trim();
+                                const resourceCosts = document.getElementById('custom_resource_costs').value.trim();
+                                const reqs = document.getElementById('custom_requirements').value.trim();
+                                const bens = document.getElementById('custom_benefits').value.trim();
+
+                                const parts = [];
+                                if (project) parts.push(project);
+                                if (pointsCost) parts.push('Points Cost: ' + pointsCost);
+                                if (reqs) parts.push('Requirements: ' + reqs);
+                                if (bens) parts.push('Benefits: ' + bens);
+                                document.getElementById('description').value = parts.join(' | ');
+                                document.getElementById('resources_used').value = resourceCosts;
+
+                                // Try to select the stat in the stat1 dropdown
+                                const stat1Sel = document.getElementById('stat1');
+                                if (statType && stat1Sel) {
+                                    for (let i=0; i<stat1Sel.options.length; i++) {
+                                        if (stat1Sel.options[i].value.toLowerCase() === statType.toLowerCase()) {
+                                            stat1Sel.selectedIndex = i;
+                                            break;
+                                        }
+                                    }
                                 }
                             });
                         </script>

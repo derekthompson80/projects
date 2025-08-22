@@ -9,57 +9,98 @@ import glob
 from datetime import timedelta
 
 app = Flask(__name__)
-app.secret_key = 'country_game_secret_key'
-# Configure session to be more persistent
-app.config['SESSION_COOKIE_SECURE'] = True  # Set to True in production with HTTPS
+# Secret key: prefer environment variable; fallback to a generated key for local/dev
+_app_secret = os.getenv('COUNTRY_GAME_SECRET_KEY')
+if not _app_secret:
+    # Generate a temporary secret if not provided (sessions will reset between restarts)
+    import secrets
+    _app_secret = secrets.token_urlsafe(32)
+    print('Warning: COUNTRY_GAME_SECRET_KEY is not set. Using a temporary key for this run.')
+app.secret_key = _app_secret
+
+# Configure session security; allow overriding via environment for local vs production
+use_secure_cookies = os.getenv('CG_SESSION_COOKIE_SECURE', 'false').lower() in ('1', 'true', 'yes')
+app.config['SESSION_COOKIE_SECURE'] = use_secure_cookies  # True recommended in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Session lasts for 24 hours
+app.config['SESSION_COOKIE_SAMESITE'] = os.getenv('CG_SESSION_COOKIE_SAMESITE', 'Lax')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=int(os.getenv('CG_SESSION_DAYS', '1')))  # Default 1 day
 
 def get_religions_data():
-    """Read and parse the religions data from the text file"""
+    """Get religions data from the database"""
     try:
-        # Read the religions file
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(script_dir, 'CG5 Major religions .txt')
-
-        with open(file_path, 'r') as file:
-            content = file.readlines()
-
-        # Parse the content into a structured format
-        religions = []
-        current_religion = None
-
-        for line in content:
-            line = line.strip()
-            if not line:
-                continue
-
-            # Check if this is a religion entry (name followed by abbreviation in parentheses)
-            if re.search(r'\([A-Za-z]+\)$', line):
-                # Extract religion name and abbreviation
-                match = re.match(r'(.*?)\s*\(([A-Za-z]+)\)\s*$', line)
-                if match:
-                    religion_name = match.group(1).strip()
-                    abbreviation = match.group(2).strip()
-
-                    current_religion = {
-                        'name': religion_name,
-                        'abbreviation': abbreviation,
-                        'description': ''
-                    }
-                    religions.append(current_religion)
-            elif current_religion:
-                # Append to the description of the current religion
-                if current_religion['description']:
-                    current_religion['description'] += ' ' + line
-                else:
-                    current_religion['description'] = line
-
+        # Connect to the main database
+        conn = get_main_db_connection()
+        if not conn:
+            raise Exception("Could not connect to database")
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Get religions from the database
+        cursor.execute("""
+            SELECT r.id, r.name, r.code as abbreviation, r.description
+            FROM religions r
+            ORDER BY r.name
+        """)
+        
+        religions = cursor.fetchall()
+        
+        # Get entities for each religion
+        for religion in religions:
+            cursor.execute("""
+                SELECT name, description
+                FROM religion_entities
+                WHERE religion_id = %s
+                ORDER BY name
+            """, (religion['id'],))
+            
+            religion['entities'] = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
         return religions
     except Exception as e:
-        print(f'Error loading religions data: {str(e)}')
-        return []
+        print(f'Error loading religions data from database: {str(e)}')
+        
+        # Fallback to reading from CSV file if database access fails
+        try:
+            # Read the religions CSV file
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(script_dir, 'religions.csv')
+            
+            import csv
+            religions = []
+            
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
+                csv_reader = csv.reader(file)
+                
+                # Skip the header row
+                header = next(csv_reader)
+                
+                # Process each row
+                for row in csv_reader:
+                    if len(row) >= 3:  # Ensure we have at least name, abbreviation, and description
+                        religion_name = row[0].strip()
+                        abbreviation = row[1].strip() if row[1] else None
+                        description = row[2].strip() if len(row) > 2 else None
+                        
+                        # Skip empty rows
+                        if not religion_name:
+                            continue
+                        
+                        # Create religion object
+                        religion = {
+                            'name': religion_name,
+                            'abbreviation': abbreviation,
+                            'description': description,
+                            'entities': []  # No entities in the CSV format
+                        }
+                        religions.append(religion)
+
+            return religions
+        except Exception as e2:
+            print(f'Error in fallback religion loading: {str(e2)}')
+            return []
 
 # Authentication decorators
 def login_required(f):
@@ -83,13 +124,16 @@ def staff_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# MySQL connection parameters
+# MySQL connection parameters (loaded from environment when possible)
+# Password resolution order:
+#   CG_DB_PASSWORD -> MYSQL_PASSWORD -> DB_PASSWORD -> 'Beholder30' (local dev default; see LOCAL_DB_SETUP.md)
+_pwd = os.getenv('CG_DB_PASSWORD') or os.getenv('MYSQL_PASSWORD') or os.getenv('DB_PASSWORD') or 'Beholder30'
 config = {
-    'user': 'root',
-    'password': 'Beholder30',
-    'host': '127.0.0.1',
-    'port': 3306,
-    'database': 'county_game_local',
+    'user': os.getenv('CG_DB_USER', 'root'),
+    'password': _pwd,
+    'host': os.getenv('CG_DB_HOST', '127.0.0.1'),
+    'port': int(os.getenv('CG_DB_PORT', '3306')),
+    'database': os.getenv('CG_DB_NAME', 'county_game_local'),
     'raise_on_warnings': True
 }
 
@@ -108,17 +152,112 @@ def get_db_connection():
         return None
 
 def get_main_db_connection():
-    """Get a connection to the main database (county_game_local)"""
+    """Get a connection to the main database (default from env CG_MAIN_DB_NAME)"""
     try:
         # Always connect to the main database
         conn_config = config.copy()
-        conn_config['database'] = 'county_game_local'  # Ensure we connect to the local database
+        main_db = os.getenv('CG_MAIN_DB_NAME', conn_config.get('database') or 'county_game_local')
+        conn_config['database'] = main_db
 
         conn = mysql.connector.connect(**conn_config)
         return conn
     except mysql.connector.Error as err:
         print(f"Error connecting to main MySQL database: {err}")
         return None
+
+
+def load_standard_actions_if_empty():
+    """Ensure standard_actions table is populated from default_actions.csv if empty.
+    This is a safe no-op if the table already has rows or if CSV is missing.
+    """
+    try:
+        main_conn = get_main_db_connection()
+        if not main_conn:
+            return
+        cur = main_conn.cursor()
+        try:
+            # Check if table exists and count rows
+            try:
+                cur.execute("SELECT COUNT(*) FROM standard_actions")
+            except mysql.connector.Error:
+                # If the table does not exist yet, try to create it minimally
+                cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS standard_actions (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        project VARCHAR(255) NOT NULL,
+                        stat_type VARCHAR(50),
+                        points_cost VARCHAR(50),
+                        resource_costs TEXT,
+                        requirements TEXT,
+                        benefits TEXT
+                    )
+                    """
+                )
+                main_conn.commit()
+                cur.execute("SELECT COUNT(*) FROM standard_actions")
+            count = cur.fetchone()[0]
+            if count and int(count) > 0:
+                return
+
+            # Load from CSV
+            import os, csv
+            # CSV is expected at projects/country_game/default_actions.csv relative to repo root
+            csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'default_actions.csv')
+            if not os.path.exists(csv_path):
+                # Try fallback from repo root if run context differs
+                alt_path = os.path.join(os.getcwd(), 'projects', 'country_game', 'default_actions.csv')
+                csv_path = alt_path if os.path.exists(alt_path) else csv_path
+
+            if os.path.exists(csv_path):
+                with open(csv_path, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    rows = []
+                    for row in reader:
+                        project = (row.get('Project') or '').strip()
+                        if not project:
+                            continue
+                        stat_type = (row.get('Stat Type') or '').strip()
+                        points_cost = (row.get('Points Cost') or '').strip()
+                        resource_costs = (row.get('Resource Costs (total)') or '').strip()
+                        requirements = (row.get('Requirements') or '').strip()
+                        benefits = (row.get('Benefits') or '').strip()
+                        rows.append((project, stat_type, points_cost, resource_costs, requirements, benefits))
+                    if rows:
+                        cur.executemany(
+                            """
+                            INSERT INTO standard_actions (project, stat_type, points_cost, resource_costs, requirements, benefits)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                            """,
+                            rows
+                        )
+                        main_conn.commit()
+        finally:
+            cur.close()
+            main_conn.close()
+    except Exception as e:
+        # Non-fatal; just log for debugging
+        print(f"load_standard_actions_if_empty error: {e}")
+
+
+def ensure_actions_is_free_column(conn):
+    """Ensure the current country's actions table has the 'is_free' column.
+    Adds it as BOOLEAN DEFAULT FALSE if missing. Safe to call repeatedly.
+    """
+    try:
+        cur = conn.cursor()
+        cur.execute("SHOW COLUMNS FROM actions LIKE 'is_free'")
+        if not cur.fetchone():
+            try:
+                cur.execute("ALTER TABLE actions ADD COLUMN is_free BOOLEAN DEFAULT FALSE")
+                conn.commit()
+                print("Added missing 'is_free' column to actions table")
+            except mysql.connector.Error as err:
+                # If table doesn't exist or other error, just log
+                print(f"Error adding is_free column: {err}")
+        cur.close()
+    except mysql.connector.Error as err:
+        print(f"Error ensuring is_free column: {err}")
 
 def get_current_country_info():
     """Get information about the currently selected country"""
@@ -2110,6 +2249,22 @@ def player_dashboard():
         cursor.close()
         conn.close()
 
+    # Ensure standard actions exist, then load them for dropdowns
+    load_standard_actions_if_empty()
+    standard_actions = []
+    try:
+        main_conn_std = get_main_db_connection()
+        if main_conn_std:
+            main_cur_std = main_conn_std.cursor(dictionary=True)
+            try:
+                main_cur_std.execute("SELECT * FROM standard_actions ORDER BY stat_type, project")
+                standard_actions = main_cur_std.fetchall()
+            finally:
+                main_cur_std.close()
+                main_conn_std.close()
+    except Exception as e:
+        print(f"Error loading standard actions for player: {e}")
+
     # Get religions data
     religions = get_religions_data()
 
@@ -2143,7 +2298,8 @@ def player_dashboard():
                           current_season=current_season,
                           achievements=achievements,
                           religions=religions,
-                          user_religion=user_religion)
+                          user_religion=user_religion,
+                          standard_actions=standard_actions)
 
 @app.route('/submit_player_action', methods=['POST'])
 @login_required
@@ -2171,6 +2327,8 @@ def submit_player_action():
 
         conn = get_db_connection()
         if conn:
+            # Ensure schema compatibility for older country DBs
+            ensure_actions_is_free_column(conn)
             cursor = conn.cursor(dictionary=True)
 
             # Get politics stat to determine max actions
@@ -2623,6 +2781,7 @@ def staff_dashboard():
     all_resources = []  # List of all resources from CSV
     messages = []
     player_actions = []
+    standard_actions = []
 
     # Get CPU quota info from PythonAnywhere API
     cpu_quota_info = None
@@ -2684,6 +2843,23 @@ def staff_dashboard():
 
         cursor.close()
         conn.close()
+
+        # Ensure standard actions exist, then load them from the main database
+        try:
+            load_standard_actions_if_empty()
+            main_conn2 = get_main_db_connection()
+            if main_conn2:
+                main_cur2 = main_conn2.cursor(dictionary=True)
+                try:
+                    main_cur2.execute("SELECT * FROM standard_actions ORDER BY stat_type, project")
+                    standard_actions = main_cur2.fetchall()
+                except mysql.connector.Error as err:
+                    print(f"Error fetching standard actions: {err}")
+                finally:
+                    main_cur2.close()
+                    main_conn2.close()
+        except Exception as e:
+            print(f"Error loading standard actions: {e}")
 
         # Connect to country database for game data
         conn = get_db_connection()
@@ -2851,7 +3027,8 @@ def staff_dashboard():
                           messages=messages,
                           player_actions=player_actions,
                           cpu_quota_info=cpu_quota_info,
-                          religions=religions)
+                          religions=religions,
+                          standard_actions=standard_actions)
 
 @app.route('/delete_country/<db_name>')
 @staff_required
@@ -3126,6 +3303,112 @@ def update_country(db_name):
 
     return redirect(url_for('staff_dashboard'))
 
+@app.route('/add_default_action_to_player', methods=['POST'])
+@staff_required
+def add_default_action_to_player():
+    """Staff: Add a standard/default action to a player's country action sheet"""
+    player_id = request.form.get('player_id')
+    standard_action_id = request.form.get('standard_action_id')
+    action_number = request.form.get('action_number')
+
+    # Basic validation
+    if not player_id or not standard_action_id or not action_number:
+        flash('Please select a player, a default action, and an action number.', 'danger')
+        return redirect(url_for('staff_dashboard'))
+
+    try:
+        action_number = int(action_number)
+    except ValueError:
+        flash('Invalid action number.', 'danger')
+        return redirect(url_for('staff_dashboard'))
+
+    # Fetch player and standard action from main DB
+    main_conn = get_main_db_connection()
+    if not main_conn:
+        flash('Database connection error (main).', 'danger')
+        return redirect(url_for('staff_dashboard'))
+
+    main_cur = main_conn.cursor(dictionary=True)
+    try:
+        main_cur.execute("SELECT id, username, country_db FROM users WHERE id = %s", (player_id,))
+        player = main_cur.fetchone()
+        if not player or not player.get('country_db'):
+            flash('Selected player does not have an assigned country.', 'warning')
+            return redirect(url_for('staff_dashboard'))
+
+        main_cur.execute("SELECT * FROM standard_actions WHERE id = %s", (standard_action_id,))
+        std = main_cur.fetchone()
+        if not std:
+            flash('Selected default action not found.', 'danger')
+            return redirect(url_for('staff_dashboard'))
+    finally:
+        main_cur.close()
+        main_conn.close()
+
+    # Connect to player's country DB
+    try:
+        conn_config = config.copy()
+        conn_config['database'] = player['country_db']
+        cconn = mysql.connector.connect(**conn_config)
+        # Ensure schema compatibility for older country DBs
+        ensure_actions_is_free_column(cconn)
+        cur = cconn.cursor(dictionary=True)
+
+        # Determine stat1 and value
+        stat1 = std.get('stat_type') if std.get('stat_type') else None
+        stat1_value = None
+        if stat1:
+            try:
+                cur.execute("SELECT rating FROM stats WHERE name = %s", (stat1,))
+                res = cur.fetchone()
+                if res:
+                    stat1_value = res['rating']
+            except mysql.connector.Error as err:
+                print(f"Error fetching stat rating: {err}")
+
+        # Compose description and resources
+        desc_parts = [f"[Default] {std.get('project','')}" ]
+        if std.get('points_cost'):
+            desc_parts.append(f"Points Cost: {std.get('points_cost')}")
+        if std.get('requirements'):
+            desc_parts.append(f"Requirements: {std.get('requirements')}")
+        if std.get('benefits'):
+            desc_parts.append(f"Benefits: {std.get('benefits')}")
+        description = " | ".join([p for p in desc_parts if p])
+        resources_used = std.get('resource_costs') or ''
+
+        # Upsert into actions for given action_number
+        cur.execute("SELECT COUNT(*) as cnt FROM actions WHERE action_number = %s", (action_number,))
+        cnt = cur.fetchone()['cnt']
+        if cnt and cnt > 0:
+            cur.execute(
+                """
+                UPDATE actions
+                   SET description=%s, stat1=%s, stat1_value=%s, stat2=NULL, stat2_value=NULL,
+                       advisor_used=%s, resources_used=%s, gold_spent=%s, is_free=%s
+                 WHERE action_number=%s
+                """,
+                (description, stat1, stat1_value, False, resources_used, 0, False, action_number)
+            )
+            flash(f'Updated Action {action_number} for {player["username"]} with default action.', 'success')
+        else:
+            cur.execute(
+                """
+                INSERT INTO actions (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, is_free)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """,
+                (action_number, description, stat1, stat1_value, None, None, False, resources_used, 0, False)
+            )
+            flash(f'Added Action {action_number} for {player["username"]} with default action.', 'success')
+        cconn.commit()
+        cur.close()
+        cconn.close()
+    except mysql.connector.Error as err:
+        print(f"Error adding default action to player: {err}")
+        flash(f'Error adding default action: {err}', 'danger')
+
+    return redirect(url_for('staff_dashboard'))
+
 @app.route('/player_actions')
 @staff_required
 def player_actions():
@@ -3175,4 +3458,7 @@ def respond_to_action(action_id):
     return redirect(url_for('player_actions'))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5006)
+    # Use environment flags for debug and port to avoid exposing debug in production
+    _debug = os.getenv('FLASK_DEBUG', 'false').lower() in ('1', 'true', 'yes')
+    _port = int(os.getenv('FLASK_RUN_PORT', '5006'))
+    app.run(debug=_debug, port=_port)

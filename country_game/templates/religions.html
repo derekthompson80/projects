@@ -119,6 +119,22 @@
                 </div>
                 <div class="card-body">
                     <p>{{ religion.description }}</p>
+                    
+                    {% if religion.entities and religion.entities|length > 0 %}
+                    <div class="mt-3">
+                        <h6>Deities/Entities:</h6>
+                        <ul class="list-group">
+                            {% for entity in religion.entities %}
+                            <li class="list-group-item">
+                                <strong>{{ entity.name }}</strong>
+                                {% if entity.description %}
+                                <p class="mb-0 mt-1">{{ entity.description }}</p>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}

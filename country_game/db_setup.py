@@ -6,31 +6,23 @@ import csv
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # MySQL connection parameters
-# Note: PythonAnywhere databases are only accessible from within the PythonAnywhere environment.
-# For local development, use a local MySQL server.
-# 
-# LOCAL DEVELOPMENT SETUP:
-# 1. Install MySQL on your local machine if not already installed
-# 2. Create a user or use the default 'root' user
-# 3. Set the password below to match your local MySQL password
-# 4. Make sure MySQL service is running on your machine
-#
-# PYTHONANYWHERE DEPLOYMENT:
-# When deploying to PythonAnywhere, change these settings back to:
-# 'user': 'spade605',
-# 'password': 'Beholder30',
-# 'host': 'spade605.mysql.pythonanywhere-services.com',
-# 'port': 3306,
-# DATABASE_NAME: 'spade605$county_game_server',
+# Note: Use environment variables to configure credentials; avoid hardcoding secrets.
+# Local development example (PowerShell):
+#   $env:CG_DB_USER='root'
+#   $env:CG_DB_PASSWORD='yourpassword'
+#   $env:CG_DB_HOST='127.0.0.1'
+#   $env:CG_DB_PORT='3306'
+#   $env:CG_MAIN_DB_NAME='county_game_local'
 
 # Database name
-DATABASE_NAME = 'county_game_local'
+DATABASE_NAME = os.getenv('CG_MAIN_DB_NAME', 'county_game_local')
 
 config = {
-    'user': 'root',
-    'password': 'Beholder30',
-    'host': '127.0.0.1',
-    'port': 3306,
+    'user': os.getenv('CG_DB_USER', 'root'),
+    # Default password aligns with LOCAL_DB_SETUP.md for local testing; override via CG_DB_PASSWORD env var.
+    'password': os.getenv('CG_DB_PASSWORD', 'Beholder30'),
+    'host': os.getenv('CG_DB_HOST', '127.0.0.1'),
+    'port': int(os.getenv('CG_DB_PORT', '3306')),
     'raise_on_warnings': True
 }
 
@@ -67,31 +59,21 @@ def create_database():
         # Import werkzeug for password hashing
         from werkzeug.security import generate_password_hash
 
-        # Check if the specified admin user already exists
-        cursor.execute("SELECT * FROM users WHERE username = %s", ('admin',))
-        admin_user = cursor.fetchone()
-
-        if not admin_user:
-            # Create admin user with specified credentials
-            hashed_password = generate_password_hash('admin')
-            cursor.execute(
-                "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
-                ('admin', hashed_password, 'staff')
-            )
-            print("Created admin user (username: admin, password: admin)")
-
-        # Check if the specified admin user already exists
-        cursor.execute("SELECT * FROM users WHERE username = %s", ('Derek.Thompson',))
-        admin_user = cursor.fetchone()
-
-        if not admin_user:
-            # Create admin user with specified credentials
-            hashed_password = generate_password_hash('Beholder30')
-            cursor.execute(
-                "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
-                ('Derek.Thompson', hashed_password, 'staff')
-            )
-            print("Created admin user (username: Derek.Thompson, password: Beholder30)")
+        # Create an initial staff user from environment variables if provided
+        admin_username = os.getenv('CG_ADMIN_USERNAME')
+        admin_password = os.getenv('CG_ADMIN_PASSWORD')
+        if admin_username and admin_password:
+            cursor.execute("SELECT * FROM users WHERE username = %s", (admin_username,))
+            existing = cursor.fetchone()
+            if not existing:
+                hashed_password = generate_password_hash(admin_password)
+                cursor.execute(
+                    "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
+                    (admin_username, hashed_password, 'staff')
+                )
+                print(f"Created admin user (username: {admin_username}) from environment variables")
+        else:
+            print("No CG_ADMIN_USERNAME/CG_ADMIN_PASSWORD provided; skipping admin creation.")
 
         conn.commit()
         cursor.close()
@@ -242,6 +224,19 @@ def create_tables(cursor):
         rule_type VARCHAR(50) NOT NULL,
         description TEXT NOT NULL,
         effect TEXT
+    )
+    """)
+
+    # Standard actions (default actions) table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS standard_actions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        project VARCHAR(255) NOT NULL,
+        stat_type VARCHAR(50),
+        points_cost VARCHAR(50),
+        resource_costs TEXT,
+        requirements TEXT,
+        benefits TEXT
     )
     """)
 
@@ -566,7 +561,8 @@ def import_data():
                     religion_description = ""
                     current_religion_id = None
 
-                    i = 0
+                    # Skip the first line which is just a header
+                    i = 1
                     while i < len(lines):
                         line = lines[i].strip()
 
@@ -626,6 +622,37 @@ def import_data():
                 print("Warning: CG5 Major religions .txt not found. Skipping religions import.")
         else:
             print(f"Religions table already has {religions_count} records. Skipping import.")
+
+        # Check if standard_actions table has data
+        cursor.execute("SELECT COUNT(*) FROM standard_actions")
+        standard_actions_count = cursor.fetchone()[0]
+
+        if standard_actions_count == 0:
+            print("Importing standard actions (default actions) from CSV...")
+            try:
+                with open(os.path.join(SCRIPT_DIR, 'default_actions.csv'), 'r', encoding='utf-8') as file:
+                    reader = csv.DictReader(file)
+                    for row in reader:
+                        # Skip empty rows
+                        if not row.get('Project'):
+                            continue
+                        project = row.get('Project', '').strip()
+                        stat_type = row.get('Stat Type', '').strip()
+                        points_cost = row.get('Points Cost', '').strip()
+                        resource_costs = row.get('Resource Costs (total)', '').strip()
+                        requirements = row.get('Requirements', '').strip()
+                        benefits = row.get('Benefits', '').strip()
+                        cursor.execute(
+                            """
+                            INSERT INTO standard_actions (project, stat_type, points_cost, resource_costs, requirements, benefits)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                            """,
+                            (project, stat_type, points_cost, resource_costs, requirements, benefits)
+                        )
+            except FileNotFoundError:
+                print("Warning: default_actions.csv not found. Skipping standard actions import.")
+        else:
+            print(f"Standard actions table already has {standard_actions_count} records. Skipping import.")
 
         conn.commit()
         cursor.close()

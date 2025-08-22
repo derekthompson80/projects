@@ -297,6 +297,52 @@
         </div>
     </div>
 
+    <!-- Default Actions to Player Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Add Default Action to Player</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('add_default_action_to_player') }}" method="post">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label for="player_id_default" class="form-label">Select Player</label>
+                        <select class="form-control" id="player_id_default" name="player_id" required>
+                            {% if players %}
+                                {% for player in players %}
+                                    <option value="{{ player.id }}">{{ player.username }}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option disabled>No players available</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="standard_action_id" class="form-label">Select Default Action</label>
+                        <select class="form-control" id="standard_action_id" name="standard_action_id" required>
+                            <option value="">-- Select a default action --</option>
+                            {% if standard_actions %}
+                                {% for a in standard_actions %}
+                                    <option value="{{ a.id }}">[{{ a.stat_type or 'Any' }}] {{ a.project }}{% if a.points_cost %} (Points: {{ a.points_cost }}){% endif %}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option disabled>No default actions found</option>
+                            {% endif %}
+                        </select>
+                        <small class="form-text text-muted">Loaded from default_actions.csv into the database.</small>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="action_number" class="form-label">Action #</label>
+                        <input type="number" class="form-control" id="action_number" name="action_number" min="1" max="4" value="1" required>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-dark w-100">Add</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Player Actions Section -->
     <div class="card mb-4">
         <div class="card-header bg-info text-white">

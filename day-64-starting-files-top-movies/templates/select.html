@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Movie{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="heading">Select Movie</h1>
+    {% if movies %}
+        {% for movie in movies %}
+        <p>
+            <a href="{{ url_for('find_movie', id=movie.id) }}">{{ movie.title }} - {{ movie.release_date.split('-')[0] if movie.release_date else 'Unknown' }}</a>
+        </p>
+        {% endfor %}
+    {% else %}
+        <p>No movies found. Please try another search term.</p>
+    {% endif %}
+</div>
+{% endblock %}
