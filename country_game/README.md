@@ -19,7 +19,7 @@ A web application for managing data from the Country Game using Flask and MySQL.
 
 3. Make sure MySQL server is running and accessible with the following credentials:
    - Username: `root`
-   - Password: `Beholder30`
+   - Password: `Darklove90!`
    - Host: `localhost`
 
 ## Database Setup

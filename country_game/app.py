@@ -126,14 +126,14 @@ def staff_required(f):
 
 # MySQL connection parameters (loaded from environment when possible)
 # Password resolution order:
-#   CG_DB_PASSWORD -> MYSQL_PASSWORD -> DB_PASSWORD -> 'Beholder30' (local dev default; see LOCAL_DB_SETUP.md)
-_pwd = os.getenv('CG_DB_PASSWORD') or os.getenv('MYSQL_PASSWORD') or os.getenv('DB_PASSWORD') or 'Beholder30'
+#   CG_DB_PASSWORD -> MYSQL_PASSWORD -> DB_PASSWORD -> 'Darklove90!' (local dev default; see LOCAL_DB_SETUP.md)
+_pwd = os.getenv('CG_DB_PASSWORD') or os.getenv('MYSQL_PASSWORD') or os.getenv('DB_PASSWORD') or 'Darklove90!'
 config = {
     'user': os.getenv('CG_DB_USER', 'root'),
     'password': _pwd,
     'host': os.getenv('CG_DB_HOST', '127.0.0.1'),
     'port': int(os.getenv('CG_DB_PORT', '3306')),
-    'database': os.getenv('CG_DB_NAME', 'county_game_local'),
+    'database': os.getenv('CG_DB_NAME', 'spade605$county_game_server'),
     'raise_on_warnings': True
 }
 
@@ -156,7 +156,7 @@ def get_main_db_connection():
     try:
         # Always connect to the main database
         conn_config = config.copy()
-        main_db = os.getenv('CG_MAIN_DB_NAME', conn_config.get('database') or 'county_game_local')
+        main_db = os.getenv('CG_MAIN_DB_NAME', conn_config.get('database') or 'spade605$county_game_server')
         conn_config['database'] = main_db
 
         conn = mysql.connector.connect(**conn_config)
@@ -906,8 +906,8 @@ def create_country_form():
 
             # Get player assignments for countries
             try:
-                # Switch back to the main database
-                cursor.execute("USE spade605$county_game_server")
+                # Switch back to the main database (configurable)
+                cursor.execute(f"USE {os.getenv('CG_MAIN_DB_NAME', config.get('database') or 'spade605$county_game_server')}")
 
                 # Get all users with assigned countries
                 cursor.execute("SELECT id, username, country_db FROM users WHERE country_db IS NOT NULL AND country_db != ''")
@@ -2951,7 +2951,8 @@ def staff_dashboard():
         # Get player assignments for countries
         try:
             # Switch back to the main database
-            cursor.execute("USE spade605$county_game_server")
+            # Use the configured main database instead of hardcoding
+            cursor.execute(f"USE {os.getenv('CG_MAIN_DB_NAME', config.get('database') or 'spade605$county_game_server')}")
 
             # Get all users with assigned countries
             cursor.execute("SELECT id, username, country_db FROM users WHERE country_db IS NOT NULL AND country_db != ''")

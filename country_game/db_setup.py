@@ -12,15 +12,15 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 #   $env:CG_DB_PASSWORD='yourpassword'
 #   $env:CG_DB_HOST='127.0.0.1'
 #   $env:CG_DB_PORT='3306'
-#   $env:CG_MAIN_DB_NAME='county_game_local'
+#   $env:CG_MAIN_DB_NAME='spade605$county_game_server'
 
 # Database name
-DATABASE_NAME = os.getenv('CG_MAIN_DB_NAME', 'county_game_local')
+DATABASE_NAME = os.getenv('CG_MAIN_DB_NAME', 'spade605$county_game_server')
 
 config = {
     'user': os.getenv('CG_DB_USER', 'root'),
     # Default password aligns with LOCAL_DB_SETUP.md for local testing; override via CG_DB_PASSWORD env var.
-    'password': os.getenv('CG_DB_PASSWORD', 'Beholder30'),
+    'password': os.getenv('CG_DB_PASSWORD', 'Darklove90!'),
     'host': os.getenv('CG_DB_HOST', '127.0.0.1'),
     'port': int(os.getenv('CG_DB_PORT', '3306')),
     'raise_on_warnings': True

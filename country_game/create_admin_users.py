@@ -4,10 +4,10 @@ from werkzeug.security import generate_password_hash
 # Database connection parameters
 config = {
     'user': 'root',
-    'password': 'Beholder30',
+    'password': 'Darklove90!',
     'host': '127.0.0.1',
     'port': 3306,
-    'database': 'county_game_local',
+    'database': 'spade605$county_game_server',
     'raise_on_warnings': True
 }
 

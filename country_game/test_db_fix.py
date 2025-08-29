@@ -15,18 +15,18 @@ def test_db_fix():
         cursor = conn.cursor(dictionary=True)
 
         # Check if database exists
-        cursor.execute("SHOW DATABASES LIKE 'county_game_local'")
+        cursor.execute("SHOW DATABASES LIKE 'spade605$county_game_server'")
         db_exists = cursor.fetchone()
 
         if db_exists:
-            print(f"Database 'county_game_local' exists")
+            print(f"Database 'spade605$county_game_server' exists")
 
             # Use the database
-            cursor.execute("USE county_game_local")
+            cursor.execute("USE spade605$county_game_server")
 
             # Check if tables exist
             cursor.execute("SHOW TABLES")
-            tables = [table['Tables_in_county_game_local'] for table in cursor.fetchall()]
+            tables = [list(table.values())[0] for table in cursor.fetchall()]
 
             print(f"Tables in database: {', '.join(tables)}")
 
@@ -38,7 +38,7 @@ def test_db_fix():
             else:
                 print("Stats table doesn't exist")
         else:
-            print(f"Database 'county_game_local' doesn't exist")
+            print(f"Database 'spade605$county_game_server' doesn't exist")
 
         cursor.close()
         conn.close()
@@ -52,18 +52,18 @@ def test_db_fix():
         cursor = conn.cursor(dictionary=True)
 
         # Check if database exists now
-        cursor.execute("SHOW DATABASES LIKE 'county_game_local'")
+        cursor.execute("SHOW DATABASES LIKE 'spade605$county_game_server'")
         db_exists = cursor.fetchone()
 
         if db_exists:
-            print(f"Database 'county_game_local' exists after setup")
+            print(f"Database 'spade605$county_game_server' exists after setup")
 
             # Use the database
-            cursor.execute("USE county_game_local")
+            cursor.execute("USE spade605$county_game_server")
 
             # Check if tables exist now
             cursor.execute("SHOW TABLES")
-            tables = [table['Tables_in_county_game_local'] for table in cursor.fetchall()]
+            tables = [list(table.values())[0] for table in cursor.fetchall()]
 
             print(f"Tables in database after setup: {', '.join(tables)}")
 

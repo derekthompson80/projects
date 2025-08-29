@@ -7,11 +7,11 @@ import sys
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Database connection parameters - using the same config as db_setup.py
-DATABASE_NAME = 'county_game_local'
+DATABASE_NAME = 'spade605$county_game_server'
 
 config = {
     'user': 'root',
-    'password': 'Beholder30',
+    'password': 'Darklove90!',
     'host': '127.0.0.1',
     'port': 3306,
     'raise_on_warnings': True

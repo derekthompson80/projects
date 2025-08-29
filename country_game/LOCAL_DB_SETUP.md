@@ -7,7 +7,7 @@ This document explains how to set up and use the local database for testing the 
 The database configuration has been updated to use a local MySQL server with the following settings:
 
 - **Username**: root
-- **Password**: Beholder30
+- **Password**: Darklove90!
 - **Host**: localhost
 - **Port**: 3306
 - **Database Name**: county_game_local
