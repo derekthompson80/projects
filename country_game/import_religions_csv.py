@@ -3,6 +3,13 @@ import os
 import csv
 import sys
 
+# Optionally load environment variables from a local .env file for credentials
+try:
+    from dotenv import load_dotenv, find_dotenv  # type: ignore
+    load_dotenv(find_dotenv(), override=False)
+except Exception:
+    pass
+
 # Get the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -32,8 +39,20 @@ def import_religions_from_csv():
         conn_config = config.copy()
         conn_config['database'] = DATABASE_NAME
         
-        # Connect to the database
-        conn = mysql.connector.connect(**conn_config)
+        # Connect to the database (optionally via SSH tunnel)
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=conn_config.get('database'),
+                )
+            except Exception:
+                conn = mysql.connector.connect(**conn_config)
+        else:
+            conn = mysql.connector.connect(**conn_config)
         cursor = conn.cursor()
         
         # Check if the religions table exists

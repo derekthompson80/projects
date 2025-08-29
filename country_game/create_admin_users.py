@@ -1,6 +1,13 @@
 import mysql.connector
 from werkzeug.security import generate_password_hash
 
+# Optionally load environment variables from a local .env file for credentials
+try:
+    from dotenv import load_dotenv, find_dotenv  # type: ignore
+    load_dotenv(find_dotenv(), override=False)
+except Exception:
+    pass
+
 # Database connection parameters
 config = {
     'user': 'root',
@@ -14,8 +21,21 @@ config = {
 def create_admin_users():
     """Create or update admin users with correct passwords"""
     try:
-        # Connect to the database
-        conn = mysql.connector.connect(**config)
+        # Connect to the database (optionally via SSH tunnel)
+        import os
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=config.get('user'),
+                    db_password=config.get('password'),
+                    db_name=config.get('database'),
+                )
+            except Exception:
+                conn = mysql.connector.connect(**config)
+        else:
+            conn = mysql.connector.connect(**config)
         cursor = conn.cursor(dictionary=True)
         
         # Check if admin user exists

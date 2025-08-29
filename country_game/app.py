@@ -8,6 +8,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import glob
 from datetime import timedelta
 
+# Optionally load environment variables from a local .env file for credentials
+try:
+    from dotenv import load_dotenv, find_dotenv  # type: ignore
+    load_dotenv(find_dotenv(), override=False)
+except Exception:
+    pass
+
 app = Flask(__name__)
 # Secret key: prefer environment variable; fallback to a generated key for local/dev
 _app_secret = os.getenv('COUNTRY_GAME_SECRET_KEY')
@@ -138,13 +145,30 @@ config = {
 }
 
 def get_db_connection():
-    """Get a connection to the database"""
+    """Get a connection to the database. If CG_USE_SSH_TUNNEL is true and SSH env vars are set,
+    connect via SSH tunnel using db_remote_connection (ssh_db_tunnel). Otherwise, connect directly.
+    """
     try:
         # Use the current country database if one is selected
         conn_config = config.copy()
         if 'current_country_db' in session:
             conn_config['database'] = session['current_country_db']
 
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                # Import lazily to avoid hard dependency when not tunneling
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+            except Exception:
+                get_connector_connection_via_tunnel = None  # type: ignore
+            if get_connector_connection_via_tunnel:
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=conn_config.get('database'),
+                )
+                return conn
+        # Default direct connection
         conn = mysql.connector.connect(**conn_config)
         return conn
     except mysql.connector.Error as err:
@@ -152,12 +176,28 @@ def get_db_connection():
         return None
 
 def get_main_db_connection():
-    """Get a connection to the main database (default from env CG_MAIN_DB_NAME)"""
+    """Get a connection to the main database (default from env CG_MAIN_DB_NAME).
+    Respects CG_USE_SSH_TUNNEL to connect via SSH when configured.
+    """
     try:
         # Always connect to the main database
         conn_config = config.copy()
         main_db = os.getenv('CG_MAIN_DB_NAME', conn_config.get('database') or 'spade605$county_game_server')
         conn_config['database'] = main_db
+
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+            except Exception:
+                get_connector_connection_via_tunnel = None  # type: ignore
+            if get_connector_connection_via_tunnel:
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=conn_config.get('database'),
+                )
+                return conn
 
         conn = mysql.connector.connect(**conn_config)
         return conn

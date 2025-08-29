@@ -2,6 +2,13 @@ import mysql.connector
 import os
 import csv
 
+# Optionally load environment variables from a local .env file for credentials
+try:
+    from dotenv import load_dotenv, find_dotenv  # type: ignore
+    load_dotenv(find_dotenv(), override=False)
+except Exception:
+    pass
+
 # Get the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -34,7 +41,20 @@ def create_database():
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
+        # Optionally connect via SSH tunnel if enabled
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # lazy import
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=None,  # server-level, no DB selected yet
+                )
+            except Exception:
+                conn = mysql.connector.connect(**conn_config)
+        else:
+            conn = mysql.connector.connect(**conn_config)
         cursor = conn.cursor()
 
         # Check if database exists
@@ -272,7 +292,20 @@ def import_data():
         conn_config = config.copy()
         conn_config['database'] = DATABASE_NAME
 
-        conn = mysql.connector.connect(**conn_config)
+        # Optionally connect via SSH tunnel if enabled
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=conn_config.get('database'),
+                )
+            except Exception:
+                conn = mysql.connector.connect(**conn_config)
+        else:
+            conn = mysql.connector.connect(**conn_config)
         cursor = conn.cursor(dictionary=True)
 
         # Check if tables exist

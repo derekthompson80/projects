@@ -1,6 +1,13 @@
 import mysql.connector
 from db_setup import config, create_database, create_tables
 
+# Optionally load environment variables from a local .env file for credentials
+try:
+    from dotenv import load_dotenv, find_dotenv  # type: ignore
+    load_dotenv(find_dotenv(), override=False)
+except Exception:
+    pass
+
 def test_db_fix():
     """Test the database fix"""
     try:
@@ -11,7 +18,20 @@ def test_db_fix():
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
+        import os
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=None,
+                )
+            except Exception:
+                conn = mysql.connector.connect(**conn_config)
+        else:
+            conn = mysql.connector.connect(**conn_config)
         cursor = conn.cursor(dictionary=True)
 
         # Check if database exists
@@ -47,8 +67,20 @@ def test_db_fix():
         print("\nRunning database setup...")
         create_database()
 
-        # Connect again to verify changes
-        conn = mysql.connector.connect(**conn_config)
+        # Connect again to verify changes (optionally via SSH tunnel)
+        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+        if use_tunnel:
+            try:
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=None,
+                )
+            except Exception:
+                conn = mysql.connector.connect(**conn_config)
+        else:
+            conn = mysql.connector.connect(**conn_config)
         cursor = conn.cursor(dictionary=True)
 
         # Check if database exists now

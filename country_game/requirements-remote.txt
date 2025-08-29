@@ -1,0 +1,4 @@
+sshtunnel>=0.4.0
+mysqlclient>=2.2.0
+# Alternatively, if you prefer mysql.connector in your code instead of MySQLdb:
+# mysql-connector-python>=9.0.0
