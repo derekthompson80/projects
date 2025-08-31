@@ -42,6 +42,36 @@ config = {
     'raise_on_warnings': True
 }
 
+# Helpers for connection strategy
+
+def _bool_env(name: str, default: bool = True) -> bool:
+    v = os.getenv(name)
+    if v is None:
+        return default
+    return str(v).strip().lower() in ("1", "true", "yes", "y", "on")
+
+
+def _direct_connect(selected_db: str | None):
+    """Create a direct mysql.connector connection (no SSH tunnel). Returns (conn, close_fn)."""
+    # Prefer explicit remote host if provided, else fall back to CG_DB_HOST/local
+    host = os.getenv('CG_REMOTE_DB_HOST') or os.getenv('PA_REMOTE_DB_HOST') or os.getenv('CG_DB_HOST', '127.0.0.1')
+    port = int(os.getenv('CG_REMOTE_DB_PORT') or os.getenv('CG_DB_PORT', '3306'))
+    user = os.getenv('CG_DB_USER') or os.getenv('DB_USER') or 'spade605'
+    password = os.getenv('CG_DB_PASSWORD') or os.getenv('DB_PASSWORD') or 'Darklove90!'
+
+    conn_kwargs = dict(user=user, password=password, host=host, port=port, raise_on_warnings=True)
+    if selected_db is not None:
+        conn_kwargs['database'] = selected_db
+    conn = mysql.connector.connect(**conn_kwargs)
+
+    def _close():
+        try:
+            if conn.is_connected():
+                conn.close()
+        except Exception:
+            pass
+    return conn, _close
+
 def create_database(timeout_seconds: int | None = None):
     """Create the database and tables with timeout and debug logging.
 
@@ -70,12 +100,25 @@ def create_database(timeout_seconds: int | None = None):
             except ModuleNotFoundError:
                 logger.debug("create_database: importing tunnel helper (local path fallback)")
                 from ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
-            logger.debug("create_database: establishing SSH tunnel and DB connection…")
-            conn, _close = get_connector_connection_via_tunnel(
-                db_user=None,
-                db_password=None,
-                db_name=None,  # server-level, no DB selected yet
-            )
+            logger.debug("create_database: establishing DB connection (SSH if enabled)…")
+            use_ssh = _bool_env('CG_USE_SSH_TUNNEL', True)
+            conn = None
+            _close = None
+            if use_ssh:
+                try:
+                    conn, _close = get_connector_connection_via_tunnel(
+                        db_user=None,
+                        db_password=None,
+                        db_name=None,  # server-level, no DB selected yet
+                    )
+                    logger.debug("create_database: connected via SSH tunnel")
+                except Exception as e:
+                    logger.warning("create_database: SSH tunnel unavailable (%s). Falling back to direct connection.", e)
+                    conn, _close = _direct_connect(selected_db=None)
+            else:
+                logger.info("create_database: CG_USE_SSH_TUNNEL disabled; using direct connection")
+                conn, _close = _direct_connect(selected_db=None)
+
             cursor = conn.cursor()
 
             # Ensure database exists without dropping it (PythonAnywhere often restricts CREATE/DROP)
@@ -328,16 +371,28 @@ def import_data():
         conn_config = config.copy()
         conn_config['database'] = DATABASE_NAME
 
-        # Always connect via SSH tunnel
-        try:
-            from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
-        except ModuleNotFoundError:
-            from ssh_db_tunnel import get_connector_connection_via_tunnel
-        conn, _close = get_connector_connection_via_tunnel(
-            db_user=conn_config.get('user'),
-            db_password=conn_config.get('password'),
-            db_name=conn_config.get('database'),
-        )
+        # Establish connection (SSH if enabled, else direct)
+        logger.debug("import_data: establishing DB connection (SSH if enabled)…")
+        use_ssh = _bool_env('CG_USE_SSH_TUNNEL', True)
+        if use_ssh:
+            try:
+                try:
+                    from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                except ModuleNotFoundError:
+                    from ssh_db_tunnel import get_connector_connection_via_tunnel
+                conn, _close = get_connector_connection_via_tunnel(
+                    db_user=conn_config.get('user'),
+                    db_password=conn_config.get('password'),
+                    db_name=conn_config.get('database'),
+                )
+                logger.debug("import_data: connected via SSH tunnel")
+            except Exception as e:
+                logger.warning("import_data: SSH tunnel unavailable (%s). Falling back to direct connection.", e)
+                conn, _close = _direct_connect(selected_db=DATABASE_NAME)
+        else:
+            logger.info("import_data: CG_USE_SSH_TUNNEL disabled; using direct connection")
+            conn, _close = _direct_connect(selected_db=DATABASE_NAME)
+
         cursor = conn.cursor(dictionary=True)
 
         # Check if tables exist
