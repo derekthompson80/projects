@@ -8,14 +8,14 @@ Install dependencies (locally):
 - Option B (use mysql.connector via our helper): pip install mysql-connector-python
 
 Environment variables (PowerShell examples):
-  $env:CG_SSH_HOST='yourusername.pythonanywhere.com'
-  $env:CG_SSH_USER='yourusername'
-  $env:CG_SSH_PASSWORD='your_pythonanywhere_web_password'
-  $env:CG_REMOTE_DB_HOST='yourusername.mysql.pythonanywhere-services.com'
+  $env:CG_SSH_HOST='ssh.pythonanywhere.com'
+  $env:CG_SSH_USER='spade605'
+  $env:CG_SSH_PASSWORD='Darklove90!'
+  $env:CG_REMOTE_DB_HOST='spade605.mysql.pythonanywhere-services.com'
   $env:CG_REMOTE_DB_PORT='3306'
-  $env:CG_DB_USER='yourusername'
-  $env:CG_DB_PASSWORD='your_database_password'
-  $env:CG_DB_NAME='yourusername$mydatabase'
+  $env:CG_DB_USER='spade605'
+  $env:CG_DB_PASSWORD='Darklove90!'
+  $env:CG_DB_NAME='spade605$county_game_server'
 
 Option A: Use MySQLdb with the provided example
   python projects\country_game\examples\pythonanywhere_tunnel_example.py
@@ -35,6 +35,9 @@ Python snippet:
       print(cur.fetchone())
   finally:
       close_func()
+
+Quick confirmation script (uses your provided defaults; override via env as needed):
+  python projects\country_game\confirm_remote_db_connection.py
 
 Notes:
 - The Flask app and scripts now honor CG_USE_SSH_TUNNEL. When set to true, connections go through the SSH tunnel; otherwise they connect directly using mysql.connector.

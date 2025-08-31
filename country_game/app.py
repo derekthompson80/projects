@@ -206,6 +206,28 @@ def get_main_db_connection():
         return None
 
 
+def connect_optional_tunnel(conn_config: dict):
+    """Helper to open a MySQL connection honoring CG_USE_SSH_TUNNEL.
+    If tunneling is enabled and ssh_db_tunnel is available, connects via tunnel; otherwise uses mysql.connector directly.
+    The conn_config may or may not include 'database'.
+    """
+    use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
+    if use_tunnel:
+        try:
+            from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+        except Exception:
+            get_connector_connection_via_tunnel = None  # type: ignore
+        if get_connector_connection_via_tunnel:
+            conn, _close = get_connector_connection_via_tunnel(
+                db_user=conn_config.get('user'),
+                db_password=conn_config.get('password'),
+                db_name=conn_config.get('database'),
+            )
+            return conn
+    # Fallback to direct connection
+    return mysql.connector.connect(**conn_config)
+
+
 def load_standard_actions_if_empty():
     """Ensure standard_actions table is populated from default_actions.csv if empty.
     This is a safe no-op if the table already has rows or if CSV is missing.
@@ -911,7 +933,7 @@ def create_country_form():
             if 'database' in conn_config:
                 del conn_config['database']
 
-            conn = mysql.connector.connect(**conn_config)
+            conn = connect_optional_tunnel(conn_config)
             cursor = conn.cursor(dictionary=True)
 
             # Get all databases that start with 'country_'
@@ -1143,7 +1165,7 @@ def create_country_database(db_name):
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor()
 
         # Create the database
@@ -1241,7 +1263,7 @@ def save_country_info(db_name, country_name, ruler_name, government_type, descri
         conn_config = config.copy()
         conn_config['database'] = db_name
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor()
 
         # Insert country info
@@ -1266,7 +1288,7 @@ def save_initial_stats(db_name, politics, military, economics, culture):
         conn_config = config.copy()
         conn_config['database'] = db_name
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor()
 
         # Insert initial stats
@@ -1299,7 +1321,7 @@ def import_resources_from_template(db_name, resources):
         conn_config = config.copy()
         conn_config['database'] = db_name
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor()
 
         # Insert resources
@@ -1343,7 +1365,7 @@ def list_countries():
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor()
 
         # Get all databases that start with 'country_'
@@ -1392,7 +1414,7 @@ def select_country(db_name):
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor()
 
         # Check if the database exists
@@ -1807,7 +1829,7 @@ def staff_assign_religion():
             conn_config['database'] = player['country_db']
 
             try:
-                conn = mysql.connector.connect(**conn_config)
+                conn = connect_optional_tunnel(conn_config)
                 cursor = conn.cursor()
 
                 # Check if the country_info table has a religion column
@@ -1863,7 +1885,7 @@ def staff_remove_religion():
             conn_config['database'] = player['country_db']
 
             try:
-                conn = mysql.connector.connect(**conn_config)
+                conn = connect_optional_tunnel(conn_config)
                 cursor = conn.cursor()
 
                 # Check if the country_info table has a religion column
@@ -1968,7 +1990,7 @@ def users():
             if 'database' in conn_config:
                 del conn_config['database']
 
-            conn2 = mysql.connector.connect(**conn_config)
+            conn2 = connect_optional_tunnel(conn_config)
             cursor2 = conn2.cursor(dictionary=True)
 
             # Get all databases that start with 'country_'
@@ -2589,7 +2611,7 @@ def create_countries_from_descriptions():
             if 'database' in conn_config:
                 del conn_config['database']
 
-            conn = mysql.connector.connect(**conn_config)
+            conn = connect_optional_tunnel(conn_config)
             cursor = conn.cursor()
 
             cursor.execute("SHOW DATABASES LIKE %s", (db_name,))
@@ -2955,7 +2977,7 @@ def staff_dashboard():
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor(dictionary=True)
 
         # Get all databases that start with 'country_'
@@ -3024,7 +3046,7 @@ def staff_dashboard():
                         conn_config_player = config.copy()
                         conn_config_player['database'] = player_info['country_db']
 
-                        conn_player = mysql.connector.connect(**conn_config_player)
+                        conn_player = connect_optional_tunnel(conn_config_player)
                         cursor_player = conn_player.cursor(dictionary=True)
 
                         # Check if the country_info table has a religion column

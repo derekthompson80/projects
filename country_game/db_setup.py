@@ -1,6 +1,9 @@
 import mysql.connector
 import os
 import csv
+import logging
+import threading
+import time
 
 # Optionally load environment variables from a local .env file for credentials
 try:
@@ -8,6 +11,12 @@ try:
     load_dotenv(find_dotenv(), override=False)
 except Exception:
     pass
+
+# Configure logging (level can be overridden by CG_LOG_LEVEL env)
+_LOG_LEVEL = os.getenv('CG_LOG_LEVEL', 'DEBUG').upper()
+logging.basicConfig(level=getattr(logging, _LOG_LEVEL, logging.DEBUG),
+                    format='%(asctime)s | %(levelname)s | %(name)s | %(message)s')
+logger = logging.getLogger('country_game.db_setup')
 
 # Get the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -26,82 +35,108 @@ DATABASE_NAME = os.getenv('CG_MAIN_DB_NAME', 'spade605$county_game_server')
 
 config = {
     'user': os.getenv('CG_DB_USER', 'root'),
-    # Default password aligns with LOCAL_DB_SETUP.md for local testing; override via CG_DB_PASSWORD env var.
+    # The default password aligns with LOCAL_DB_SETUP.md for local testing; override via CG_DB_PASSWORD env var.
     'password': os.getenv('CG_DB_PASSWORD', 'Darklove90!'),
     'host': os.getenv('CG_DB_HOST', '127.0.0.1'),
     'port': int(os.getenv('CG_DB_PORT', '3306')),
     'raise_on_warnings': True
 }
 
-def create_database():
-    """Create the database and tables"""
-    try:
-        # First try connecting without specifying a database
-        conn_config = config.copy()
-        if 'database' in conn_config:
-            del conn_config['database']
+def create_database(timeout_seconds: int | None = None):
+    """Create the database and tables with timeout and debug logging.
 
-        # Optionally connect via SSH tunnel if enabled
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        if use_tunnel:
+    timeout_seconds can be provided directly or via env CG_DB_SETUP_TIMEOUT (default 180).
+    """
+    if timeout_seconds is None:
+        try:
+            timeout_seconds = int(os.getenv('CG_DB_SETUP_TIMEOUT', '180'))
+        except Exception:
+            timeout_seconds = 180
+
+    result = {'error': None}
+
+    def _worker():
+        try:
+            logger.debug("create_database: starting setup")
+            # First try connecting without specifying a database
+            conn_config = config.copy()
+            if 'database' in conn_config:
+                del conn_config['database']
+
+            # Always connect via SSH tunnel using our helper
             try:
-                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # lazy import
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=conn_config.get('user'),
-                    db_password=conn_config.get('password'),
-                    db_name=None,  # server-level, no DB selected yet
-                )
-            except Exception:
-                conn = mysql.connector.connect(**conn_config)
-        else:
-            conn = mysql.connector.connect(**conn_config)
-        cursor = conn.cursor()
+                logger.debug("create_database: importing tunnel helper (package path)")
+                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+            except ModuleNotFoundError:
+                logger.debug("create_database: importing tunnel helper (local path fallback)")
+                from ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+            logger.debug("create_database: establishing SSH tunnel and DB connection…")
+            conn, _close = get_connector_connection_via_tunnel(
+                db_user=None,
+                db_password=None,
+                db_name=None,  # server-level, no DB selected yet
+            )
+            cursor = conn.cursor()
 
-        # Check if database exists
-        cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
-        db_exists = cursor.fetchone()
+            # Ensure database exists without dropping it (PythonAnywhere often restricts CREATE/DROP)
+            try:
+                logger.debug("create_database: ensuring database exists -> %s", DATABASE_NAME)
+                cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DATABASE_NAME}")
+                print("Ensured database exists (CREATE DATABASE IF NOT EXISTS)")
+            except mysql.connector.Error as e:
+                logger.warning("create_database: CREATE DATABASE may be restricted: %s", e)
+                print(f"Warning: Could not CREATE DATABASE (likely insufficient privileges). Proceeding to USE existing DB. Details: {e}")
 
-        if db_exists:
-            # Drop the database if it exists
-            cursor.execute(f"DROP DATABASE {DATABASE_NAME}")
-            print(f"Database '{DATABASE_NAME}' dropped")
-            
-        # Create database
-        cursor.execute(f"CREATE DATABASE {DATABASE_NAME}")
-        print("Database created successfully")
+            # Use the database
+            logger.debug("create_database: using database -> %s", DATABASE_NAME)
+            cursor.execute(f"USE {DATABASE_NAME}")
+            print(f"Using database: {DATABASE_NAME}")
 
-        # Use the database
-        cursor.execute(f"USE {DATABASE_NAME}")
+            # Create tables
+            logger.debug("create_database: creating tables…")
+            create_tables(cursor)
 
-        # Create tables
-        create_tables(cursor)
+            # Import werkzeug for password hashing
+            from werkzeug.security import generate_password_hash  # type: ignore
 
-        # Import werkzeug for password hashing
-        from werkzeug.security import generate_password_hash
+            # Create an initial staff user from environment variables if provided
+            admin_username = os.getenv('CG_ADMIN_USERNAME')
+            admin_password = os.getenv('CG_ADMIN_PASSWORD')
+            logger.debug("create_database: admin env present? %s", bool(admin_username and admin_password))
+            if admin_username and admin_password:
+                cursor.execute("SELECT * FROM users WHERE username = %s", (admin_username,))
+                existing = cursor.fetchone()
+                if not existing:
+                    hashed_password = generate_password_hash(admin_password)
+                    cursor.execute(
+                        "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
+                        (admin_username, hashed_password, 'staff')
+                    )
+                    print(f"Created admin user (username: {admin_username}) from environment variables")
+            else:
+                print("No CG_ADMIN_USERNAME/CG_ADMIN_PASSWORD provided; skipping admin creation.")
 
-        # Create an initial staff user from environment variables if provided
-        admin_username = os.getenv('CG_ADMIN_USERNAME')
-        admin_password = os.getenv('CG_ADMIN_PASSWORD')
-        if admin_username and admin_password:
-            cursor.execute("SELECT * FROM users WHERE username = %s", (admin_username,))
-            existing = cursor.fetchone()
-            if not existing:
-                hashed_password = generate_password_hash(admin_password)
-                cursor.execute(
-                    "INSERT INTO users (username, password, role) VALUES (%s, %s, %s)",
-                    (admin_username, hashed_password, 'staff')
-                )
-                print(f"Created admin user (username: {admin_username}) from environment variables")
-        else:
-            print("No CG_ADMIN_USERNAME/CG_ADMIN_PASSWORD provided; skipping admin creation.")
+            logger.debug("create_database: committing and closing…")
+            conn.commit()
+            cursor.close()
+            _close()
+            print("Database setup completed successfully")
+            logger.debug("create_database: completed successfully")
+        except Exception as e:  # capture any error for the outer scope
+            result['error'] = e
+            logger.exception("create_database: encountered error")
 
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print("Database setup completed successfully")
+    t = threading.Thread(target=_worker, name="create_database_worker", daemon=True)
+    t.start()
+    t.join(timeout_seconds)
 
-    except mysql.connector.Error as err:
-        print(f"Error: {err}")
+    if t.is_alive():
+        logger.error("create_database: timed out after %s seconds", timeout_seconds)
+        raise TimeoutError(f"create_database timed out after {timeout_seconds} seconds")
+
+    if result['error'] is not None:
+        # Re-raise the original exception so callers see the cause
+        raise result['error']
 
 def create_tables(cursor):
     """Create the necessary tables"""
@@ -287,25 +322,22 @@ def create_tables(cursor):
 
 def import_data():
     """Import data from CSV files into the database"""
+    logger.debug("import_data: starting data import into %s", DATABASE_NAME)
     try:
         # Connect to the database
         conn_config = config.copy()
         conn_config['database'] = DATABASE_NAME
 
-        # Optionally connect via SSH tunnel if enabled
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        if use_tunnel:
-            try:
-                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=conn_config.get('user'),
-                    db_password=conn_config.get('password'),
-                    db_name=conn_config.get('database'),
-                )
-            except Exception:
-                conn = mysql.connector.connect(**conn_config)
-        else:
-            conn = mysql.connector.connect(**conn_config)
+        # Always connect via SSH tunnel
+        try:
+            from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+        except ModuleNotFoundError:
+            from ssh_db_tunnel import get_connector_connection_via_tunnel
+        conn, _close = get_connector_connection_via_tunnel(
+            db_user=conn_config.get('user'),
+            db_password=conn_config.get('password'),
+            db_name=conn_config.get('database'),
+        )
         cursor = conn.cursor(dictionary=True)
 
         # Check if tables exist
@@ -689,7 +721,7 @@ def import_data():
 
         conn.commit()
         cursor.close()
-        conn.close()
+        _close()
         print("Data imported successfully")
 
     except mysql.connector.Error as err:
