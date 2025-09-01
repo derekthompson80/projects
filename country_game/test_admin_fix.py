@@ -5,7 +5,7 @@ import os
 
 # Add the current directory to the path so we can import db_setup
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from db_setup import create_database, config, DATABASE_NAME
+from projects.country_game.country_game_utilites.db_setup import create_database, config, DATABASE_NAME
 
 def test_admin_credentials():
     """Test that the admin credentials are correct"""

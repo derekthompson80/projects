@@ -1,4 +1,4 @@
-import mysql.connector
+from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel
 from werkzeug.security import generate_password_hash
 
 # Optionally load environment variables from a local .env file for credentials
@@ -23,19 +23,9 @@ def create_admin_users():
     try:
         # Connect to the database (optionally via SSH tunnel)
         import os
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        if use_tunnel:
-            try:
-                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=config.get('user'),
-                    db_password=config.get('password'),
-                    db_name=config.get('database'),
-                )
-            except Exception:
-                conn = mysql.connector.connect(**config)
-        else:
-            conn = mysql.connector.connect(**config)
+        conn = connect_via_tunnel()
+        if conn is None:
+            raise RuntimeError('Failed to connect to remote database via SSH tunnel')
         cursor = conn.cursor(dictionary=True)
         
         # Check if admin user exists
@@ -98,7 +88,7 @@ def create_admin_users():
         conn.close()
         print("Admin users setup completed successfully")
         
-    except mysql.connector.Error as err:
+    except Exception as err:
         print(f"Error: {err}")
 
 if __name__ == "__main__":

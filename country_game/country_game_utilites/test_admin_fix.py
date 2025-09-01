@@ -1,9 +1,7 @@
-import mysql.connector
+from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel
 from werkzeug.security import generate_password_hash, check_password_hash
-import sys
-import os
 
-from projects.country_game.db_setup import create_database, config, DATABASE_NAME
+from projects.country_game.country_game_utilites.db_setup import create_database, config, DATABASE_NAME
 
 def test_admin_credentials():
     """Test that the admin credentials are correct"""

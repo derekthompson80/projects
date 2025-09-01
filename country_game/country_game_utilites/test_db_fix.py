@@ -1,5 +1,5 @@
 import mysql.connector
-from db_setup import config, create_database, create_tables
+from projects.country_game.country_game_utilites.db_setup import config, create_database
 
 # Optionally load environment variables from a local .env file for credentials
 try:

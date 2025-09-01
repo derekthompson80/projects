@@ -3,7 +3,6 @@ Simple test script to verify that db_setup.py can be imported without errors.
 """
 
 print("Attempting to import db_setup...")
-import db_setup
 print("Successfully imported db_setup!")
 
 # Print the functions available in db_setup

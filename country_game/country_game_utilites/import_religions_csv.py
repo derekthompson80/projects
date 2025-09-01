@@ -1,7 +1,5 @@
-import mysql.connector
 import os
 import csv
-import sys
 
 # Optionally load environment variables from a local .env file for credentials
 try:
@@ -25,7 +23,8 @@ config = {
 }
 
 # Import db_setup to ensure database exists
-from projects.country_game import db_setup
+from projects.country_game.country_game_utilites import db_setup
+
 
 def import_religions_from_csv():
     """Import religions data from the CSV file into the database"""
@@ -38,20 +37,10 @@ def import_religions_from_csv():
         conn_config = config.copy()
         conn_config['database'] = DATABASE_NAME
         
-        # Connect to the database (optionally via SSH tunnel)
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        if use_tunnel:
-            try:
-                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=conn_config.get('user'),
-                    db_password=conn_config.get('password'),
-                    db_name=conn_config.get('database'),
-                )
-            except Exception:
-                conn = mysql.connector.connect(**conn_config)
-        else:
-            conn = mysql.connector.connect(**conn_config)
+        from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel
+        conn = connect_via_tunnel()
+        if conn is None:
+            raise RuntimeError("Failed to connect to remote database via SSH tunnel")
         cursor = conn.cursor()
         
         # Check if the religions table exists
@@ -103,10 +92,8 @@ def import_religions_from_csv():
             conn.commit()
             print(f"Successfully imported religions from {csv_path}")
         
-    except mysql.connector.Error as err:
-        print(f"Database error: {err}")
-    except Exception as e:
-        print(f"Error: {e}")
+    except Exception as err:
+        print(f"Error: {err}")
     finally:
         if 'cursor' in locals():
             cursor.close()

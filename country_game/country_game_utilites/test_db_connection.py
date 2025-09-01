@@ -1,5 +1,5 @@
-import mysql.connector
-from db_setup import config, create_database, create_tables, DATABASE_NAME
+from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel
+from projects.country_game.country_game_utilites.db_setup import config, create_database, create_tables, DATABASE_NAME
 
 def test_connection():
     """Test the database connection"""
@@ -14,8 +14,10 @@ def test_connection():
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
-        print("Successfully connected to the MySQL server!")
+        conn = connect_via_tunnel()
+        if not conn:
+            raise RuntimeError('Failed to connect via SSH tunnel')
+        print("Successfully connected to the MySQL server via SSH tunnel!")
 
         # Check if we can create a database
         cursor = conn.cursor()

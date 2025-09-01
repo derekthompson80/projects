@@ -1,21 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import mysql.connector
-# Route all MySQL connections through the SSH tunnel utility so the app only connects
-# via projects.country_game.country_game_utilites.ssh_db_tunnel to database spade605$county_game_server
-try:
-    from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel as _cg_tunnel_connect
-    def _cg_mysql_connector_connect_override(*args, **kwargs):  # type: ignore[no-redef]
-        # Ignore passed parameters; always connect to the remote DB through the SSH tunnel
-        return _cg_tunnel_connect()
-    # Monkey-patch mysql.connector.connect so all existing code paths use the tunnel transparently
-    mysql.connector.connect = _cg_mysql_connector_connect_override  # type: ignore[attr-defined]
-    # Ensure exception handlers that catch mysql.connector.Error still work with MySQLdb
-    try:
-        mysql.connector.Error = Exception  # type: ignore[attr-defined]
-    except Exception:
-        pass
-except Exception as _cg_patch_err:
-    print(f"Warning: could not patch mysql.connector.connect to use SSH tunnel: {_cg_patch_err}")
+# Use ssh_db_tunnel as the sole connection method; provide a lightweight shim compatible with existing code.
+from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel as _cg_tunnel_connect
+class _CGMySQLShim:
+    class connector:
+        Error = Exception
+        @staticmethod
+        def connect(*args, **kwargs):
+            return _cg_tunnel_connect()
+mysql = _CGMySQLShim()
 import os
 import re
 import random
@@ -1549,7 +1541,7 @@ def rules():
     """Display game rules from docstrings in the game_rules module"""
     try:
         # Import the game_rules module
-        from game_rules import get_all_sections, get_suggestions
+        from projects.country_game.country_game_utilites.game_rules import get_all_sections, get_suggestions
 
         # Get sections and suggestions from the module
         sections = get_all_sections()

@@ -100,5 +100,5 @@ def convert_txt_to_csv(input_file, output_file):
 
 if __name__ == "__main__":
     input_file = "CG5 Major religions .txt"
-    output_file = "country_game_utilites/religions.csv"
+    output_file = "religions.csv"
     convert_txt_to_csv(input_file, output_file)
