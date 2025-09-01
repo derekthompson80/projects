@@ -158,7 +158,7 @@ def get_db_connection():
         if use_tunnel:
             try:
                 # Import lazily to avoid hard dependency when not tunneling
-                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
             except Exception:
                 get_connector_connection_via_tunnel = None  # type: ignore
             if get_connector_connection_via_tunnel:
@@ -188,7 +188,7 @@ def get_main_db_connection():
         use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
         if use_tunnel:
             try:
-                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
             except Exception:
                 get_connector_connection_via_tunnel = None  # type: ignore
             if get_connector_connection_via_tunnel:
@@ -214,7 +214,7 @@ def connect_optional_tunnel(conn_config: dict):
     use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
     if use_tunnel:
         try:
-            from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
+            from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
         except Exception:
             get_connector_connection_via_tunnel = None  # type: ignore
         if get_connector_connection_via_tunnel:

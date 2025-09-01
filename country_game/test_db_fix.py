@@ -22,7 +22,7 @@ def test_db_fix():
         use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
         if use_tunnel:
             try:
-                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                from projects.country_game_utilites import get_connector_connection_via_tunnel
                 conn, _close = get_connector_connection_via_tunnel(
                     db_user=conn_config.get('user'),
                     db_password=conn_config.get('password'),
@@ -71,7 +71,7 @@ def test_db_fix():
         use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
         if use_tunnel:
             try:
-                from projects.country_game.ssh_db_tunnel import get_connector_connection_via_tunnel
+                from projects.country_game_utilites import get_connector_connection_via_tunnel
                 conn, _close = get_connector_connection_via_tunnel(
                     db_user=conn_config.get('user'),
                     db_password=conn_config.get('password'),

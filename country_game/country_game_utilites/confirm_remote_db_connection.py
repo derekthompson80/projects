@@ -8,7 +8,7 @@ try:
 except Exception:
     pass
 
-from projects.country_game.country_game_utilites import quick_test_connection, get_connector_connection_via_tunnel
+from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel
 
 
 def print_env_summary():
