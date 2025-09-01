@@ -55,8 +55,6 @@ def main():
         ssh_username=ssh_user,
         ssh_password=ssh_password,
         remote_bind_address=(remote_db_host, remote_db_port),
-        allow_agent=False,
-        look_for_keys=False,
     ) as tunnel:
         # Connect to MySQL through the local end of the tunnel
         connection = MySQLdb.connect(

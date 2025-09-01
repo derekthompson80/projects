@@ -1,4 +1,3 @@
-import mysql.connector
 import os
 import csv
 
@@ -6,68 +5,27 @@ import csv
 try:
     from dotenv import load_dotenv, find_dotenv  # type: ignore
     load_dotenv(find_dotenv(), override=False)
-except Exception:
+except Exception as e:
+    print(f"Warning: Error loading environment variables from .env file: {e}")
     pass
 
 # Get the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Database name
-DATABASE_NAME = os.getenv('CG_MAIN_DB_NAME', 'spade605$county_game_server')
-
-config = {
-    'user': os.getenv('CG_DB_USER', 'spade605'),
-    # The default password aligns with LOCAL_DB_SETUP.md for local testing; override via CG_DB_PASSWORD env var.
-    'password': os.getenv('CG_DB_PASSWORD', 'Darklove90!'),
-    'host': os.getenv('CG_DB_HOST', '127.0.0.1'),
-    'port': int(os.getenv('CG_DB_PORT', '3306')),
-    'raise_on_warnings': True
-}
-
 def create_database():
     """Create the database and tables"""
     try:
-        # First, try connecting without specifying a database
-        conn_config = config.copy()
-        if 'database' in conn_config:
-            del conn_config['database']
+        # Connect to the remote database via SSH tunnel only
 
-        # Connect to MySQL, optionally via an SSH tunnel if enabled/configured
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        conn = None
-        _close = lambda: None
-        if use_tunnel:
-            try:
-                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel  # lazy import
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=conn_config.get('user'),
-                    db_password=conn_config.get('password'),
-                    db_name=None,  # server-level, no DB selected yet
-                )
-            except Exception as e:
-                print(f"SSH tunneling requested but not available ({e}); falling back to direct MySQL connection.")
-                conn = mysql.connector.connect(**conn_config)
-        else:
-            conn = mysql.connector.connect(**conn_config)
+        # Connect to MySQL exclusively via SSH tunnel to the remote DB
+        from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel
+        conn = connect_via_tunnel()
+        if conn is None:
+            raise RuntimeError("Failed to connect to remote database via SSH tunnel")
+        _close = lambda: None  # kept for compatibility with the previous flow
         cursor = conn.cursor()
 
-        # Check if database exists
-        cursor.execute(f"SHOW DATABASES LIKE '{DATABASE_NAME}'")
-        db_exists = cursor.fetchone()
-
-        if db_exists:
-            # Drop the database if it exists
-            cursor.execute(f"DROP DATABASE {DATABASE_NAME}")
-            print(f"Database '{DATABASE_NAME}' dropped")
-            
-        # Create database
-        cursor.execute(f"CREATE DATABASE {DATABASE_NAME}")
-        print("Database created successfully")
-
-        # Use the database
-        cursor.execute(f"USE {DATABASE_NAME}")
-
-        # Create tables
+        # We are already connected to the target database via the tunnel; just ensure tables exist
         create_tables(cursor)
 
         # Import werkzeug for password hashing
@@ -91,10 +49,14 @@ def create_database():
 
         conn.commit()
         cursor.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
         _close()
         print("Database setup completed successfully")
 
-    except mysql.connector.Error as err:
+    except Exception as err:
         print(f"Error: {err}")
 
 def create_tables(cursor):
@@ -282,32 +244,17 @@ def create_tables(cursor):
 def import_data():
     """Import data from CSV files into the database"""
     try:
-        # Connect to the database
-        conn_config = config.copy()
-        conn_config['database'] = DATABASE_NAME
-
-        # Connect to MySQL, optionally via SSH tunnel for the target database
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        conn = None
+        # Connect to the remote database via SSH tunnel only
+        from projects.country_game.country_game_utilites.ssh_db_tunnel import connect_via_tunnel
+        conn = connect_via_tunnel()
+        if conn is None:
+            raise RuntimeError("Failed to connect to remote database via SSH tunnel")
         _close = lambda: None
-        if use_tunnel:
-            try:
-                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=conn_config.get('user'),
-                    db_password=conn_config.get('password'),
-                    db_name=conn_config.get('database'),
-                )
-            except Exception as e:
-                print(f"SSH tunneling requested but not available ({e}); falling back to direct MySQL connection.")
-                conn = mysql.connector.connect(**conn_config)
-        else:
-            conn = mysql.connector.connect(**conn_config)
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor()
 
         # Check if tables exist
         cursor.execute("SHOW TABLES")
-        tables = [table[f'Tables_in_{DATABASE_NAME}'] for table in cursor.fetchall()]
+        tables = [row[0] for row in cursor.fetchall()]
 
         if 'stats' not in tables or 'users' not in tables or 'resources' not in tables:
             print("Required tables don't exist. Creating tables first...")
@@ -686,13 +633,15 @@ def import_data():
 
         conn.commit()
         cursor.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
         _close()
         print("Data imported successfully")
 
-    except mysql.connector.Error as err:
+    except Exception as err:
         print(f"Error: {err}")
-    except Exception as e:
-        print(f"Error: {e}")
 
 if __name__ == "__main__":
     create_database()

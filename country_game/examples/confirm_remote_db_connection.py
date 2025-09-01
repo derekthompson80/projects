@@ -39,8 +39,6 @@ def main():
         ssh_username=SSH_USER,
         ssh_password=SSH_PASSWORD,
         remote_bind_address=(REMOTE_DB_HOST, REMOTE_DB_PORT),
-        allow_agent=False,
-        look_for_keys=False,
     ) as tunnel:
         local_port = tunnel.local_bind_port
         print(f'Tunnel established. Local bind port: {local_port}')
