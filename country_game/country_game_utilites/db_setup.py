@@ -239,6 +239,27 @@ def create_tables(cursor):
     )
     """)
 
+    # Countries table (new central registry for countries)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS countries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        ruler_name VARCHAR(100) NOT NULL,
+        government_type VARCHAR(50),
+        description TEXT,
+        db_name VARCHAR(128),
+        assigned_player_id INT NULL,
+        is_open_for_selection BOOLEAN DEFAULT TRUE,
+        politics INT,
+        military INT,
+        economics INT,
+        culture INT,
+        resources_json TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (assigned_player_id) REFERENCES users(id)
+    )
+    """)
+
     print("Tables created successfully")
 
 def import_data():

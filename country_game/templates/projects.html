@@ -94,6 +94,222 @@
 </div>
 {% endif %}
 
+{% if session.get('is_staff') %}
+<!-- Staff Tools: Moved from Staff Dashboard -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Player Sheet Updates</h5>
+    </div>
+    <div class="card-body">
+        <h6>Update Stats</h6>
+        <form action="{{ url_for('update_player_stats') }}" method="post">
+            <div class="form-group mb-3">
+                <label for="stat_id">Select Stat</label>
+                <select class="form-control" id="stat_id" name="stat_id" required>
+                    {% if stats %}
+                        {% for stat in stats %}
+                            <option value="{{ stat.id }}">{{ stat.name }} (Current: {{ stat.rating }})</option>
+                        {% endfor %}
+                    {% else %}
+                        <option disabled>No stats available</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="new_rating">New Rating</label>
+                <input type="number" class="form-control" id="new_rating" name="new_rating" required>
+            </div>
+            <div class="form-group mb-3">
+                <label for="update_notes">Notes</label>
+                <textarea class="form-control" id="update_notes" name="notes" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-warning">Update Stat</button>
+        </form>
+
+        <hr>
+
+        <h6>Update Resources</h6>
+        <form action="{{ url_for('update_player_resources') }}" method="post">
+            <div class="form-group mb-3">
+                <label for="resource_id">Select Resource</label>
+                <select class="form-control" id="resource_id" name="resource_id" required>
+                    {% if resources %}
+                        {% for resource in resources %}
+                            <option value="{{ resource.id }}">{{ resource.name }} (Available: {{ resource.available }})</option>
+                        {% endfor %}
+                    {% else %}
+                        <option disabled>No resources available</option>
+                    {% endif %}
+                </select>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="all_resources">All Available Resources (from CSV)</label>
+                <div class="input-group">
+                    <select class="form-control" id="all_resources">
+                        <option value="">-- Select a resource --</option>
+                        {% if all_resources %}
+                            {% for resource in all_resources %}
+                                <option value="{{ resource.name }}">{{ resource.name }} ({{ resource.type }}, Tier: {{ resource.tier }})</option>
+                            {% endfor %}
+                        {% else %}
+                            <option disabled>No resources available in CSV</option>
+                        {% endif %}
+                    </select>
+                    <button class="btn btn-outline-secondary" type="button" id="add_resource_btn">Add Resource</button>
+                </div>
+                <small class="form-text text-muted">This dropdown shows all resources from the CSV file. Select a resource and click "Add Resource" to add it to the database.</small>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const btn = document.getElementById('add_resource_btn');
+                    if (btn) {
+                        btn.addEventListener('click', function() {
+                            const resourceSelect = document.getElementById('all_resources');
+                            const resourceName = resourceSelect.value;
+                            if (resourceName) {
+                                const existingResources = document.getElementById('resource_id');
+                                let resourceExists = false;
+                                for (let i = 0; i < existingResources.options.length; i++) {
+                                    if (existingResources.options[i].text.startsWith(resourceName + ' ')) {
+                                        resourceExists = true;
+                                        existingResources.selectedIndex = i;
+                                        break;
+                                    }
+                                }
+                                if (resourceExists) {
+                                    alert('This resource already exists in the database. It has been selected in the dropdown above.');
+                                } else {
+                                    if (confirm('Do you want to add "' + resourceName + '" to the database?')) {
+                                        window.location.href = '/resources/add?name=' + encodeURIComponent(resourceName);
+                                    }
+                                }
+                            } else {
+                                alert('Please select a resource first.');
+                            }
+                        });
+                    }
+                });
+            </script>
+            <div class="form-group mb-3">
+                <label for="field_to_update">Field to Update</label>
+                <select class="form-control" id="field_to_update" name="field_to_update" required>
+                    <option value="natively_produced">Natively Produced</option>
+                    <option value="trade">Trade</option>
+                    <option value="committed">Committed</option>
+                    <option value="not_developed">Not Developed</option>
+                    <option value="available">Available</option>
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="new_value">New Value</label>
+                <input type="number" class="form-control" id="new_value" name="new_value" required>
+            </div>
+            <button type="submit" class="btn btn-warning">Update Resource</button>
+        </form>
+    </div>
+</div>
+
+<!-- Default Actions to Player Section -->
+<div class="card mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">Add Default Action to Player</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('add_default_action_to_player') }}" method="post">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="player_id_default" class="form-label">Select Player</label>
+                    <select class="form-control" id="player_id_default" name="player_id" required>
+                        {% if players %}
+                            {% for player in players %}
+                                <option value="{{ player.id }}">{{ player.username }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option disabled>No players available</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label for="standard_action_id" class="form-label">Select Default Action</label>
+                    <select class="form-control" id="standard_action_id" name="standard_action_id" required>
+                        <option value="">-- Select a default action --</option>
+                        {% if standard_actions %}
+                            {% for a in standard_actions %}
+                                <option value="{{ a.id }}">[{{ a.stat_type or 'Any' }}] {{ a.project }}{% if a.points_cost %} (Points: {{ a.points_cost }}){% endif %}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option disabled>No default actions found</option>
+                        {% endif %}
+                    </select>
+                    <small class="form-text text-muted">Loaded from default_actions.csv into the database.</small>
+                </div>
+                <div class="col-md-2">
+                    <label for="action_number" class="form-label">Action #</label>
+                    <input type="number" class="form-control" id="action_number" name="action_number" min="1" max="4" value="1" required>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-dark w-100">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Player Actions Section -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Recent Player Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <a href="{{ url_for('player_actions') }}" class="btn btn-primary">View All Player Actions</a>
+            <p class="mt-2">Click the button above to view all player actions and respond to them.</p>
+        </div>
+        {% if player_actions %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Action #</th>
+                            <th>Description</th>
+                            <th>Stats Used</th>
+                            <th>Resources Used</th>
+                            <th>Gold Spent</th>
+                            <th>Staff Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for action in player_actions %}
+                            <tr>
+                                <td>{{ action.action_number }}</td>
+                                <td>{{ action.description }}</td>
+                                <td>
+                                    {% if action.stat1 %}{{ action.stat1 }} ({{ action.stat1_value }}){% endif %}
+                                    {% if action.stat2 %}<br>{{ action.stat2 }} ({{ action.stat2_value }}){% endif %}
+                                </td>
+                                <td>{{ action.resources_used }}</td>
+                                <td>{{ action.gold_spent }}</td>
+                                <td>
+                                    {% if action.staff_response %}
+                                        <div class="text-success">Responded</div>
+                                    {% else %}
+                                        <div class="text-danger">No response</div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">No player actions submitted yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div class="table-responsive">
     <table class="table table-striped">
         <thead>

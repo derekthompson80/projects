@@ -152,6 +152,34 @@ config = {
     'raise_on_warnings': True
 }
 
+# Helpers for database naming on hosts like PythonAnywhere where DBs are namespaced as "username$dbname"
+# and where CREATE DATABASE may be restricted.
+from typing import Optional
+
+def get_owner_prefix() -> str:
+    """Derive the database owner prefix (e.g., 'spade605$').
+    Priority: env CG_DB_OWNER_PREFIX -> prefix from config['database'] before '$' -> config['user'] + '$'
+    """
+    env_pref = os.getenv('CG_DB_OWNER_PREFIX')
+    if env_pref:
+        return env_pref if env_pref.endswith('$') else env_pref + '$'
+    dbname = config.get('database') or ''
+    if '$' in dbname:
+        return dbname.split('$', 1)[0] + '$'
+    user = config.get('user') or 'root'
+    return f"{user}$"
+
+def make_full_db_name(base: str) -> str:
+    """Ensure provided base (like 'country_test_1') has owner prefix."""
+    if '$' in base:
+        return base
+    return f"{get_owner_prefix()}{base}"
+
+def quote_ident(name: str) -> str:
+    """Quote a MySQL identifier with backticks, escaping internal backticks if needed."""
+    safe = (name or '').replace('`', '``')
+    return f"`{safe}`"
+
 def get_db_connection():
     """Get a connection to the database. If CG_USE_SSH_TUNNEL is true and SSH env vars are set,
     connect via SSH tunnel using db_remote_connection (ssh_db_tunnel). Otherwise, connect directly.
@@ -718,17 +746,111 @@ def delete_action(id):
 @login_required
 def projects():
     """Display all projects"""
+    # Initialize containers
+    projects_list = []
+    stats = []
+    resources = []
+    player_actions = []
+    all_resources = []
+    players = []
+    standard_actions = []
+
+    # Load projects and in-country data
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM projects")
-        projects = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return render_template('projects.html', projects=projects)
+        try:
+            cursor.execute("SELECT * FROM projects")
+            projects_list = cursor.fetchall()
+
+            # Load stats (for Player Sheet Updates)
+            try:
+                cursor.execute("SELECT * FROM stats")
+                stats = cursor.fetchall()
+            except Exception:
+                pass
+
+            # Load resources (for Player Sheet Updates)
+            try:
+                cursor.execute("SELECT * FROM resources")
+                resources = cursor.fetchall()
+            except Exception:
+                pass
+
+            # Load recent player actions (for Recent Player Actions)
+            try:
+                cursor.execute("SELECT * FROM actions ORDER BY id DESC LIMIT 20")
+                player_actions = cursor.fetchall()
+            except Exception:
+                pass
+        finally:
+            cursor.close()
+            conn.close()
     else:
         flash('Database connection error', 'danger')
-        return render_template('projects.html', projects=[])
+        return render_template('projects.html', projects=[], stats=[], resources=[], player_actions=[], all_resources=[], players=[], standard_actions=[])
+
+    # Load all resources from CSV file (for the convenience dropdown)
+    try:
+        import csv
+        with open('country_game_utilites/staff_sheet_templete.csv', 'r') as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+            # Resources section starts around row 31
+            for i in range(31, len(rows)):
+                if i < len(rows) and len(rows[i]) >= 4:
+                    name = rows[i][3].strip()
+                    if name and name != "Name" and name != "":
+                        resource_type = rows[i][4] if len(rows[i]) > 4 else ""
+                        tier = rows[i][5] if len(rows[i]) > 5 else ""
+                        all_resources.append({
+                            'name': name,
+                            'type': resource_type,
+                            'tier': tier
+                        })
+                    # Stop when we reach the "Committed in Detail" section
+                    if name == "Committed in Detail":
+                        break
+    except Exception as e:
+        print(f"Error loading resources from CSV: {e}")
+
+    # Load players and standard actions from the main database
+    try:
+        # Players
+        main_conn = get_main_db_connection()
+        if main_conn:
+            main_cur = main_conn.cursor(dictionary=True)
+            try:
+                main_cur.execute("SELECT id, username, country_db FROM users WHERE role != 'staff'")
+                players = main_cur.fetchall()
+            finally:
+                main_cur.close()
+                main_conn.close()
+    except Exception as e:
+        print(f"Error loading players: {e}")
+
+    try:
+        load_standard_actions_if_empty()
+        main_conn2 = get_main_db_connection()
+        if main_conn2:
+            main_cur2 = main_conn2.cursor(dictionary=True)
+            try:
+                main_cur2.execute("SELECT * FROM standard_actions ORDER BY stat_type, project")
+                standard_actions = main_cur2.fetchall()
+            finally:
+                main_cur2.close()
+                main_conn2.close()
+    except Exception as e:
+        print(f"Error loading standard actions: {e}")
+
+    return render_template('projects.html',
+                           projects=projects_list,
+                           stats=stats,
+                           resources=resources,
+                           player_actions=player_actions,
+                           all_resources=all_resources,
+                           players=players,
+                           standard_actions=standard_actions)
 
 @app.route('/projects/add', methods=['POST'])
 @staff_required
@@ -865,62 +987,47 @@ def delete_project(id):
 
 # Country routes
 def get_default_countries():
-    """Get a list of default countries from the CG5_Country_Descriptions.txt file"""
+    """Get a list of default countries from the generated cg5_country_descriptions.csv file"""
     countries = []
     try:
-        # Read the country descriptions file
+        # Read the CSV generated from CG5_Country_Descriptions.txt
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(script_dir, 'CG5_Country_Descriptions.txt')
-
-        with open(file_path, 'r') as file:
-            content = file.readlines()
-
-        # Parse the content to extract country names
-        for line in content:
-            line = line.strip()
-            if not line or line.startswith('There are'):
-                continue
-
-            # Check if this is a country entry (starts with a number followed by a period)
-            if re.match(r'^\d+\.', line):
-                # Extract country name
-                parts = line.split(' - ')
-                if len(parts) >= 1:
-                    country_info = parts[0].split(' ', 1)
-                    if len(country_info) > 1:
-                        country_name = country_info[1].strip()
-                        # Only add if not already in the list (remove duplicates)
-                        if country_name not in countries:
-                            countries.append(country_name)
-
-        # Sort countries alphabetically
-        countries.sort()
-        print(f"Found {len(countries)} countries in CG5_Country_Descriptions.txt")
-
+        csv_path = os.path.join(script_dir, 'cg5_country_descriptions.csv')
+        if not os.path.exists(csv_path):
+            # Attempt to build the CSV if missing
+            try:
+                from projects.country_game.country_game_utilites.descriptions_txt_to_csv import build_csv
+                build_csv()
+            except Exception as _e:
+                print(f"Could not auto-build CSV: {_e}")
+        if os.path.exists(csv_path):
+            import csv as _csv
+            with open(csv_path, 'r', encoding='utf-8', newline='') as f:
+                reader = _csv.DictReader(f)
+                for row in reader:
+                    name = (row.get('country_name') or '').strip()
+                    if name and name not in countries:
+                        countries.append(name)
+            countries.sort()
+            print(f"Found {len(countries)} countries in cg5_country_descriptions.csv")
+        else:
+            raise FileNotFoundError(csv_path)
     except Exception as e:
-        print(f"Error getting default countries: {e}")
+        print(f"Error getting default countries from CSV: {e}")
         # Fallback to the old method if there's an error
         try:
-            # Get all .csv files in the 'countries_templates' directory
             script_dir = os.path.dirname(os.path.abspath(__file__))
             countries_dir = os.path.join(script_dir, 'countries_templates')
             country_files = glob.glob(os.path.join(countries_dir, '*.csv'))
-
-            # Extract country names from filenames
-            for file_path in country_files:
-                # Get the filename without path and extension
-                filename = os.path.basename(file_path)
-                # Remove the " (Staff) - Template.csv" suffix
+            for fp in country_files:
+                filename = os.path.basename(fp)
                 country_name = filename.replace(' (Staff) - Template.csv', '')
-                if country_name not in countries:  # Avoid duplicates
+                if country_name not in countries:
                     countries.append(country_name)
-
-            # Sort countries alphabetically
             countries.sort()
             print(f"Fallback: Found {len(country_files)} country template files")
         except Exception as inner_e:
             print(f"Error in fallback method: {inner_e}")
-
     return countries
 
 @app.route('/create_country')
@@ -932,78 +1039,113 @@ def create_country_form():
 
     # Get list of countries for management (similar to staff_dashboard)
     countries = []
+    players_with_countries = []
 
     # Only staff members should see country management
     if session.get('is_staff'):
         try:
-            # Connect to MySQL server for country list
-            conn_config = config.copy()
-            if 'database' in conn_config:
-                del conn_config['database']
+            # Use the central countries table in the main DB instead of scanning per-country databases
+            main_conn = get_main_db_connection()
+            if not main_conn:
+                raise mysql.connector.Error("Failed to connect to main DB")
+            main_cur = main_conn.cursor(dictionary=True)
 
-            conn = connect_optional_tunnel(conn_config)
-            cursor = conn.cursor(dictionary=True)
+            # Ensure the countries table exists (safety)
+            main_cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS countries (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(100) NOT NULL UNIQUE,
+                    ruler_name VARCHAR(100) NOT NULL,
+                    government_type VARCHAR(50),
+                    description TEXT,
+                    db_name VARCHAR(128),
+                    assigned_player_id INT NULL,
+                    is_open_for_selection BOOLEAN DEFAULT TRUE,
+                    politics INT,
+                    military INT,
+                    economics INT,
+                    culture INT,
+                    resources_json TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (assigned_player_id) REFERENCES users(id)
+                )
+                """
+            )
 
-            # Get all databases that start with 'country_'
-            cursor.execute("SHOW DATABASES LIKE 'country_%'")
-            # When using dictionary=True, we need to get the first value from each dictionary
-            country_dbs = [list(db.values())[0] for db in cursor.fetchall()]
+            # Fetch countries with optional assigned player
+            main_cur.execute(
+                """
+                SELECT c.*, u.id AS player_id, u.username AS player_username
+                  FROM countries c
+             LEFT JOIN users u ON u.id = c.assigned_player_id
+              ORDER BY c.created_at DESC, c.name ASC
+                """
+            )
+            rows = main_cur.fetchall() or []
 
-            # For each country database, get the country info
-            for db_name in country_dbs:
-                # Connect to the country database
-                cursor.execute(f"USE {db_name}")
+            countries = []
+            for r in rows:
+                countries.append({
+                    'name': r.get('name'),
+                    'ruler_name': r.get('ruler_name'),
+                    'government_type': r.get('government_type'),
+                    'description': r.get('description') or '',
+                    'db_name': r.get('db_name') or '',
+                    'assigned_player': ({'id': r.get('player_id'), 'username': r.get('player_username')} if r.get('player_id') else None),
+                    'is_open_for_selection': bool(r.get('is_open_for_selection')) if r.get('is_open_for_selection') is not None else True,
+                })
 
-                # Get country info
-                try:
-                    cursor.execute("SELECT * FROM country_info LIMIT 1")
-                    country_data = cursor.fetchone()
+            # Build players_with_countries list based on users and countries table
+            main_cur.execute("SELECT id, username, country_db FROM users WHERE role != 'staff'")
+            players = main_cur.fetchall() or []
 
-                    if country_data:
-                        # Create a dictionary with country info
-                        country = {
-                            'name': country_data['name'],
-                            'ruler_name': country_data['ruler_name'],
-                            'government_type': country_data['government_type'],
-                            'description': country_data['description'] if 'description' in country_data else '',
-                            'db_name': db_name,
-                            'assigned_player': None,
-                            'is_open_for_selection': True
-                        }
-                        countries.append(country)
-                except mysql.connector.Error as err:
-                    print(f"Error fetching country info from {db_name}: {err}")
-
-            # Get player assignments for countries
-            try:
-                # Switch back to the main database (configurable)
-                cursor.execute(f"USE {os.getenv('CG_MAIN_DB_NAME', config.get('database') or 'spade605$county_game_server')}")
-
-                # Get all users with assigned countries
-                cursor.execute("SELECT id, username, country_db FROM users WHERE country_db IS NOT NULL AND country_db != ''")
-                assigned_countries = cursor.fetchall()
-
-                # Update country objects with player information
-                for assignment in assigned_countries:
-                    for country in countries:
-                        if country['db_name'] == assignment['country_db']:
-                            country['assigned_player'] = {
-                                'id': assignment['id'],
-                                'username': assignment['username']
-                            }
-                            country['is_open_for_selection'] = False
+            for p in players:
+                entry = {
+                    'id': p['id'],
+                    'username': p['username'],
+                    'country_db': p.get('country_db'),
+                    'country_name': None,
+                    'religion': None,
+                }
+                # Map to a country name using countries table db_name
+                if entry['country_db']:
+                    for c in countries:
+                        if c['db_name'] == entry['country_db']:
+                            entry['country_name'] = c['name']
                             break
-            except mysql.connector.Error as err:
-                print(f"Error fetching country assignments: {err}")
+                players_with_countries.append(entry)
 
-            cursor.close()
-            conn.close()
+            main_cur.close()
+            main_conn.close()
+
+            # Optionally fetch religion from each player's country database (legacy info)
+            for p in players_with_countries:
+                if p['country_db']:
+                    try:
+                        conn_config_player = config.copy()
+                        conn_config_player['database'] = p['country_db']
+                        conn_player = connect_optional_tunnel(conn_config_player)
+                        cursor_player = conn_player.cursor(dictionary=True)
+                        cursor_player.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
+                        if cursor_player.fetchone():
+                            cursor_player.execute("SELECT religion FROM country_info LIMIT 1")
+                            result = cursor_player.fetchone()
+                            if result and result.get('religion'):
+                                p['religion'] = result['religion']
+                        cursor_player.close()
+                        conn_player.close()
+                    except Exception as e:
+                        print(f"Error fetching religion for player {p['username']}: {e}")
 
         except mysql.connector.Error as err:
             print(f"Error preparing country management: {err}")
             flash(f'Error preparing country management: {err}', 'danger')
 
-    return render_template('create_country.html', default_countries=default_countries, countries=countries)
+    # Religions data for Major Religions section
+    religions = get_religions_data()
+
+    return render_template('create_country.html', default_countries=default_countries, countries=countries, religions=religions, players_with_countries=players_with_countries)
 
 def parse_country_template(template_name):
     """Parse a country template CSV file and extract relevant data"""
@@ -1084,12 +1226,11 @@ def parse_country_template(template_name):
 @login_required
 @staff_required
 def create_country():
-    """Create a new country database and tables"""
+    """Create a new country record in the central countries table (no per-country DB)."""
     if request.method == 'POST':
-        # Check if a template was selected
+        # Check if a template was selected (for possible default values only)
         default_country = request.form.get('default_country', '')
         template_data = {}
-
         if default_country:
             template_data = parse_country_template(default_country)
 
@@ -1099,26 +1240,20 @@ def create_country():
         government_type = request.form['government_type']
         description = request.form['description']
 
-        # Get initial stats
+        # Get initial stats (currently unused when not creating DB; kept for future use)
         politics = int(request.form['politics'])
         military = int(request.form['military'])
         economics = int(request.form['economics'])
         culture = int(request.form['culture'])
 
-        # Get random resources if provided
+        # Get random resources if provided (unused in registry-only creation)
         random_resources_json = request.form.get('random_resources', '')
-        random_resources = []
-
         if random_resources_json:
-            try:
-                import json
-                random_resources = json.loads(random_resources_json)
-            except Exception as e:
-                print(f"Error parsing random resources JSON: {e}")
+            # We won't parse/use resources since no country DB is created in this mode
+            pass
 
-        # Override with template data if available
+        # Override with template data if available (fill blanks only)
         if template_data:
-            # Only override ruler_name, government_type, and description if they're empty in the form
             if not ruler_name and 'ruler_name' in template_data:
                 ruler_name = template_data['ruler_name']
             if government_type == 'Other' and 'government_type' in template_data:
@@ -1126,142 +1261,111 @@ def create_country():
             if not description and 'description' in template_data:
                 description = template_data['description']
 
-            # Override stats if they're at default values (5)
-            if politics == 5 and 'politics' in template_data.get('stats', {}):
-                politics = template_data['stats']['politics']
-            if military == 5 and 'military' in template_data.get('stats', {}):
-                military = template_data['stats']['military']
-            if economics == 5 and 'economics' in template_data.get('stats', {}):
-                economics = template_data['stats']['economics']
-            if culture == 5 and 'culture' in template_data.get('stats', {}):
-                culture = template_data['stats']['culture']
-
-        # Validate country name (only allow alphanumeric and underscore)
-        if not re.match(r'^[a-zA-Z0-9_]+$', country_name):
-            flash('Country name can only contain letters, numbers, and underscores', 'danger')
+        # Validate country name (allow letters, numbers, underscores and spaces for registry records)
+        if not re.match(r'^[a-zA-Z0-9_ ]+$', country_name):
+            flash('Country name can only contain letters, numbers, spaces, and underscores', 'danger')
             return redirect(url_for('create_country_form'))
 
-        # Create database name (lowercase for consistency)
-        db_name = f"country_{country_name.lower()}"
+        # Insert/Update the central countries registry (no database is created here)
+        ok = False
+        try:
+            ok = add_country_registry_entry(
+                name=country_name,
+                ruler_name=ruler_name or f"Ruler of {country_name}",
+                government_type=government_type or 'Other',
+                description=description or '',
+                db_name=None,  # no per-country DB
+                is_open_for_selection=True,
+                assigned_player_id=None
+            )
+        except Exception as e:
+            print(f"Error adding registry entry: {e}")
+            ok = False
 
-        # Create the database and tables
-        if create_country_database(db_name):
-            # Save country info
-            if save_country_info(db_name, country_name, ruler_name, government_type, description):
-                # Save initial stats
-                if save_initial_stats(db_name, politics, military, economics, culture):
-                    # Import resources from template if available
-                    if template_data and 'resources' in template_data and template_data['resources']:
-                        import_resources_from_template(db_name, template_data['resources'])
-                    # Import random resources if available
-                    elif random_resources:
-                        import_resources_from_template(db_name, random_resources)
-
-                    # Store the current country database in session
-                    session['current_country_db'] = db_name
-                    flash(f'Country {country_name} created successfully!', 'success')
-                    return redirect(url_for('index'))
-
-        flash('Failed to create country', 'danger')
-        return redirect(url_for('create_country_form'))
+        if ok:
+            flash(f'Country {country_name} added to registry successfully (no database created).', 'success')
+            return redirect(url_for('create_country_form'))
+        else:
+            flash('Failed to add country to registry', 'danger')
+            return redirect(url_for('create_country_form'))
 
 def create_country_database(db_name):
-    """Create a new database for the country and set up tables"""
+    """Deprecated: Database creation has been removed. This function is a no-op and always returns False."""
     try:
-        # Connect to MySQL server (without specifying a database)
-        conn_config = config.copy()
-        if 'database' in conn_config:
-            del conn_config['database']
+        print(f"[DEPRECATED] create_country_database called for '{db_name}'. Database creation is disabled.")
+        try:
+            flash(f"Database creation is disabled. No database will be created for '{db_name}'.", 'warning')
+        except Exception:
+            pass
+        return False
+    except Exception as err:
+        print(f"Error in deprecated create_country_database: {err}")
+        return False
 
-        conn = connect_optional_tunnel(conn_config)
-        cursor = conn.cursor()
-
-        # Create the database
-        cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
-
-        # Use the new database
-        cursor.execute(f"USE {db_name}")
-
-        # Create tables (similar to db_setup.py)
-        # Stats table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stats (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(50) NOT NULL,
-            rating INT NOT NULL,
-            modifier VARCHAR(10),
-            notes TEXT,
-            advisor VARCHAR(100)
+def add_country_registry_entry(name, ruler_name, government_type, description, db_name,
+                               is_open_for_selection=True, assigned_player_id=None,
+                               politics=None, military=None, economics=None, culture=None,
+                               resources_json=None):
+    """Insert or update a row in the central countries table in the main DB, including initial stats/resources."""
+    try:
+        main_conn = get_main_db_connection()
+        if not main_conn:
+            return False
+        cur = main_conn.cursor()
+        # Ensure table exists (safety; main setup should create it)
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS countries (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                ruler_name VARCHAR(100) NOT NULL,
+                government_type VARCHAR(50),
+                description TEXT,
+                db_name VARCHAR(128),
+                assigned_player_id INT NULL,
+                is_open_for_selection BOOLEAN DEFAULT TRUE,
+                politics INT,
+                military INT,
+                economics INT,
+                culture INT,
+                resources_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (assigned_player_id) REFERENCES users(id)
+            )
+            """
         )
-        """)
-
-        # Resources table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS resources (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            type VARCHAR(50),
-            tier INT,
-            natively_produced INT DEFAULT 0,
-            trade INT DEFAULT 0,
-            committed INT DEFAULT 0,
-            not_developed INT DEFAULT 0,
-            available INT DEFAULT 0
+        cur.execute(
+            """
+            INSERT INTO countries (name, ruler_name, government_type, description, db_name, assigned_player_id, is_open_for_selection,
+                                   politics, military, economics, culture, resources_json)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                ruler_name=VALUES(ruler_name),
+                government_type=VALUES(government_type),
+                description=VALUES(description),
+                db_name=COALESCE(VALUES(db_name), db_name),
+                assigned_player_id=COALESCE(VALUES(assigned_player_id), assigned_player_id),
+                is_open_for_selection=COALESCE(VALUES(is_open_for_selection), is_open_for_selection),
+                politics=COALESCE(VALUES(politics), politics),
+                military=COALESCE(VALUES(military), military),
+                economics=COALESCE(VALUES(economics), economics),
+                culture=COALESCE(VALUES(culture), culture),
+                resources_json=COALESCE(VALUES(resources_json), resources_json)
+            """,
+            (name, ruler_name, government_type, description, db_name, assigned_player_id, 1 if is_open_for_selection else 0,
+             politics, military, economics, culture, resources_json)
         )
-        """)
-
-        # Actions table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS actions (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            action_number INT NOT NULL,
-            description TEXT,
-            stat1 VARCHAR(50),
-            stat1_value INT,
-            stat2 VARCHAR(50),
-            stat2_value INT,
-            advisor_used BOOLEAN DEFAULT FALSE,
-            resources_used TEXT,
-            gold_spent INT DEFAULT 0
-        )
-        """)
-
-        # Projects table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS projects (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            effect TEXT,
-            cost INT,
-            resources TEXT,
-            status CHAR(1),
-            progress_per_turn INT DEFAULT 0,
-            total_needed INT DEFAULT 0,
-            total_progress INT DEFAULT 0,
-            turn_started INT
-        )
-        """)
-
-        # Country info table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS country_info (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            ruler_name VARCHAR(100) NOT NULL,
-            government_type VARCHAR(50),
-            description TEXT,
-            religion VARCHAR(50),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """)
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
+        main_conn.commit()
+        cur.close()
+        main_conn.close()
         return True
     except mysql.connector.Error as err:
-        print(f"Error creating country database: {err}")
+        print(f"Error writing to countries table: {err}")
+        try:
+            cur.close()
+            main_conn.close()
+        except Exception:
+            pass
         return False
 
 def save_country_info(db_name, country_name, ruler_name, government_type, description, religion=None):
@@ -1364,50 +1468,57 @@ def import_resources_from_template(db_name, resources):
 @login_required
 @staff_required
 def list_countries():
-    """List all available country databases"""
+    """List all countries from the central registry (countries table)"""
     countries = []
-
     try:
-        # Connect to MySQL server (without specifying a database)
-        conn_config = config.copy()
-        if 'database' in conn_config:
-            del conn_config['database']
-
-        conn = connect_optional_tunnel(conn_config)
-        cursor = conn.cursor()
-
-        # Get all databases that start with 'country_'
-        cursor.execute("SHOW DATABASES LIKE 'country_%'")
-        country_dbs = [db[0] for db in cursor.fetchall()]
-
-        # For each country database, get the country info
-        for db_name in country_dbs:
-            # Connect to the country database
-            cursor.execute(f"USE {db_name}")
-
-            # Get country info
-            try:
-                cursor.execute("SELECT * FROM country_info LIMIT 1")
-                country_data = cursor.fetchone()
-
-                if country_data:
-                    # Create a dictionary with country info
-                    country = {
-                        'name': country_data[1],  # Assuming name is the second column
-                        'ruler_name': country_data[2],  # Assuming ruler_name is the third column
-                        'government_type': country_data[3],  # Assuming government_type is the fourth column
-                        'db_name': db_name
-                    }
-                    countries.append(country)
-            except mysql.connector.Error as err:
-                print(f"Error fetching country info from {db_name}: {err}")
-
-        cursor.close()
-        conn.close()
-
+        main_conn = get_main_db_connection()
+        if not main_conn:
+            raise mysql.connector.Error("Failed to connect to main DB")
+        cur = main_conn.cursor(dictionary=True)
+        # Ensure table exists (safety)
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS countries (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(100) NOT NULL UNIQUE,
+                ruler_name VARCHAR(100) NOT NULL,
+                government_type VARCHAR(50),
+                description TEXT,
+                db_name VARCHAR(128),
+                assigned_player_id INT NULL,
+                is_open_for_selection BOOLEAN DEFAULT TRUE,
+                politics INT,
+                military INT,
+                economics INT,
+                culture INT,
+                resources_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (assigned_player_id) REFERENCES users(id)
+            )
+            """
+        )
+        cur.execute(
+            """
+            SELECT name, ruler_name, government_type, description, db_name, is_open_for_selection
+              FROM countries
+             WHERE COALESCE(db_name, '') <> ''
+          ORDER BY name ASC
+            """
+        )
+        rows = cur.fetchall() or []
+        for r in rows:
+            countries.append({
+                'name': r.get('name'),
+                'ruler_name': r.get('ruler_name'),
+                'government_type': r.get('government_type'),
+                'description': r.get('description') or '',
+                'db_name': r.get('db_name') or '',
+                'is_open_for_selection': bool(r.get('is_open_for_selection')) if r.get('is_open_for_selection') is not None else True,
+            })
+        cur.close()
+        main_conn.close()
     except mysql.connector.Error as err:
-        print(f"Error listing country databases: {err}")
-
+        print(f"Error listing countries from registry: {err}")
     return render_template('select_country.html', countries=countries)
 
 @app.route('/select_country/<db_name>')
@@ -1415,8 +1526,10 @@ def list_countries():
 @staff_required
 def select_country(db_name):
     """Select a country database"""
-    # Validate that the database exists and is a country database
     try:
+        # Normalize to full owner-prefixed DB name
+        full_name = make_full_db_name(db_name)
+
         # Connect to MySQL server (without specifying a database)
         conn_config = config.copy()
         if 'database' in conn_config:
@@ -1426,13 +1539,13 @@ def select_country(db_name):
         cursor = conn.cursor()
 
         # Check if the database exists
-        cursor.execute("SHOW DATABASES LIKE %s", (db_name,))
+        cursor.execute("SHOW DATABASES LIKE %s", (full_name,))
         if cursor.fetchone():
             # Set the current country database in session
-            session['current_country_db'] = db_name
-            flash(f'Switched to country database: {db_name}', 'success')
+            session['current_country_db'] = full_name
+            flash(f'Switched to country database: {full_name}', 'success')
         else:
-            flash(f'Country database not found: {db_name}', 'danger')
+            flash(f'Country database not found: {full_name}', 'danger')
 
         cursor.close()
         conn.close()
@@ -2001,14 +2114,15 @@ def users():
             conn2 = connect_optional_tunnel(conn_config)
             cursor2 = conn2.cursor(dictionary=True)
 
-            # Get all databases that start with 'country_'
-            cursor2.execute("SHOW DATABASES LIKE 'country_%'")
+            # Get all databases that start with owner-prefixed 'country_'
+            pattern = make_full_db_name('country_%')
+            cursor2.execute("SHOW DATABASES LIKE %s", (pattern,))
             country_dbs = [list(db.values())[0] for db in cursor2.fetchall()]
 
             # For each country database, get the country info
             for db_name in country_dbs:
                 # Connect to the country database
-                cursor2.execute(f"USE {db_name}")
+                cursor2.execute(f"USE {quote_ident(db_name)}")
 
                 # Get country info
                 try:
@@ -2547,251 +2661,162 @@ def send_message():
             return redirect(url_for('player_dashboard'))
 
 # Staff routes
+@app.route('/import_countries_registry')
+@staff_required
+def import_countries_registry():
+    """Import or update entries in the central countries registry from cg5_country_descriptions.csv without creating DBs."""
+    try:
+        # Ensure CSV exists; try to build if missing
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, 'cg5_country_descriptions.csv')
+        if not os.path.exists(csv_path):
+            try:
+                from projects.country_game.country_game_utilites.descriptions_txt_to_csv import build_csv
+                build_csv()
+            except Exception as _e:
+                print(f"Could not auto-build CSV for registry import: {_e}")
+        import csv as _csv
+        if not os.path.exists(csv_path):
+            flash('Country descriptions CSV not found and could not be auto-built.', 'danger')
+            return redirect(url_for('create_country_form'))
+
+        # Read CSV and upsert into countries registry
+        imported = 0
+        with open(csv_path, 'r', encoding='utf-8', newline='') as f:
+            reader = _csv.DictReader(f)
+            for row in reader:
+                name = (row.get('country_name') or '').strip()
+                if not name:
+                    continue
+                gov = (row.get('government_description') or '').strip()
+                desc = (row.get('description') or '').strip()
+                # Use placeholder ruler until set later
+                ok = add_country_registry_entry(name=name,
+                                                ruler_name=f"Ruler of {name}" if gov else 'TBD',
+                                                government_type=gov or 'Other',
+                                                description=desc,
+                                                db_name=None,
+                                                is_open_for_selection=True,
+                                                assigned_player_id=None)
+                if ok:
+                    imported += 1
+        flash(f'Registry import complete. Upserted {imported} rows from CSV.', 'success')
+    except Exception as e:
+        flash(f'Error importing registry from CSV: {e}', 'danger')
+    return redirect(url_for('create_country_form'))
+
 @app.route('/create_countries_from_descriptions')
 @staff_required
 def create_countries_from_descriptions():
-    """Create countries based on descriptions in CG5_Country_Descriptions.txt"""
+    """Import/Upsert countries into the central registry from cg5_country_descriptions.csv (no DB creation)."""
     try:
-        # Read the country descriptions file
+        # Load countries from CSV (auto-build if missing)
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(script_dir, 'CG5_Country_Descriptions.txt')
+        csv_path = os.path.join(script_dir, 'cg5_country_descriptions.csv')
+        if not os.path.exists(csv_path):
+            try:
+                from projects.country_game.country_game_utilites.descriptions_txt_to_csv import build_csv
+                build_csv()
+            except Exception as _e:
+                print(f"Could not auto-build CSV: {_e}")
+        import csv as _csv
+        if not os.path.exists(csv_path):
+            flash('Country descriptions CSV not found and could not be auto-built.', 'danger')
+            return redirect(url_for('create_country_form'))
 
-        with open(file_path, 'r') as file:
-            content = file.readlines()
+        upserted = 0
+        with open(csv_path, 'r', encoding='utf-8', newline='') as f:
+            reader = _csv.DictReader(f)
+            for row in reader:
+                name = (row.get('country_name') or '').strip()
+                if not name:
+                    continue
+                gov = (row.get('government_description') or '').strip() or 'Other'
+                desc = (row.get('description') or '').strip()
 
-        # Parse the content into a structured format
-        descriptions = []
-        current_description = None
-        seen_countries = set()  # To track and prevent duplicate countries
-
-        for line in content:
-            line = line.strip()
-            if not line:
-                continue
-
-            # Check if this is a country entry (starts with a number followed by a period)
-            if re.match(r'^\d+\.', line):
-                # Extract country information
-                parts = line.split(' - ')
-                if len(parts) >= 3:
-                    country_info = parts[0].split(' ', 1)
-                    country_number = country_info[0].rstrip('.')
-                    country_name = country_info[1]
-
-                    # Skip if we've already seen this country
-                    if country_name in seen_countries:
-                        current_description = None
-                        continue
-
-                    seen_countries.add(country_name)
-                    alignment = parts[1]
-
-                    # The government type might contain additional hyphens
-                    government_type = ' - '.join(parts[2:-1]) if len(parts) > 3 else parts[2]
-
-                    # The description is the last part
-                    description = parts[-1] if len(parts) > 3 else ""
-
-                    current_description = {
-                        'number': country_number,
-                        'name': country_name,
-                        'alignment': alignment,
-                        'government_type': government_type,
-                        'description': description,
-                    }
-                    descriptions.append(current_description)
-            elif current_description and not line.startswith('There are'):
-                # Append to the description of the current country
-                if current_description['description']:
-                    current_description['description'] += ' ' + line
-                else:
-                    current_description['description'] = line
-
-        # Create countries from descriptions
-        created_countries = []
-        for desc in descriptions:
-            # Create database name (lowercase for consistency)
-            country_name = desc['name']
-            db_name = f"country_{country_name.lower().replace(' ', '_')}"
-
-            # Check if country already exists
-            conn_config = config.copy()
-            if 'database' in conn_config:
-                del conn_config['database']
-
-            conn = connect_optional_tunnel(conn_config)
-            cursor = conn.cursor()
-
-            cursor.execute("SHOW DATABASES LIKE %s", (db_name,))
-            if cursor.fetchone():
-                # Country already exists, skip
-                cursor.close()
-                conn.close()
-                continue
-
-            # Create the database and tables
-            if create_country_database(db_name):
-                # Generate random stats between 1-3
+                # Generate Initial Stats (1-3)
                 politics = random.randint(1, 3)
                 military = random.randint(1, 3)
                 economics = random.randint(1, 3)
                 culture = random.randint(1, 3)
 
-                # Save country info
-                if save_country_info(db_name, country_name, f"Ruler of {country_name}", desc['government_type'], desc['description']):
-                    # Save initial stats
-                    if save_initial_stats(db_name, politics, military, economics, culture):
-                        # Generate random resources between 5-12
-                        import json
+                # Generate Initial Resources (5-12 random items)
+                all_resources = [
+                    { "name": "Iron", "type": "Metal", "tier": 1 },
+                    { "name": "Copper", "type": "Metal", "tier": 1 },
+                    { "name": "Gold", "type": "Precious Metal", "tier": 2 },
+                    { "name": "Silver", "type": "Precious Metal", "tier": 2 },
+                    { "name": "Wheat", "type": "Food", "tier": 1 },
+                    { "name": "Rice", "type": "Food", "tier": 1 },
+                    { "name": "Cattle", "type": "Livestock", "tier": 1 },
+                    { "name": "Horses", "type": "Livestock", "tier": 2 },
+                    { "name": "Timber", "type": "Wood", "tier": 1 },
+                    { "name": "Exotic Wood", "type": "Wood", "tier": 2 },
+                    { "name": "Coal", "type": "Fuel", "tier": 1 },
+                    { "name": "Oil", "type": "Fuel", "tier": 2 },
+                    { "name": "Gems", "type": "Luxury", "tier": 3 },
+                    { "name": "Spices", "type": "Luxury", "tier": 2 },
+                    { "name": "Wine", "type": "Luxury", "tier": 2 },
+                    { "name": "Silk", "type": "Textile", "tier": 2 },
+                    { "name": "Cotton", "type": "Textile", "tier": 1 },
+                    { "name": "Stone", "type": "Building Material", "tier": 1 },
+                    { "name": "Marble", "type": "Building Material", "tier": 2 },
+                    { "name": "Fish", "type": "Food", "tier": 1 }
+                ]
+                num_resources = random.randint(5, 12)
+                shuffled = list(all_resources)
+                random.shuffle(shuffled)
+                selected = shuffled[:num_resources]
+                for res in selected:
+                    res["natively_produced"] = random.randint(1, 3)
+                    res["trade"] = random.randint(0, 1)
+                import json as _json
+                resources_json = _json.dumps(selected)
 
-                        # Sample resources for random generation
-                        all_resources = [
-                            { "name": "Iron", "type": "Metal", "tier": 1 },
-                            { "name": "Copper", "type": "Metal", "tier": 1 },
-                            { "name": "Gold", "type": "Precious Metal", "tier": 2 },
-                            { "name": "Silver", "type": "Precious Metal", "tier": 2 },
-                            { "name": "Wheat", "type": "Food", "tier": 1 },
-                            { "name": "Rice", "type": "Food", "tier": 1 },
-                            { "name": "Cattle", "type": "Livestock", "tier": 1 },
-                            { "name": "Horses", "type": "Livestock", "tier": 2 },
-                            { "name": "Timber", "type": "Wood", "tier": 1 },
-                            { "name": "Exotic Wood", "type": "Wood", "tier": 2 },
-                            { "name": "Coal", "type": "Fuel", "tier": 1 },
-                            { "name": "Oil", "type": "Fuel", "tier": 2 },
-                            { "name": "Gems", "type": "Luxury", "tier": 3 },
-                            { "name": "Spices", "type": "Luxury", "tier": 2 },
-                            { "name": "Wine", "type": "Luxury", "tier": 2 },
-                            { "name": "Silk", "type": "Textile", "tier": 2 },
-                            { "name": "Cotton", "type": "Textile", "tier": 1 },
-                            { "name": "Stone", "type": "Building Material", "tier": 1 },
-                            { "name": "Marble", "type": "Building Material", "tier": 2 },
-                            { "name": "Fish", "type": "Food", "tier": 1 }
-                        ]
-
-                        # Generate a random number of resources (between 5 and 12)
-                        num_resources = random.randint(5, 12)
-
-                        # Shuffle the resources array
-                        random.shuffle(all_resources)
-
-                        # Take the first num_resources
-                        selected_resources = all_resources[:num_resources]
-
-                        # Generate random values for natively_produced and trade
-                        for resource in selected_resources:
-                            resource["natively_produced"] = random.randint(1, 3)
-                            resource["trade"] = random.randint(0, 1)
-
-                        # Import resources
-                        import_resources_from_template(db_name, selected_resources)
-
-                        created_countries.append(country_name)
-
-        if created_countries:
-            flash(f'Successfully created {len(created_countries)} countries from descriptions: {", ".join(created_countries)}', 'success')
-        else:
-            flash('No new countries were created. All countries from descriptions may already exist.', 'info')
-
-        return redirect(url_for('staff_dashboard'))
-
+                if add_country_registry_entry(name=name,
+                                              ruler_name=f"Ruler of {name}",
+                                              government_type=gov,
+                                              description=desc,
+                                              db_name=None,
+                                              is_open_for_selection=True,
+                                              assigned_player_id=None,
+                                              politics=politics, military=military, economics=economics, culture=culture,
+                                              resources_json=resources_json):
+                    upserted += 1
+        flash(f'Registry update complete. Upserted {upserted} countries from descriptions CSV. No databases were created.', 'success')
+        return redirect(url_for('create_country_form'))
     except Exception as e:
-        flash(f'Error creating countries from descriptions: {str(e)}', 'danger')
-        return redirect(url_for('staff_dashboard'))
+        flash(f'Error importing countries from descriptions: {str(e)}', 'danger')
+        return redirect(url_for('create_country_form'))
 
 @app.route('/create_starting_countries')
 @staff_required
 def create_starting_countries():
-    """Create countries based on all default countries"""
+    """Upsert starting countries into the central registry based on default countries (no DB creation)."""
     try:
-        # Get the list of default countries
         default_countries = get_default_countries()
-
-        # Track how many countries were created
-        created_count = 0
-
-        # Create a country for each default country
+        upserted = 0
         for country_name in default_countries:
-            # Create database name (lowercase for consistency)
-            db_name = f"country_starting_{country_name.lower().replace(' ', '_')}"
-
-            # Check if country already exists
-            conn_config = config.copy()
-            if 'database' in conn_config:
-                del conn_config['database']
-
-            conn = mysql.connector.connect(**conn_config)
-            cursor = conn.cursor()
-
-            cursor.execute("SHOW DATABASES LIKE %s", (db_name,))
-            if cursor.fetchone():
-                # Country already exists, skip
-                cursor.close()
-                conn.close()
+            if not country_name:
                 continue
-
-            # Create the database and tables
-            if create_country_database(db_name):
-                # Generate random stats between 1-3
-                politics = random.randint(1, 3)
-                military = random.randint(1, 3)
-                economics = random.randint(1, 3)
-                culture = random.randint(1, 3)
-
-                # Save country info
-                if save_country_info(db_name, country_name, f"Ruler of {country_name}", "Default", f"Starting country based on {country_name}"):
-                    # Save initial stats
-                    if save_initial_stats(db_name, politics, military, economics, culture):
-                        # Generate random resources between 5-12
-                        num_resources = random.randint(5, 12)
-
-                        # Shuffle the resources array
-                        all_resources_copy = [
-                            { "name": "Iron", "type": "Metal", "tier": 1 },
-                            { "name": "Copper", "type": "Metal", "tier": 1 },
-                            { "name": "Gold", "type": "Precious Metal", "tier": 2 },
-                            { "name": "Silver", "type": "Precious Metal", "tier": 2 },
-                            { "name": "Wheat", "type": "Food", "tier": 1 },
-                            { "name": "Rice", "type": "Food", "tier": 1 },
-                            { "name": "Cattle", "type": "Livestock", "tier": 1 },
-                            { "name": "Horses", "type": "Livestock", "tier": 2 },
-                            { "name": "Timber", "type": "Wood", "tier": 1 },
-                            { "name": "Exotic Wood", "type": "Wood", "tier": 2 },
-                            { "name": "Coal", "type": "Fuel", "tier": 1 },
-                            { "name": "Oil", "type": "Fuel", "tier": 2 },
-                            { "name": "Gems", "type": "Luxury", "tier": 3 },
-                            { "name": "Spices", "type": "Luxury", "tier": 2 },
-                            { "name": "Wine", "type": "Luxury", "tier": 2 },
-                            { "name": "Silk", "type": "Textile", "tier": 2 },
-                            { "name": "Cotton", "type": "Textile", "tier": 1 },
-                            { "name": "Stone", "type": "Building Material", "tier": 1 },
-                            { "name": "Marble", "type": "Building Material", "tier": 2 },
-                            { "name": "Fish", "type": "Food", "tier": 1 }
-                        ]
-                        shuffled_resources = sorted(all_resources_copy, key=lambda k: random.random())
-
-                        # Take the first numResources
-                        selected_resources = shuffled_resources[:num_resources]
-
-                        # Save resources
-                        for resource in selected_resources:
-                            # Generate random values for natively_produced and trade
-                            natively_produced = random.randint(1, 3)
-                            trade = random.randint(0, 1)
-
-                            # Save resource
-                            save_resource(db_name, resource["name"], resource["type"], resource["tier"], natively_produced, trade)
-
-                        created_count += 1
-
-        if created_count > 0:
-            flash(f'Successfully created {created_count} starting countries based on default countries', 'success')
+            ok = add_country_registry_entry(
+                name=country_name,
+                ruler_name=f"Ruler of {country_name}",
+                government_type='Default',
+                description=f"Starting country based on {country_name}",
+                db_name=None,
+                is_open_for_selection=True,
+                assigned_player_id=None,
+            )
+            if ok:
+                upserted += 1
+        if upserted > 0:
+            flash(f'Upserted {upserted} starting countries into registry (no databases created).', 'success')
         else:
-            flash('No new starting countries were created. All starting countries may already exist.', 'info')
-
+            flash('No starting countries were upserted. They may already exist in the registry.', 'info')
         return redirect(url_for('create_country_form'))
-
     except Exception as e:
-        flash(f'Error creating starting countries: {str(e)}', 'danger')
+        flash(f'Error upserting starting countries: {str(e)}', 'danger')
         return redirect(url_for('create_country_form'))
 
 @app.route('/delete_starting_countries')
@@ -2804,11 +2829,12 @@ def delete_starting_countries():
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
-        cursor = conn.cursor()
+        conn = connect_optional_tunnel(conn_config)
+        cursor = conn.cursor(dictionary=True)
 
-        # Get all databases that start with 'country_starting_'
-        cursor.execute("SHOW DATABASES LIKE 'country\\_starting\\_%'")
+        # Get all databases that start with owner-prefixed 'country_starting_'
+        pattern = make_full_db_name('country_starting_%')
+        cursor.execute("SHOW DATABASES LIKE %s", (pattern,))
         starting_country_dbs = [list(db.values())[0] for db in cursor.fetchall()]
 
         # Track how many countries were deleted
@@ -2817,7 +2843,7 @@ def delete_starting_countries():
         # Delete each starting country
         for db_name in starting_country_dbs:
             # Drop the database
-            cursor.execute(f"DROP DATABASE {db_name}")
+            cursor.execute(f"DROP DATABASE {quote_ident(db_name)}")
 
             # If this was the current country, clear the selection
             if session.get('current_country_db') == db_name:
@@ -2980,106 +3006,67 @@ def staff_dashboard():
         except Exception as e:
             print(f"Error loading resources from CSV: {e}")
 
-        # Connect to MySQL server for country list
-        conn_config = config.copy()
-        if 'database' in conn_config:
-            del conn_config['database']
-
-        conn = connect_optional_tunnel(conn_config)
-        cursor = conn.cursor(dictionary=True)
-
-        # Get all databases that start with 'country_'
-        cursor.execute("SHOW DATABASES LIKE 'country_%'")
-        # When using dictionary=True, we need to get the first value from each dictionary
-        country_dbs = [list(db.values())[0] for db in cursor.fetchall()]
-
-        # For each country database, get the country info
-        for db_name in country_dbs:
-            # Connect to the country database
-            cursor.execute(f"USE {db_name}")
-
-            # Get country info
-            try:
-                cursor.execute("SELECT * FROM country_info LIMIT 1")
-                country_data = cursor.fetchone()
-
-                if country_data:
-                    # Create a dictionary with country info
-                    country = {
-                        'name': country_data['name'],
-                        'ruler_name': country_data['ruler_name'],
-                        'government_type': country_data['government_type'],
-                        'description': country_data['description'] if 'description' in country_data else '',
-                        'db_name': db_name,
-                        'assigned_player': None,
-                        'is_open_for_selection': True
-                    }
-                    countries.append(country)
-            except mysql.connector.Error as err:
-                print(f"Error fetching country info from {db_name}: {err}")
-
-        # Get player assignments for countries
+        # Build countries list from central registry instead of scanning DBs
         try:
-            # Switch back to the main database
-            # Use the configured main database instead of hardcoding
-            cursor.execute(f"USE {os.getenv('CG_MAIN_DB_NAME', config.get('database') or 'spade605$county_game_server')}")
-
-            # Get all users with assigned countries
-            cursor.execute("SELECT id, username, country_db FROM users WHERE country_db IS NOT NULL AND country_db != ''")
-            assigned_countries = cursor.fetchall()
-
-            # Update country objects with player information
-            for assignment in assigned_countries:
-                for country in countries:
-                    if country['db_name'] == assignment['country_db']:
-                        country['assigned_player'] = {
-                            'id': assignment['id'],
-                            'username': assignment['username']
-                        }
-                        country['is_open_for_selection'] = False
-                        break
-
-            # Update players_with_countries list with country names and religions
-            for player_info in players_with_countries:
-                if player_info['country_db']:
-                    # Get country name
-                    for country in countries:
-                        if country['db_name'] == player_info['country_db']:
-                            player_info['country_name'] = country['name']
-                            break
-
-                    # Get player's religion
-                    try:
-                        # Connect to the player's country database
-                        conn_config_player = config.copy()
-                        conn_config_player['database'] = player_info['country_db']
-
-                        conn_player = connect_optional_tunnel(conn_config_player)
-                        cursor_player = conn_player.cursor(dictionary=True)
-
-                        # Check if the country_info table has a religion column
-                        cursor_player.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-                        if cursor_player.fetchone():
-                            # Get the current religion
-                            cursor_player.execute("SELECT religion FROM country_info LIMIT 1")
-                            result = cursor_player.fetchone()
-                            if result and result['religion']:
-                                player_info['religion'] = result['religion']
-                            else:
-                                player_info['religion'] = None
-                        else:
-                            player_info['religion'] = None
-
-                        cursor_player.close()
-                        conn_player.close()
-                    except mysql.connector.Error as err:
-                        print(f"Error fetching religion for player {player_info['username']}: {err}")
-                        player_info['religion'] = None
+            main_conn = get_main_db_connection()
+            if main_conn:
+                main_cur = main_conn.cursor(dictionary=True)
+                # Ensure table exists (safety)
+                main_cur.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS countries (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL UNIQUE,
+                        ruler_name VARCHAR(100) NOT NULL,
+                        government_type VARCHAR(50),
+                        description TEXT,
+                        db_name VARCHAR(128),
+                        assigned_player_id INT NULL,
+                        is_open_for_selection BOOLEAN DEFAULT TRUE,
+                        politics INT,
+                        military INT,
+                        economics INT,
+                        culture INT,
+                        resources_json TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (assigned_player_id) REFERENCES users(id)
+                    )
+                    """
+                )
+                # Fetch countries with optional assigned player
+                main_cur.execute(
+                    """
+                    SELECT c.*, u.id AS player_id, u.username AS player_username
+                      FROM countries c
+                 LEFT JOIN users u ON u.id = c.assigned_player_id
+                  ORDER BY c.name ASC
+                    """
+                )
+                rows = main_cur.fetchall() or []
+                countries.clear()
+                for r in rows:
+                    # Only include countries with a concrete database in the staff dropdown list
+                    if not r.get('db_name'):
+                        continue
+                    countries.append({
+                        'name': r.get('name'),
+                        'ruler_name': r.get('ruler_name'),
+                        'government_type': r.get('government_type'),
+                        'description': r.get('description') or '',
+                        'db_name': r.get('db_name') or '',
+                        'assigned_player': ({'id': r.get('player_id'), 'username': r.get('player_username')} if r.get('player_id') else None),
+                        'is_open_for_selection': (bool(r.get('is_open_for_selection')) if r.get('is_open_for_selection') is not None else True),
+                    })
+                # Update players_with_countries list with country names and religions
+                # Map db_name to country name for quick lookup
+                db_to_name = {c['db_name']: c['name'] for c in countries if c['db_name']}
+                for player_info in players_with_countries:
+                    if player_info['country_db'] and player_info['country_db'] in db_to_name:
+                        player_info['country_name'] = db_to_name[player_info['country_db']]
+                main_cur.close()
+                main_conn.close()
         except mysql.connector.Error as err:
-            print(f"Error fetching country assignments: {err}")
-
-        cursor.close()
-        conn.close()
+            print(f"Error fetching countries for staff dashboard: {err}")
 
     except mysql.connector.Error as err:
         print(f"Error preparing staff dashboard: {err}")
@@ -3106,8 +3093,10 @@ def staff_dashboard():
 def delete_country(db_name):
     """Delete a country database"""
     try:
-        # Validate that the database exists and is a country database
-        if not db_name.startswith('country_'):
+        # Normalize and validate database name
+        full_name = make_full_db_name(db_name)
+        base = full_name.split('$', 1)[-1]
+        if not base.startswith('country_'):
             flash('Invalid country database name', 'danger')
             return redirect(url_for('staff_dashboard'))
 
@@ -3116,21 +3105,21 @@ def delete_country(db_name):
         if 'database' in conn_config:
             del conn_config['database']
 
-        conn = mysql.connector.connect(**conn_config)
+        conn = connect_optional_tunnel(conn_config)
         cursor = conn.cursor()
 
         # Check if the database exists
-        cursor.execute("SHOW DATABASES LIKE %s", (db_name,))
+        cursor.execute("SHOW DATABASES LIKE %s", (full_name,))
         if cursor.fetchone():
             # Drop the database
-            cursor.execute(f"DROP DATABASE {db_name}")
-            flash(f'Country database {db_name} has been deleted', 'success')
+            cursor.execute(f"DROP DATABASE {quote_ident(full_name)}")
+            flash(f'Country database {full_name} has been deleted', 'success')
 
             # If this was the current country, clear the selection
-            if session.get('current_country_db') == db_name:
+            if session.get('current_country_db') == full_name:
                 session.pop('current_country_db', None)
         else:
-            flash(f'Country database not found: {db_name}', 'danger')
+            flash(f'Country database not found: {full_name}', 'danger')
 
         cursor.close()
         conn.close()
@@ -3237,6 +3226,16 @@ def assign_country_to_player():
             )
             conn.commit()
 
+            # Also reflect assignment in central countries table: set assigned_player_id and close selection
+            try:
+                cursor.execute(
+                    "UPDATE countries SET assigned_player_id = %s, is_open_for_selection = FALSE WHERE db_name = %s",
+                    (player_id, country_db)
+                )
+                conn.commit()
+            except mysql.connector.Error as err:
+                print(f"Error updating countries registry on assignment: {err}")
+
             # Get the player's username for the flash message
             cursor.execute("SELECT username FROM users WHERE id = %s", (player_id,))
             player = cursor.fetchone()
@@ -3322,6 +3321,16 @@ def remove_player_from_country(player_id):
                 (player_id,)
             )
             conn.commit()
+
+            # Mark country as available again in countries registry
+            try:
+                cursor.execute(
+                    "UPDATE countries SET assigned_player_id = NULL, is_open_for_selection = TRUE WHERE db_name = %s",
+                    (country_db,)
+                )
+                conn.commit()
+            except mysql.connector.Error as err:
+                print(f"Error updating countries registry on removal: {err}")
 
             flash(f'Player "{player_username}" has been removed from country "{country_name}"', 'success')
         else:
@@ -3533,3 +3542,28 @@ if __name__ == '__main__':
     _debug = os.getenv('FLASK_DEBUG', 'false').lower() in ('1', 'true', 'yes')
     _port = int(os.getenv('FLASK_RUN_PORT', '5006'))
     app.run(debug=_debug, port=_port)
+
+
+# Helper to save a single resource into a country's database
+# Added to support create_starting_countries where resources are generated programmatically.
+def save_resource(db_name, name, rtype, tier, natively_produced, trade):
+    try:
+        conn_config = config.copy()
+        conn_config['database'] = db_name
+        conn = connect_optional_tunnel(conn_config)
+        cursor = conn.cursor()
+        available = int(natively_produced or 0) + int(trade or 0)
+        cursor.execute(
+            """
+            INSERT INTO resources (name, type, tier, natively_produced, trade, committed, not_developed, available)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (name or '', rtype or '', int(tier or 0), int(natively_produced or 0), int(trade or 0), 0, 0, available)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except mysql.connector.Error as err:
+        print(f"Error saving resource '{name}' for {db_name}: {err}")
+        return False
