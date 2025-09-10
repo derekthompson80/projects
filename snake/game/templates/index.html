@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #snakeCanvas {
+            border: 1px solid white;
+            margin: 20px 0;
+        }
+
+        #score-container {
+            display: flex;
+            justify-content: space-between;
+            width: 600px;
+            margin-bottom: 10px;
+        }
+
+        #controls {
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .game-over-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10;
+            display: none;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Snake Game</h1>
+
+        <div id="score-container">
+            <div id="current-score">Score: 0</div>
+            <div id="high-score">High Score: {{ high_score }}</div>
+        </div>
+
+        <canvas id="snakeCanvas" width="600" height="600"></canvas>
+
+        <div id="controls">
+            <button id="start-button">Start Game</button>
+            <button id="reset-button">Reset Game</button>
+            <a href="{{ url_for('instructions') }}"><button type="button">How to Play</button></a>
+        </div>
+
+        <div class="game-over-message" id="game-over-container">
+            <h2>Game Over</h2>
+            <p id="final-score">Your score: 0</p>
+            <p id="new-high-score" style="color: gold; display: none;">New High Score!</p>
+            <button id="restart-button">Play Again</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='snake.js') }}"></script>
+</body>
+</html>

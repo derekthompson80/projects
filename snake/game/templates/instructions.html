@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game - How to Play</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: left;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 20px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Snake Game - How to Play</h1>
+        
+        <div class="instructions">
+            <h2>Game Controls:</h2>
+            <p>Use the arrow keys to control the snake:</p>
+            <ul>
+                <li>↑ - Move Up</li>
+                <li>↓ - Move Down</li>
+                <li>← - Move Left</li>
+                <li>→ - Move Right</li>
+            </ul>
+            
+            <h2>Game Rules:</h2>
+            <ol>
+                <li>Press the "Start Game" button to begin the game.</li>
+                <li>Control the snake using the arrow keys.</li>
+                <li>Eat the food (red circle) to grow longer and increase your score.</li>
+                <li>Avoid hitting the walls or yourself - this will end the game!</li>
+                <li>Try to achieve the highest score possible.</li>
+            </ol>
+            
+            <h2>Tips:</h2>
+            <ul>
+                <li>Plan your moves ahead to avoid getting trapped.</li>
+                <li>Use the edges of the game area carefully.</li>
+                <li>The snake moves automatically in the direction you choose.</li>
+                <li>You cannot reverse direction directly (e.g., from right to left).</li>
+            </ul>
+        </div>
+        
+        <a href="{{ url_for('index') }}"><button>Back to Game</button></a>
+    </div>
+</body>
+</html>

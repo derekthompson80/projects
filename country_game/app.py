@@ -47,18 +47,18 @@ def get_religions_data():
         conn = get_main_db_connection()
         if not conn:
             raise Exception("Could not connect to database")
-        
+
         cursor = conn.cursor(dictionary=True)
-        
+
         # Get religions from the database
         cursor.execute("""
             SELECT r.id, r.name, r.code as abbreviation, r.description
             FROM religions r
             ORDER BY r.name
         """)
-        
+
         religions = cursor.fetchall()
-        
+
         # Get entities for each religion
         for religion in religions:
             cursor.execute("""
@@ -67,42 +67,42 @@ def get_religions_data():
                 WHERE religion_id = %s
                 ORDER BY name
             """, (religion['id'],))
-            
+
             religion['entities'] = cursor.fetchall()
-        
+
         cursor.close()
         conn.close()
-        
+
         return religions
     except Exception as e:
         print(f'Error loading religions data from database: {str(e)}')
-        
+
         # Fallback to reading from CSV file if database access fails
         try:
             # Read the religions CSV file
             script_dir = os.path.dirname(os.path.abspath(__file__))
             file_path = os.path.join(script_dir, 'religions.csv')
-            
+
             import csv
             religions = []
-            
+
             with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
                 csv_reader = csv.reader(file)
-                
+
                 # Skip the header row
                 header = next(csv_reader)
-                
+
                 # Process each row
                 for row in csv_reader:
                     if len(row) >= 3:  # Ensure we have at least name, abbreviation, and description
                         religion_name = row[0].strip()
                         abbreviation = row[1].strip() if row[1] else None
                         description = row[2].strip() if len(row) > 2 else None
-                        
+
                         # Skip empty rows
                         if not religion_name:
                             continue
-                        
+
                         # Create religion object
                         religion = {
                             'name': religion_name,
@@ -1276,7 +1276,12 @@ def create_country():
                 description=description or '',
                 db_name=None,  # no per-country DB
                 is_open_for_selection=True,
-                assigned_player_id=None
+                assigned_player_id=None,
+                politics=politics,
+                military=military,
+                economics=economics,
+                culture=culture,
+                resources_json=random_resources_json
             )
         except Exception as e:
             print(f"Error adding registry entry: {e}")

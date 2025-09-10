@@ -61,6 +61,17 @@ def create_database():
 
 def create_tables(cursor):
     """Create the necessary tables"""
+
+    # Function to check if a column exists in a table
+    def column_exists(cursor, table, column):
+        cursor.execute(f"""
+        SELECT COUNT(*)
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = '{table}'
+        AND COLUMN_NAME = '{column}'
+        """)
+        return cursor.fetchone()[0] > 0
     # Users table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
@@ -260,6 +271,31 @@ def create_tables(cursor):
     )
     """)
 
+    # Check if politics column exists and add it if it doesn't
+    if not column_exists(cursor, 'countries', 'politics'):
+        print("Adding missing 'politics' column to countries table")
+        cursor.execute("ALTER TABLE countries ADD COLUMN politics INT")
+
+    # Check if military column exists and add it if it doesn't
+    if not column_exists(cursor, 'countries', 'military'):
+        print("Adding missing 'military' column to countries table")
+        cursor.execute("ALTER TABLE countries ADD COLUMN military INT")
+
+    # Check if economics column exists and add it if it doesn't
+    if not column_exists(cursor, 'countries', 'economics'):
+        print("Adding missing 'economics' column to countries table")
+        cursor.execute("ALTER TABLE countries ADD COLUMN economics INT")
+
+    # Check if culture column exists and add it if it doesn't
+    if not column_exists(cursor, 'countries', 'culture'):
+        print("Adding missing 'culture' column to countries table")
+        cursor.execute("ALTER TABLE countries ADD COLUMN culture INT")
+
+    # Check if resources_json column exists and add it if it doesn't
+    if not column_exists(cursor, 'countries', 'resources_json'):
+        print("Adding missing 'resources_json' column to countries table")
+        cursor.execute("ALTER TABLE countries ADD COLUMN resources_json TEXT")
+
     print("Tables created successfully")
 
 def import_data():
@@ -344,33 +380,33 @@ def import_data():
                                         name = rows[i][0].strip() if rows[i][0] is not None else ""
                                         if name and name != "Name" and name != "":
                                             resource_type = rows[i][1] if len(rows[i]) > 1 and rows[i][1] is not None else None
-                                            
+
                                             # Safely convert values to integers with proper error handling
                                             try:
                                                 tier = int(rows[i][2]) if len(rows[i]) > 2 and rows[i][2] is not None and rows[i][2].isdigit() else 0
                                             except (ValueError, AttributeError):
                                                 tier = 0
-                                                
+
                                             try:
                                                 natively_produced = int(rows[i][3]) if len(rows[i]) > 3 and rows[i][3] is not None and rows[i][3].isdigit() else 0
                                             except (ValueError, AttributeError):
                                                 natively_produced = 0
-                                                
+
                                             try:
                                                 trade = int(rows[i][4]) if len(rows[i]) > 4 and rows[i][4] is not None and rows[i][4].isdigit() else 0
                                             except (ValueError, AttributeError):
                                                 trade = 0
-                                                
+
                                             try:
                                                 committed = int(rows[i][5]) if len(rows[i]) > 5 and rows[i][5] is not None and rows[i][5].isdigit() else 0
                                             except (ValueError, AttributeError):
                                                 committed = 0
-                                                
+
                                             try:
                                                 not_developed = int(rows[i][6]) if len(rows[i]) > 6 and rows[i][6] is not None and rows[i][6].isdigit() else 0
                                             except (ValueError, AttributeError):
                                                 not_developed = 0
-                                                
+
                                             try:
                                                 available = int(rows[i][7]) if len(rows[i]) > 7 and rows[i][7] is not None and rows[i][7].isdigit() else 0
                                             except (ValueError, AttributeError):
@@ -440,19 +476,19 @@ def import_data():
                                         try:
                                             # Safely extract and convert values with proper error handling
                                             stat1 = rows[stats_row][0] if len(rows[stats_row]) > 0 and rows[stats_row][0] is not None else None
-                                            
+
                                             try:
                                                 stat1_value = int(rows[stats_row][1]) if len(rows[stats_row]) > 1 and rows[stats_row][1] is not None and rows[stats_row][1].isdigit() else 0
                                             except (ValueError, AttributeError):
                                                 stat1_value = 0
-                                                
+
                                             stat2 = rows[stats_row][2] if len(rows[stats_row]) > 2 and rows[stats_row][2] is not None else None
-                                            
+
                                             try:
                                                 stat2_value = int(rows[stats_row][3]) if len(rows[stats_row]) > 3 and rows[stats_row][3] is not None and rows[stats_row][3].isdigit() else 0
                                             except (ValueError, AttributeError):
                                                 stat2_value = 0
-                                                
+
                                             advisor_used = True if len(rows[stats_row]) > 4 and rows[stats_row][4] is not None and rows[stats_row][4] == "Yes" else False
 
                                             # Collect resources used
@@ -463,7 +499,7 @@ def import_data():
                                                         resources_used.append(rows[stats_row][j])
                                             except IndexError:
                                                 print(f"Warning: Error collecting resources for Action {action_num}")
-                                                
+
                                             try:
                                                 gold_spent = int(rows[stats_row][10]) if len(rows[stats_row]) > 10 and rows[stats_row][10] is not None and rows[stats_row][10].isdigit() else 0
                                             except (ValueError, AttributeError, IndexError):
@@ -603,7 +639,7 @@ def import_data():
                                             """, (current_religion_id, entity_name, entity_description))
 
                                 i += 1
-                            
+
                             # No need to decrement i, as we want to move to the next line
                         else:
                             i += 1
