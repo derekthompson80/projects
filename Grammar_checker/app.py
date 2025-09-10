@@ -1,15 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 import os
 import tempfile
 import json
 import datetime
-import io
-import requests
 from werkzeug.utils import secure_filename
 
 # Import the txt.reviewer functionality
 import sys
-import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # Import with the correct module name (txt.reviewer.py -> txt_reviewer)
 from txt_reviewer import correct_text, write_txt, process_document, process_blog_entry, save_blog_entry
@@ -25,7 +22,11 @@ app.secret_key = os.urandom(24)  # For session management
 @app.before_request
 def redirect_to_pythonanywhere():
     """Redirect all requests to spade605.pythonanywhere.com"""
-    # Skip redirection if request is already to the target domain
+    # Allow local development/testing without redirect
+    if app.debug or app.testing or os.environ.get('DISABLE_PROD_REDIRECT', '').lower() in ('1', 'true', 'yes'):
+        return None
+
+    # Only redirect if host is not already the target domain
     if request.host != 'spade605.pythonanywhere.com':
         # Construct the new URL with the same path and query parameters
         target_url = f"https://spade605.pythonanywhere.com{request.full_path}"
@@ -51,7 +52,19 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
+    return redirect(url_for('blog'))
+
+# New explicit route for grammar checker
+@app.route('/grammar')
+def grammar():
+    """Explicit route path for the grammar checker UI"""
     return render_template('index.html')
+
+# New explicit route for blog homepage path alias
+@app.route('/blog-home')
+def blog_home():
+    """Alias path that routes to the blog homepage"""
+    return redirect(url_for('blog'))
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -103,17 +116,8 @@ def upload_file():
 
         return jsonify({'error': str(e)}), 500
 
-@app.route('/home')
-def home():
-    """Redirect to the blog homepage"""
-    return redirect(url_for('blog'))
 
 
-@app.route('/logout')
-def logout():
-    # Clear the session
-    session.clear()
-    return redirect(url_for('index'))
 
 @app.route('/pexels/search')
 def pexels_search():

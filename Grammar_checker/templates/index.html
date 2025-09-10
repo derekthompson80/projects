@@ -56,7 +56,10 @@
         <header class="mb-4">
             <div class="d-flex justify-content-between align-items-center">
                 <h1>Grammar Checker</h1>
-                <a href="{{ url_for('blog') }}" class="btn btn-primary">Go to Blog</a>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('grammar') }}" class="btn btn-outline-secondary">Grammar Checker</a>
+                    <a href="{{ url_for('blog_home') }}" class="btn btn-primary">Go to Blog</a>
+                </div>
             </div>
             <p class="text-muted">Hosted on PythonAnywhere by spade605@pythonanywhere.com</p>
         </header>
