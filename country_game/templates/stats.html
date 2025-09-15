@@ -12,8 +12,11 @@
 
 {% if session.get('is_staff') %}
 <div class="card mb-4">
-    <div class="card-header">
-        <h5>Add New Stat</h5>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Add New Stat</h5>
+        <form action="/stats/reset_all" method="post" onsubmit="return confirm('Set all stat ratings to 0? This cannot be undone.');">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Set All Stats to 0</button>
+        </form>
     </div>
     <div class="card-body">
         <form action="/stats/add" method="post">
@@ -31,22 +34,7 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="modifier">Modifier</label>
-                        <input type="text" class="form-control" id="modifier" name="modifier">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label for="notes">Notes</label>
-                        <input type="text" class="form-control" id="notes" name="notes">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="advisor">Advisor</label>
-                        <input type="text" class="form-control" id="advisor" name="advisor">
-                    </div>
+
                 </div>
             </div>
             <button type="submit" class="btn btn-primary mt-3">Add Stat</button>
@@ -62,10 +50,6 @@
                 <th>ID</th>
                 <th>Name</th>
                 <th>Rating</th>
-                <th>Modifier</th>
-                <th>Notes</th>
-                <th>Advisor</th>
-                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -74,9 +58,6 @@
                 <td>{{ stat.id }}</td>
                 <td>{{ stat.name }}</td>
                 <td>{{ stat.rating }}</td>
-                <td>{{ stat.modifier }}</td>
-                <td>{{ stat.notes }}</td>
-                <td>{{ stat.advisor }}</td>
                 <td>
                     {% if session.get('is_staff') %}
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ stat.id }}">Edit</button>
@@ -105,18 +86,7 @@
                                     <label for="edit_rating{{ stat.id }}">Rating</label>
                                     <input type="number" class="form-control" id="edit_rating{{ stat.id }}" name="rating" value="{{ stat.rating }}" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="edit_modifier{{ stat.id }}">Modifier</label>
-                                    <input type="text" class="form-control" id="edit_modifier{{ stat.id }}" name="modifier" value="{{ stat.modifier }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_notes{{ stat.id }}">Notes</label>
-                                    <input type="text" class="form-control" id="edit_notes{{ stat.id }}" name="notes" value="{{ stat.notes }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_advisor{{ stat.id }}">Advisor</label>
-                                    <input type="text" class="form-control" id="edit_advisor{{ stat.id }}" name="advisor" value="{{ stat.advisor }}">
-                                </div>
+
                                 <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
                             </form>
                         </div>

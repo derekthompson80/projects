@@ -23,7 +23,8 @@ try:
 except Exception:
     pass
 
-app = Flask(__name__)
+# Explicitly set template and static folders to the current project's locations
+app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
 # Secret key: prefer environment variable; fallback to a generated key for local/dev
 _app_secret = os.getenv('COUNTRY_GAME_SECRET_KEY')
 if not _app_secret:
@@ -40,82 +41,6 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = os.getenv('CG_SESSION_COOKIE_SAMESITE', 'Lax')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=int(os.getenv('CG_SESSION_DAYS', '1')))  # Default 1 day
 
-def get_religions_data():
-    """Get religions data from the database"""
-    try:
-        # Connect to the main database
-        conn = get_main_db_connection()
-        if not conn:
-            raise Exception("Could not connect to database")
-
-        cursor = conn.cursor(dictionary=True)
-
-        # Get religions from the database
-        cursor.execute("""
-            SELECT r.id, r.name, r.code as abbreviation, r.description
-            FROM religions r
-            ORDER BY r.name
-        """)
-
-        religions = cursor.fetchall()
-
-        # Get entities for each religion
-        for religion in religions:
-            cursor.execute("""
-                SELECT name, description
-                FROM religion_entities
-                WHERE religion_id = %s
-                ORDER BY name
-            """, (religion['id'],))
-
-            religion['entities'] = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-
-        return religions
-    except Exception as e:
-        print(f'Error loading religions data from database: {str(e)}')
-
-        # Fallback to reading from CSV file if database access fails
-        try:
-            # Read the religions CSV file
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            file_path = os.path.join(script_dir, 'religions.csv')
-
-            import csv
-            religions = []
-
-            with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
-                csv_reader = csv.reader(file)
-
-                # Skip the header row
-                header = next(csv_reader)
-
-                # Process each row
-                for row in csv_reader:
-                    if len(row) >= 3:  # Ensure we have at least name, abbreviation, and description
-                        religion_name = row[0].strip()
-                        abbreviation = row[1].strip() if row[1] else None
-                        description = row[2].strip() if len(row) > 2 else None
-
-                        # Skip empty rows
-                        if not religion_name:
-                            continue
-
-                        # Create religion object
-                        religion = {
-                            'name': religion_name,
-                            'abbreviation': abbreviation,
-                            'description': description,
-                            'entities': []  # No entities in the CSV format
-                        }
-                        religions.append(religion)
-
-            return religions
-        except Exception as e2:
-            print(f'Error in fallback religion loading: {str(e2)}')
-            return []
 
 # Authentication decorators
 def login_required(f):
@@ -154,7 +79,6 @@ config = {
 
 # Helpers for database naming on hosts like PythonAnywhere where DBs are namespaced as "username$dbname"
 # and where CREATE DATABASE may be restricted.
-from typing import Optional
 
 def get_owner_prefix() -> str:
     """Derive the database owner prefix (e.g., 'spade605$').
@@ -170,7 +94,7 @@ def get_owner_prefix() -> str:
     return f"{user}$"
 
 def make_full_db_name(base: str) -> str:
-    """Ensure provided base (like 'country_test_1') has owner prefix."""
+    """Ensure the provided base (like 'country_test_1') has owner prefix."""
     if '$' in base:
         return base
     return f"{get_owner_prefix()}{base}"
@@ -181,87 +105,38 @@ def quote_ident(name: str) -> str:
     return f"`{safe}`"
 
 def get_db_connection():
-    """Get a connection to the database. If CG_USE_SSH_TUNNEL is true and SSH env vars are set,
-    connect via SSH tunnel using db_remote_connection (ssh_db_tunnel). Otherwise, connect directly.
-    """
+    """Get a connection to the (optionally selected) database via the unified tunnel helper."""
     try:
-        # Use the current country database if one is selected
         conn_config = config.copy()
         if 'current_country_db' in session:
             conn_config['database'] = session['current_country_db']
-
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        if use_tunnel:
-            try:
-                # Import lazily to avoid hard dependency when not tunneling
-                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
-            except Exception:
-                get_connector_connection_via_tunnel = None  # type: ignore
-            if get_connector_connection_via_tunnel:
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=conn_config.get('user'),
-                    db_password=conn_config.get('password'),
-                    db_name=conn_config.get('database'),
-                )
-                return conn
-        # Default direct connection
-        conn = mysql.connector.connect(**conn_config)
-        return conn
+        return connect_optional_tunnel(conn_config)
     except mysql.connector.Error as err:
         print(f"Error connecting to MySQL: {err}")
         return None
 
 def get_main_db_connection():
-    """Get a connection to the main database (default from env CG_MAIN_DB_NAME).
-    Respects CG_USE_SSH_TUNNEL to connect via SSH when configured.
-    """
+    """Get a connection to the main database via the unified tunnel helper."""
     try:
-        # Always connect to the main database
         conn_config = config.copy()
         main_db = os.getenv('CG_MAIN_DB_NAME', conn_config.get('database') or 'spade605$county_game_server')
         conn_config['database'] = main_db
-
-        use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-        if use_tunnel:
-            try:
-                from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
-            except Exception:
-                get_connector_connection_via_tunnel = None  # type: ignore
-            if get_connector_connection_via_tunnel:
-                conn, _close = get_connector_connection_via_tunnel(
-                    db_user=conn_config.get('user'),
-                    db_password=conn_config.get('password'),
-                    db_name=conn_config.get('database'),
-                )
-                return conn
-
-        conn = mysql.connector.connect(**conn_config)
-        return conn
+        return connect_optional_tunnel(conn_config)
     except mysql.connector.Error as err:
         print(f"Error connecting to main MySQL database: {err}")
         return None
 
 
 def connect_optional_tunnel(conn_config: dict):
-    """Helper to open a MySQL connection honoring CG_USE_SSH_TUNNEL.
-    If tunneling is enabled and ssh_db_tunnel is available, connects via tunnel; otherwise uses mysql.connector directly.
-    The conn_config may or may not include 'database'.
+    """Unified connection helper using the SSH tunnel shim (unconditionally).
+    Keeps signature for backward compatibility, ignores most conn_config fields.
     """
-    use_tunnel = os.getenv('CG_USE_SSH_TUNNEL', 'false').lower() in ('1', 'true', 'yes')
-    if use_tunnel:
-        try:
-            from projects.country_game.country_game_utilites.ssh_db_tunnel import get_connector_connection_via_tunnel  # type: ignore
-        except Exception:
-            get_connector_connection_via_tunnel = None  # type: ignore
-        if get_connector_connection_via_tunnel:
-            conn, _close = get_connector_connection_via_tunnel(
-                db_user=conn_config.get('user'),
-                db_password=conn_config.get('password'),
-                db_name=conn_config.get('database'),
-            )
-            return conn
-    # Fallback to direct connection
-    return mysql.connector.connect(**conn_config)
+    # Always use the tunnel-based connector for consistency and security.
+    try:
+        return mysql.connector.connect()
+    except mysql.connector.Error as err:
+        print(f"Error connecting via tunnel: {err}")
+        return None
 
 
 def load_standard_actions_if_empty():
@@ -300,14 +175,17 @@ def load_standard_actions_if_empty():
 
             # Load from CSV
             import os, csv
-            # CSV is expected at projects/country_game/default_actions.csv relative to repo root
-            csv_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'default_actions.csv')
-            if not os.path.exists(csv_path):
-                # Try fallback from repo root if run context differs
-                alt_path = os.path.join(os.getcwd(), 'projects', 'country_game', 'default_actions.csv')
-                csv_path = alt_path if os.path.exists(alt_path) else csv_path
+            # Look for default_actions.csv in several locations (new location prioritized)
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            search_candidates = [
+                os.path.join(script_dir, 'country_game_utilites', 'default_actions.csv'),
+                os.path.join(script_dir, 'default_actions.csv'),
+                os.path.join(os.getcwd(), 'projects', 'country_game', 'country_game_utilites', 'default_actions.csv'),
+                os.path.join(os.getcwd(), 'projects', 'country_game', 'default_actions.csv'),
+            ]
+            csv_path = next((p for p in search_candidates if os.path.exists(p)), None)
 
-            if os.path.exists(csv_path):
+            if csv_path and os.path.exists(csv_path):
                 with open(csv_path, 'r', encoding='utf-8') as f:
                     reader = csv.DictReader(f)
                     rows = []
@@ -390,8 +268,8 @@ def inject_current_country():
 
 @app.route('/')
 def index():
-    """Home page - redirects to login page"""
-    return redirect(url_for('login'))
+    # Render the home page using current template and static assets
+    return render_template('index.html', country_info=get_current_country_info())
 
 # Stats routes
 @app.route('/stats')
@@ -401,8 +279,12 @@ def stats():
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM stats")
-        stats = cursor.fetchall()
+        try:
+            cursor.execute("SELECT * FROM stats")
+            stats = cursor.fetchall()
+        except mysql.connector.Error as err:
+            print(f"Error fetching stats: {err}")
+            stats = []
         cursor.close()
         conn.close()
         return render_template('stats.html', stats=stats)
@@ -481,6 +363,32 @@ def delete_stat(id):
 
     return redirect(url_for('stats'))
 
+
+@app.route('/stats/reset_all', methods=['POST'])
+@staff_required
+def reset_all_stats():
+    """Set all stats ratings to 0 in the current country database."""
+    conn = get_db_connection()
+    if not conn:
+        flash('Database connection error', 'danger')
+        return redirect(url_for('stats'))
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE stats SET rating = 0")
+        conn.commit()
+        affected = cursor.rowcount
+        cursor.close()
+        conn.close()
+        flash(f'Reset {affected if affected is not None else 0} stat ratings to 0.', 'success')
+    except mysql.connector.Error as err:
+        try:
+            cursor.close()
+            conn.close()
+        except Exception:
+            pass
+        flash(f'Error resetting stats: {err}', 'danger')
+    return redirect(url_for('stats'))
+
 # Resources routes
 @app.route('/resources')
 @login_required
@@ -489,36 +397,22 @@ def resources():
     # Get pre-filled name from query string if provided
     pre_filled_name = request.args.get('name', '')
 
-    # Get resource type and tier from CSV if name is provided
+    # Pre-fill type/level using DB instead of CSV when name provided
     pre_filled_type = ''
     pre_filled_tier = ''
-
-    if pre_filled_name:
-        try:
-            import csv
-            with open('country_game_utilites/staff_sheet_templete.csv', 'r') as file:
-                reader = csv.reader(file)
-                rows = list(reader)
-
-                # Find resources section (starting at row 31)
-                for i in range(31, len(rows)):
-                    if i < len(rows) and len(rows[i]) >= 4:
-                        name = rows[i][3].strip()
-                        # If we find the resource, get its type and tier
-                        if name == pre_filled_name:
-                            pre_filled_type = rows[i][4] if len(rows[i]) > 4 else ''
-                            pre_filled_tier = rows[i][5] if len(rows[i]) > 5 else ''
-                            break
-
-                        # Stop when we reach the "Committed in Detail" section
-                        if name == "Committed in Detail":
-                            break
-        except Exception as e:
-            print(f"Error loading resource details from CSV: {e}")
 
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor(dictionary=True)
+        if pre_filled_name:
+            try:
+                cursor.execute("SELECT type, COALESCE(level, tier) AS level FROM resources WHERE name = %s LIMIT 1", (pre_filled_name,))
+                row = cursor.fetchone()
+                if row:
+                    pre_filled_type = row.get('type') or ''
+                    pre_filled_tier = row.get('level') or ''
+            except Exception as e:
+                print(f"Error pre-filling resource details from DB: {e}")
         cursor.execute("SELECT * FROM resources")
         resources = cursor.fetchall()
         cursor.close()
@@ -539,23 +433,24 @@ def resources():
 @app.route('/resources/add', methods=['POST'])
 @staff_required
 def add_resource():
-    """Add a new resource"""
+    """Add a new resource (CG5 schema)"""
     if request.method == 'POST':
         name = request.form['name']
-        resource_type = request.form['type'] if 'type' in request.form else None
-        tier = int(request.form['tier']) if 'tier' in request.form and request.form['tier'].strip() else 0
-        natively_produced = int(request.form['natively_produced']) if 'natively_produced' in request.form and request.form['natively_produced'].strip() else 0
-        trade = int(request.form['trade']) if 'trade' in request.form and request.form['trade'].strip() else 0
-        committed = int(request.form['committed']) if 'committed' in request.form and request.form['committed'].strip() else 0
-        not_developed = int(request.form['not_developed']) if 'not_developed' in request.form and request.form['not_developed'].strip() else 0
-        available = int(request.form['available']) if 'available' in request.form and request.form['available'].strip() else 0
+        resource_type = request.form.get('type')
+        level = request.form.get('level')
+        description = request.form.get('description')
+        try:
+            level_val = int(level) if level and str(level).strip() != '' else None
+        except Exception:
+            level_val = None
 
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor()
+            # Insert into CG5 columns; legacy columns remain untouched
             cursor.execute(
-                "INSERT INTO resources (name, type, tier, natively_produced, trade, committed, not_developed, available) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                (name, resource_type, tier, natively_produced, trade, committed, not_developed, available)
+                "INSERT INTO resources (name, type, level, description) VALUES (%s, %s, %s, %s)",
+                (name, resource_type, level_val, description)
             )
             conn.commit()
             cursor.close()
@@ -569,23 +464,23 @@ def add_resource():
 @app.route('/resources/edit/<int:id>', methods=['POST'])
 @staff_required
 def edit_resource(id):
-    """Edit an existing resource"""
+    """Edit an existing resource (CG5 schema)"""
     if request.method == 'POST':
         name = request.form['name']
-        resource_type = request.form['type'] if 'type' in request.form else None
-        tier = int(request.form['tier']) if 'tier' in request.form and request.form['tier'].strip() else 0
-        natively_produced = int(request.form['natively_produced']) if 'natively_produced' in request.form and request.form['natively_produced'].strip() else 0
-        trade = int(request.form['trade']) if 'trade' in request.form and request.form['trade'].strip() else 0
-        committed = int(request.form['committed']) if 'committed' in request.form and request.form['committed'].strip() else 0
-        not_developed = int(request.form['not_developed']) if 'not_developed' in request.form and request.form['not_developed'].strip() else 0
-        available = int(request.form['available']) if 'available' in request.form and request.form['available'].strip() else 0
+        resource_type = request.form.get('type')
+        level = request.form.get('level')
+        description = request.form.get('description')
+        try:
+            level_val = int(level) if level and str(level).strip() != '' else None
+        except Exception:
+            level_val = None
 
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE resources SET name = %s, type = %s, tier = %s, natively_produced = %s, trade = %s, committed = %s, not_developed = %s, available = %s WHERE id = %s",
-                (name, resource_type, tier, natively_produced, trade, committed, not_developed, available, id)
+                "UPDATE resources SET name = %s, type = %s, level = %s, description = %s WHERE id = %s",
+                (name, resource_type, level_val, description, id)
             )
             conn.commit()
             cursor.close()
@@ -613,133 +508,32 @@ def delete_resource(id):
 
     return redirect(url_for('resources'))
 
-# Actions routes
-@app.route('/actions')
+@app.route('/api/resources')
 @login_required
-def actions():
-    """Display all actions"""
-    # Initialize all_resources list
-    all_resources = []
-
-    # Load all resources from CSV file
+@staff_required
+def api_resources():
+    """Return all resources from the main database as JSON for client-side random generation.
+    Fields: name, type, level, description, and tier (alias of level for compatibility).
+    """
     try:
-        import csv
-        with open('country_game_utilites/staff_sheet_templete.csv', 'r') as file:
-            reader = csv.reader(file)
-            rows = list(reader)
-
-            # Find resources section (starting at row 31)
-            for i in range(31, len(rows)):
-                if i < len(rows) and len(rows[i]) >= 4:
-                    name = rows[i][3].strip()
-                    # Process rows with resource names
-                    if name and name != "Name" and name != "":
-                        resource_type = rows[i][4] if len(rows[i]) > 4 else ""
-                        tier = rows[i][5] if len(rows[i]) > 5 else ""
-
-                        # Add to all_resources list
-                        all_resources.append({
-                            'name': name,
-                            'type': resource_type,
-                            'tier': tier
-                        })
-
-                    # Stop when we reach the "Committed in Detail" section
-                    if name == "Committed in Detail":
-                        break
+        # Use main DB so staff can pick from the canonical resource catalog
+        main_conn = get_main_db_connection()
+        if not main_conn:
+            return {"error": "DB connection failed"}, 500
+        cur = main_conn.cursor(dictionary=True)
+        cur.execute("SELECT name, type, COALESCE(level, tier) AS level, description FROM resources ORDER BY name ASC")
+        rows = cur.fetchall() or []
+        cur.close()
+        main_conn.close()
+        # Add tier alias for compatibility with existing JS expectations
+        for r in rows:
+            r['tier'] = r.get('level')
+        from flask import jsonify
+        return jsonify(rows)
     except Exception as e:
-        print(f"Error loading resources from CSV: {e}")
+        from flask import jsonify
+        return jsonify({"error": str(e)}), 500
 
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM actions")
-        actions = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return render_template('actions.html', actions=actions, all_resources=all_resources)
-    else:
-        flash('Database connection error', 'danger')
-        return render_template('actions.html', actions=[], all_resources=all_resources)
-
-@app.route('/actions/add', methods=['POST'])
-@staff_required
-def add_action():
-    """Add a new action"""
-    if request.method == 'POST':
-        action_number = int(request.form['action_number']) if request.form['action_number'].strip() else 0
-        description = request.form['description'] if 'description' in request.form else None
-        stat1 = request.form['stat1'] if 'stat1' in request.form else None
-        stat1_value = int(request.form['stat1_value']) if 'stat1_value' in request.form and request.form['stat1_value'].strip() else None
-        stat2 = request.form['stat2'] if 'stat2' in request.form else None
-        stat2_value = int(request.form['stat2_value']) if 'stat2_value' in request.form and request.form['stat2_value'].strip() else None
-        advisor_used = request.form['advisor_used'] == '1' if 'advisor_used' in request.form else False
-        resources_used = request.form['resources_used'] if 'resources_used' in request.form else None
-        gold_spent = int(request.form['gold_spent']) if 'gold_spent' in request.form and request.form['gold_spent'].strip() else 0
-
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO actions (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent)
-            )
-            conn.commit()
-            cursor.close()
-            conn.close()
-            flash('Action added successfully', 'success')
-        else:
-            flash('Database connection error', 'danger')
-
-        return redirect(url_for('actions'))
-
-@app.route('/actions/edit/<int:id>', methods=['POST'])
-@staff_required
-def edit_action(id):
-    """Edit an existing action"""
-    if request.method == 'POST':
-        action_number = int(request.form['action_number']) if request.form['action_number'].strip() else 0
-        description = request.form['description'] if 'description' in request.form else None
-        stat1 = request.form['stat1'] if 'stat1' in request.form else None
-        stat1_value = int(request.form['stat1_value']) if 'stat1_value' in request.form and request.form['stat1_value'].strip() else None
-        stat2 = request.form['stat2'] if 'stat2' in request.form else None
-        stat2_value = int(request.form['stat2_value']) if 'stat2_value' in request.form and request.form['stat2_value'].strip() else None
-        advisor_used = request.form['advisor_used'] == '1' if 'advisor_used' in request.form else False
-        resources_used = request.form['resources_used'] if 'resources_used' in request.form else None
-        gold_spent = int(request.form['gold_spent']) if 'gold_spent' in request.form and request.form['gold_spent'].strip() else 0
-
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE actions SET action_number = %s, description = %s, stat1 = %s, stat1_value = %s, stat2 = %s, stat2_value = %s, advisor_used = %s, resources_used = %s, gold_spent = %s WHERE id = %s",
-                (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, id)
-            )
-            conn.commit()
-            cursor.close()
-            conn.close()
-            flash('Action updated successfully', 'success')
-        else:
-            flash('Database connection error', 'danger')
-
-        return redirect(url_for('actions'))
-
-@app.route('/actions/delete/<int:id>')
-@staff_required
-def delete_action(id):
-    """Delete an action"""
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM actions WHERE id = %s", (id,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        flash('Action deleted successfully', 'success')
-    else:
-        flash('Database connection error', 'danger')
-
-    return redirect(url_for('actions'))
 
 # Projects routes
 @app.route('/projects')
@@ -793,7 +587,7 @@ def projects():
     # Load all resources from CSV file (for the convenience dropdown)
     try:
         import csv
-        with open('country_game_utilites/staff_sheet_templete.csv', 'r') as file:
+        with open('country_game_utilites/default_stats.csv', 'r') as file:
             reader = csv.reader(file)
             rows = list(reader)
             # Resources section starts around row 31
@@ -987,20 +781,32 @@ def delete_project(id):
 
 # Country routes
 def get_default_countries():
-    """Get a list of default countries from the generated cg5_country_descriptions.csv file"""
+    """Get a list of default countries from the generated cg5_countries.csv file"""
     countries = []
     try:
-        # Read the CSV generated from CG5_Country_Descriptions.txt
+        # Resolve CSV path in new location first, then legacy, then try auto-build.
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(script_dir, 'cg5_country_descriptions.csv')
-        if not os.path.exists(csv_path):
+        csv_candidates = [
+            os.path.join(script_dir, 'country_game_utilites', 'cg5_countries.csv'),
+            os.path.join(script_dir, 'cg5_countries.csv'),
+            os.path.join(os.getcwd(), 'projects', 'country_game', 'country_game_utilites', 'cg5_countries.csv'),
+            os.path.join(os.getcwd(), 'projects', 'country_game', 'cg5_countries.csv'),
+        ]
+        csv_path = next((p for p in csv_candidates if os.path.exists(p)), None)
+        if not csv_path:
             # Attempt to build the CSV if missing
             try:
                 from projects.country_game.country_game_utilites.descriptions_txt_to_csv import build_csv
                 build_csv()
+                # After build, check primary location again
+                built_candidates = [
+                    os.path.join(script_dir, 'country_game_utilites', 'cg5_countries.csv'),
+                    os.path.join(script_dir, 'cg5_countries.csv'),
+                ]
+                csv_path = next((p for p in built_candidates if os.path.exists(p)), None)
             except Exception as _e:
                 print(f"Could not auto-build CSV: {_e}")
-        if os.path.exists(csv_path):
+        if csv_path and os.path.exists(csv_path):
             import csv as _csv
             with open(csv_path, 'r', encoding='utf-8', newline='') as f:
                 reader = _csv.DictReader(f)
@@ -1009,9 +815,9 @@ def get_default_countries():
                     if name and name not in countries:
                         countries.append(name)
             countries.sort()
-            print(f"Found {len(countries)} countries in cg5_country_descriptions.csv")
+            print(f"Found {len(countries)} countries in cg5_countries.csv at {csv_path}")
         else:
-            raise FileNotFoundError(csv_path)
+            raise FileNotFoundError('cg5_countries.csv not found in known locations')
     except Exception as e:
         print(f"Error getting default countries from CSV: {e}")
         # Fallback to the old method if there's an error
@@ -1031,208 +837,17 @@ def get_default_countries():
     return countries
 
 @app.route('/create_country')
-@login_required
-@staff_required
 def create_country_form():
-    """Display the country creation form and country management"""
-    default_countries = get_default_countries()
+    """Display the country creation form only"""
+    return render_template('create_country.html')
 
-    # Get list of countries for management (similar to staff_dashboard)
-    countries = []
-    players_with_countries = []
-
-    # Only staff members should see country management
-    if session.get('is_staff'):
-        try:
-            # Use the central countries table in the main DB instead of scanning per-country databases
-            main_conn = get_main_db_connection()
-            if not main_conn:
-                raise mysql.connector.Error("Failed to connect to main DB")
-            main_cur = main_conn.cursor(dictionary=True)
-
-            # Ensure the countries table exists (safety)
-            main_cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS countries (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    name VARCHAR(100) NOT NULL UNIQUE,
-                    ruler_name VARCHAR(100) NOT NULL,
-                    government_type VARCHAR(50),
-                    description TEXT,
-                    db_name VARCHAR(128),
-                    assigned_player_id INT NULL,
-                    is_open_for_selection BOOLEAN DEFAULT TRUE,
-                    politics INT,
-                    military INT,
-                    economics INT,
-                    culture INT,
-                    resources_json TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (assigned_player_id) REFERENCES users(id)
-                )
-                """
-            )
-
-            # Fetch countries with optional assigned player
-            main_cur.execute(
-                """
-                SELECT c.*, u.id AS player_id, u.username AS player_username
-                  FROM countries c
-             LEFT JOIN users u ON u.id = c.assigned_player_id
-              ORDER BY c.created_at DESC, c.name ASC
-                """
-            )
-            rows = main_cur.fetchall() or []
-
-            countries = []
-            for r in rows:
-                countries.append({
-                    'name': r.get('name'),
-                    'ruler_name': r.get('ruler_name'),
-                    'government_type': r.get('government_type'),
-                    'description': r.get('description') or '',
-                    'db_name': r.get('db_name') or '',
-                    'assigned_player': ({'id': r.get('player_id'), 'username': r.get('player_username')} if r.get('player_id') else None),
-                    'is_open_for_selection': bool(r.get('is_open_for_selection')) if r.get('is_open_for_selection') is not None else True,
-                })
-
-            # Build players_with_countries list based on users and countries table
-            main_cur.execute("SELECT id, username, country_db FROM users WHERE role != 'staff'")
-            players = main_cur.fetchall() or []
-
-            for p in players:
-                entry = {
-                    'id': p['id'],
-                    'username': p['username'],
-                    'country_db': p.get('country_db'),
-                    'country_name': None,
-                    'religion': None,
-                }
-                # Map to a country name using countries table db_name
-                if entry['country_db']:
-                    for c in countries:
-                        if c['db_name'] == entry['country_db']:
-                            entry['country_name'] = c['name']
-                            break
-                players_with_countries.append(entry)
-
-            main_cur.close()
-            main_conn.close()
-
-            # Optionally fetch religion from each player's country database (legacy info)
-            for p in players_with_countries:
-                if p['country_db']:
-                    try:
-                        conn_config_player = config.copy()
-                        conn_config_player['database'] = p['country_db']
-                        conn_player = connect_optional_tunnel(conn_config_player)
-                        cursor_player = conn_player.cursor(dictionary=True)
-                        cursor_player.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-                        if cursor_player.fetchone():
-                            cursor_player.execute("SELECT religion FROM country_info LIMIT 1")
-                            result = cursor_player.fetchone()
-                            if result and result.get('religion'):
-                                p['religion'] = result['religion']
-                        cursor_player.close()
-                        conn_player.close()
-                    except Exception as e:
-                        print(f"Error fetching religion for player {p['username']}: {e}")
-
-        except mysql.connector.Error as err:
-            print(f"Error preparing country management: {err}")
-            flash(f'Error preparing country management: {err}', 'danger')
-
-    # Religions data for Major Religions section
-    religions = get_religions_data()
-
-    return render_template('create_country.html', default_countries=default_countries, countries=countries, religions=religions, players_with_countries=players_with_countries)
-
-def parse_country_template(template_name):
-    """Parse a country template CSV file and extract relevant data"""
-    template_data = {
-        'country_name': template_name,
-        'ruler_name': '',
-        'government_type': 'Other',
-        'description': '',
-        'stats': {},
-        'resources': []
-    }
-
-    try:
-        import csv
-        template_path = os.path.join('countries_templates', f"{template_name} (Staff) - Template.csv")
-
-        with open(template_path, 'r') as file:
-            reader = csv.reader(file)
-            rows = list(reader)
-
-            # Extract country info from row 2
-            if len(rows) > 1 and len(rows[1]) > 8:
-                template_data['country_name'] = rows[1][0] or template_name
-                template_data['ruler_name'] = rows[1][1] or ''
-                template_data['description'] = rows[1][7] or ''
-
-            # Extract stats
-            stats_map = {
-                'Politics': 'politics',
-                'Military': 'military',
-                'Economics': 'economics',
-                'Society': 'culture'  # Map Society to culture
-            }
-
-            for i in range(4, 14):  # Stats are in rows 5-13
-                if i < len(rows) and len(rows[i]) > 1:
-                    stat_name = rows[i][0].strip()
-                    if stat_name in stats_map and rows[i][1].strip().isdigit():
-                        template_data['stats'][stats_map[stat_name]] = int(rows[i][1])
-
-            # Extract resources
-            for i in range(31, 130):  # Resources are in rows 32-129
-                if i < len(rows) and len(rows[i]) > 6:
-                    resource_name = rows[i][3].strip()
-                    if resource_name and resource_name != "Name" and resource_name != "":
-                        resource_type = rows[i][4].strip() if len(rows[i]) > 4 else ""
-                        tier = rows[i][5].strip() if len(rows[i]) > 5 else ""
-                        natively_produced = rows[i][6].strip() if len(rows[i]) > 6 else "0"
-                        trade = rows[i][7].strip() if len(rows[i]) > 7 else "0"
-
-                        # Convert to integers, default to 0 if not a number
-                        try:
-                            natively_produced = int(natively_produced) if natively_produced.isdigit() else 0
-                        except:
-                            natively_produced = 0
-
-                        try:
-                            trade = int(trade) if trade.isdigit() else 0
-                        except:
-                            trade = 0
-
-                        # Only add resources that are produced or traded
-                        if natively_produced != 0 or trade != 0:
-                            template_data['resources'].append({
-                                'name': resource_name,
-                                'type': resource_type,
-                                'tier': tier if tier.isdigit() else 0,
-                                'natively_produced': natively_produced,
-                                'trade': trade
-                            })
-
-    except Exception as e:
-        print(f"Error parsing country template: {e}")
-
-    return template_data
 
 @app.route('/create_country', methods=['POST'])
-@login_required
-@staff_required
 def create_country():
     """Create a new country record in the central countries table (no per-country DB)."""
     if request.method == 'POST':
         # Check if a template was selected (for possible default values only)
-        default_country = request.form.get('default_country', '')
         template_data = {}
-        if default_country:
-            template_data = parse_country_template(default_country)
 
         # Get form data
         country_name = request.form['country_name']
@@ -1294,18 +909,6 @@ def create_country():
             flash('Failed to add country to registry', 'danger')
             return redirect(url_for('create_country_form'))
 
-def create_country_database(db_name):
-    """Deprecated: Database creation has been removed. This function is a no-op and always returns False."""
-    try:
-        print(f"[DEPRECATED] create_country_database called for '{db_name}'. Database creation is disabled.")
-        try:
-            flash(f"Database creation is disabled. No database will be created for '{db_name}'.", 'warning')
-        except Exception:
-            pass
-        return False
-    except Exception as err:
-        print(f"Error in deprecated create_country_database: {err}")
-        return False
 
 def add_country_registry_entry(name, ruler_name, government_type, description, db_name,
                                is_open_for_selection=True, assigned_player_id=None,
@@ -1373,101 +976,8 @@ def add_country_registry_entry(name, ruler_name, government_type, description, d
             pass
         return False
 
-def save_country_info(db_name, country_name, ruler_name, government_type, description, religion=None):
-    """Save country information to the country_info table"""
-    try:
-        # Connect to the country database
-        conn_config = config.copy()
-        conn_config['database'] = db_name
 
-        conn = connect_optional_tunnel(conn_config)
-        cursor = conn.cursor()
 
-        # Insert country info
-        cursor.execute("""
-        INSERT INTO country_info (name, ruler_name, government_type, description, religion)
-        VALUES (%s, %s, %s, %s, %s)
-        """, (country_name, ruler_name, government_type, description, religion))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return True
-    except mysql.connector.Error as err:
-        print(f"Error saving country info: {err}")
-        return False
-
-def save_initial_stats(db_name, politics, military, economics, culture):
-    """Save initial stats to the stats table"""
-    try:
-        # Connect to the country database
-        conn_config = config.copy()
-        conn_config['database'] = db_name
-
-        conn = connect_optional_tunnel(conn_config)
-        cursor = conn.cursor()
-
-        # Insert initial stats
-        stats = [
-            ('Politics', politics, None, 'Initial politics rating', None),
-            ('Military', military, None, 'Initial military rating', None),
-            ('Economics', economics, None, 'Initial economics rating', None),
-            ('Culture', culture, None, 'Initial culture rating', None)
-        ]
-
-        for stat in stats:
-            cursor.execute("""
-            INSERT INTO stats (name, rating, modifier, notes, advisor)
-            VALUES (%s, %s, %s, %s, %s)
-            """, stat)
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return True
-    except mysql.connector.Error as err:
-        print(f"Error saving initial stats: {err}")
-        return False
-
-def import_resources_from_template(db_name, resources):
-    """Import resources from a template into the country database"""
-    try:
-        # Connect to the country database
-        conn_config = config.copy()
-        conn_config['database'] = db_name
-
-        conn = connect_optional_tunnel(conn_config)
-        cursor = conn.cursor()
-
-        # Insert resources
-        for resource in resources:
-            # Calculate available based on natively_produced and trade
-            available = resource.get('natively_produced', 0) + resource.get('trade', 0)
-
-            cursor.execute("""
-            INSERT INTO resources (name, type, tier, natively_produced, trade, committed, not_developed, available)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                resource.get('name', ''),
-                resource.get('type', ''),
-                resource.get('tier', 0),
-                resource.get('natively_produced', 0),
-                resource.get('trade', 0),
-                0,  # committed
-                0,  # not_developed
-                available
-            ))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return True
-    except mysql.connector.Error as err:
-        print(f"Error importing resources from template: {err}")
-        return False
 
 @app.route('/countries')
 @login_required
@@ -1637,7 +1147,7 @@ def login():
                 if session['is_staff']:
                     return redirect(url_for('staff_dashboard'))
                 else:
-                    return redirect(url_for('player_dashboard'))
+                    return redirect(url_for('index'))
             else:
                 flash('Invalid username or password', 'danger')
         else:
@@ -1792,253 +1302,10 @@ def country_descriptions():
                           government_types=government_types,
                           alignment_mapping=alignment_mapping)
 
-@app.route('/religions')
-def religions():
-    """Display major religions information and allow players to select their religion"""
-    # Get religions data
-    religions = get_religions_data()
 
-    # Get the current user's country database if they are logged in and have one assigned
-    user_country_db = None
-    user_religion = None
 
-    if session.get('username') and not session.get('is_staff') and session.get('current_country_db'):
-        user_country_db = session.get('current_country_db')
 
-        # Get the user's current religion if they have one
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor(dictionary=True)
-            try:
-                # Check if the country_info table has a religion column
-                cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-                if cursor.fetchone():
-                    # Get the current religion
-                    cursor.execute("SELECT religion FROM country_info LIMIT 1")
-                    result = cursor.fetchone()
-                    if result and result['religion']:
-                        user_religion = result['religion']
-            except mysql.connector.Error as err:
-                print(f"Error fetching religion: {err}")
-            finally:
-                cursor.close()
-                conn.close()
 
-    # Get players list for staff
-    players = []
-    if session.get('is_staff'):
-        main_conn = get_main_db_connection()
-        if main_conn:
-            main_cursor = main_conn.cursor(dictionary=True)
-            main_cursor.execute("SELECT id, username, country_db FROM users WHERE role != 'staff'")
-            players = main_cursor.fetchall()
-            main_cursor.close()
-            main_conn.close()
-
-    return render_template('religions.html', 
-                          religions=religions,
-                          user_religion=user_religion,
-                          players=players)
-
-@app.route('/assign_religion', methods=['POST'])
-@login_required
-def assign_religion():
-    """Allow players to assign a religion to their country"""
-    if session.get('is_staff'):
-        flash('Staff members should use the staff religion management tools', 'warning')
-        return redirect(url_for('religions'))
-
-    if not session.get('current_country_db'):
-        flash('You do not have a country assigned', 'danger')
-        return redirect(url_for('religions'))
-
-    religion = request.form.get('religion')
-    if not religion:
-        flash('Please select a religion', 'danger')
-        return redirect(url_for('religions'))
-
-    # Update the country_info table with the selected religion
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor()
-        try:
-            # Check if the country_info table has a religion column
-            cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-            if not cursor.fetchone():
-                # Add the religion column if it doesn't exist
-                cursor.execute("ALTER TABLE country_info ADD COLUMN religion VARCHAR(50)")
-                conn.commit()
-
-            # Update the religion
-            cursor.execute("""
-                UPDATE country_info 
-                SET religion = %s 
-                WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
-            """, (religion,))
-            conn.commit()
-            flash(f'Religion assigned successfully', 'success')
-        except mysql.connector.Error as err:
-            print(f"Error assigning religion: {err}")
-            flash(f'Error assigning religion: {str(err)}', 'danger')
-        finally:
-            cursor.close()
-            conn.close()
-    else:
-        flash('Database connection error', 'danger')
-
-    return redirect(url_for('religions'))
-
-@app.route('/remove_religion', methods=['POST'])
-@login_required
-def remove_religion():
-    """Allow players to remove a religion from their country"""
-    if session.get('is_staff'):
-        flash('Staff members should use the staff religion management tools', 'warning')
-        return redirect(url_for('religions'))
-
-    if not session.get('current_country_db'):
-        flash('You do not have a country assigned', 'danger')
-        return redirect(url_for('religions'))
-
-    # Update the country_info table to remove the religion
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor()
-        try:
-            # Check if the country_info table has a religion column
-            cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-            if cursor.fetchone():
-                # Update the religion to NULL
-                cursor.execute("""
-                    UPDATE country_info 
-                    SET religion = NULL 
-                    WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
-                """)
-                conn.commit()
-                flash('Religion removed successfully', 'success')
-            else:
-                flash('Religion column does not exist', 'danger')
-        except mysql.connector.Error as err:
-            print(f"Error removing religion: {err}")
-            flash(f'Error removing religion: {str(err)}', 'danger')
-        finally:
-            cursor.close()
-            conn.close()
-    else:
-        flash('Database connection error', 'danger')
-
-    return redirect(url_for('religions'))
-
-@app.route('/staff_assign_religion', methods=['POST'])
-@staff_required
-def staff_assign_religion():
-    """Allow staff to assign a religion to a player's country"""
-    player_id = request.form.get('player_id')
-    religion = request.form.get('religion')
-
-    if not player_id or not religion:
-        flash('Please select a player and a religion', 'danger')
-        return redirect(url_for('religions'))
-
-    # Get the player's country database
-    main_conn = get_main_db_connection()
-    if main_conn:
-        main_cursor = main_conn.cursor(dictionary=True)
-        main_cursor.execute("SELECT country_db FROM users WHERE id = %s", (player_id,))
-        player = main_cursor.fetchone()
-        main_cursor.close()
-        main_conn.close()
-
-        if player and player['country_db']:
-            # Update the country_info table with the selected religion
-            conn_config = config.copy()
-            conn_config['database'] = player['country_db']
-
-            try:
-                conn = connect_optional_tunnel(conn_config)
-                cursor = conn.cursor()
-
-                # Check if the country_info table has a religion column
-                cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-                if not cursor.fetchone():
-                    # Add the religion column if it doesn't exist
-                    cursor.execute("ALTER TABLE country_info ADD COLUMN religion VARCHAR(50)")
-                    conn.commit()
-
-                # Update the religion
-                cursor.execute("""
-                    UPDATE country_info 
-                    SET religion = %s 
-                    WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
-                """, (religion,))
-                conn.commit()
-                cursor.close()
-                conn.close()
-
-                flash(f'Religion assigned to player successfully', 'success')
-            except mysql.connector.Error as err:
-                print(f"Error assigning religion to player: {err}")
-                flash(f'Error assigning religion to player: {str(err)}', 'danger')
-        else:
-            flash('Player does not have a country assigned', 'danger')
-    else:
-        flash('Database connection error', 'danger')
-
-    return redirect(url_for('religions'))
-
-@app.route('/staff_remove_religion', methods=['POST'])
-@staff_required
-def staff_remove_religion():
-    """Allow staff to remove a religion from a player's country"""
-    player_id = request.form.get('player_id')
-
-    if not player_id:
-        flash('Please select a player', 'danger')
-        return redirect(url_for('religions'))
-
-    # Get the player's country database
-    main_conn = get_main_db_connection()
-    if main_conn:
-        main_cursor = main_conn.cursor(dictionary=True)
-        main_cursor.execute("SELECT country_db FROM users WHERE id = %s", (player_id,))
-        player = main_cursor.fetchone()
-        main_cursor.close()
-        main_conn.close()
-
-        if player and player['country_db']:
-            # Update the country_info table to remove the religion
-            conn_config = config.copy()
-            conn_config['database'] = player['country_db']
-
-            try:
-                conn = connect_optional_tunnel(conn_config)
-                cursor = conn.cursor()
-
-                # Check if the country_info table has a religion column
-                cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-                if cursor.fetchone():
-                    # Update the religion to NULL
-                    cursor.execute("""
-                        UPDATE country_info 
-                        SET religion = NULL 
-                        WHERE id = (SELECT id FROM (SELECT id FROM country_info LIMIT 1) as temp)
-                    """)
-                    conn.commit()
-                    flash('Religion removed from player successfully', 'success')
-                else:
-                    flash('Religion column does not exist', 'danger')
-
-                cursor.close()
-                conn.close()
-            except mysql.connector.Error as err:
-                print(f"Error removing religion from player: {err}")
-                flash(f'Error removing religion from player: {str(err)}', 'danger')
-        else:
-            flash('Player does not have a country assigned', 'danger')
-    else:
-        flash('Database connection error', 'danger')
-
-    return redirect(url_for('religions'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -2109,45 +1376,19 @@ def users():
         cursor.execute("SELECT * FROM users")
         users = cursor.fetchall()
 
-        # Get list of available country databases
+        # Get countries from central registry instead of scanning per-country DBs
         try:
-            # Connect to MySQL server (without specifying a database)
-            conn_config = config.copy()
-            if 'database' in conn_config:
-                del conn_config['database']
-
-            conn2 = connect_optional_tunnel(conn_config)
-            cursor2 = conn2.cursor(dictionary=True)
-
-            # Get all databases that start with owner-prefixed 'country_'
-            pattern = make_full_db_name('country_%')
-            cursor2.execute("SHOW DATABASES LIKE %s", (pattern,))
-            country_dbs = [list(db.values())[0] for db in cursor2.fetchall()]
-
-            # For each country database, get the country info
-            for db_name in country_dbs:
-                # Connect to the country database
-                cursor2.execute(f"USE {quote_ident(db_name)}")
-
-                # Get country info
-                try:
-                    cursor2.execute("SELECT * FROM country_info LIMIT 1")
-                    country_data = cursor2.fetchone()
-
-                    if country_data:
-                        # Create a dictionary with country info
-                        country = {
-                            'name': country_data['name'],
-                            'db_name': db_name
-                        }
-                        countries.append(country)
-                except mysql.connector.Error as err:
-                    print(f"Error fetching country info from {db_name}: {err}")
-
-            cursor2.close()
-            conn2.close()
+            main_conn = get_main_db_connection()
+            if not main_conn:
+                raise mysql.connector.Error("Failed to connect to main DB for countries list")
+            cur2 = main_conn.cursor(dictionary=True)
+            cur2.execute("SELECT name, db_name FROM countries ORDER BY name ASC")
+            rows = cur2.fetchall() or []
+            countries = [{'name': r.get('name'), 'db_name': r.get('db_name') or ''} for r in rows if r.get('db_name')]
+            cur2.close()
+            main_conn.close()
         except mysql.connector.Error as err:
-            print(f"Error listing country databases: {err}")
+            print(f"Error fetching countries registry: {err}")
 
         cursor.close()
         conn.close()
@@ -2291,320 +1532,8 @@ def delete_user(id):
     return redirect(url_for('users'))
 
 # Player routes
-@app.route('/player_dashboard')
-@login_required
-def player_dashboard():
-    """Player dashboard for submitting actions and messaging staff"""
-    if session.get('is_staff'):
-        flash('Staff members should use the Staff Dashboard', 'warning')
-        return redirect(url_for('staff_dashboard'))
+# Removed player_dashboard route and associated view per deprecation of player dashboard UI.
 
-    # Get player's recent actions
-    actions = []
-    messages = []
-    politics_rating = 0
-    max_actions = 2  # Default to 2 actions
-
-    # Get actions from the country database
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-
-        # Get recent actions
-        cursor.execute("SELECT * FROM actions ORDER BY id DESC LIMIT 10")
-        actions = cursor.fetchall()
-
-        # Get politics stat to determine max actions
-        cursor.execute("SELECT * FROM stats WHERE name = 'Politics'")
-        politics_stat = cursor.fetchone()
-        if politics_stat:
-            politics_rating = politics_stat['rating']
-            # Determine max actions based on politics rating
-            if politics_rating >= 5:
-                max_actions = 4
-            elif politics_rating >= 3:
-                max_actions = 3
-
-        cursor.close()
-        conn.close()
-
-    # Get messages from the main database
-    try:
-        main_conn = get_main_db_connection()
-        if main_conn:
-            main_cursor = main_conn.cursor(dictionary=True)
-
-            # Get messages for this user
-            user_id = session.get('user_id')
-            main_cursor.execute("""
-                SELECT m.*, 
-                       sender.username as sender_username, 
-                       recipient.username as recipient_username 
-                FROM messages m
-                JOIN users sender ON m.sender_id = sender.id
-                JOIN users recipient ON m.recipient_id = recipient.id
-                WHERE m.sender_id = %s OR m.recipient_id = %s
-                ORDER BY m.created_at DESC
-            """, (user_id, user_id))
-            messages = main_cursor.fetchall()
-
-            main_cursor.close()
-            main_conn.close()
-    except mysql.connector.Error as err:
-        print(f"Error fetching messages: {err}")
-        # If there's an error (like table doesn't exist), just continue with empty messages list
-
-    # Initialize all_resources list
-    all_resources = []
-
-    # Get resources from the player's country database
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-
-        # Get resources from the database
-        cursor.execute("SELECT * FROM resources")
-        db_resources = cursor.fetchall()
-
-        # Convert to the format expected by the template
-        for resource in db_resources:
-            all_resources.append({
-                'name': resource['name'],
-                'type': resource['type'],
-                'tier': resource['tier']
-            })
-
-        cursor.close()
-        conn.close()
-
-    # If no resources found in database, fall back to CSV (for backward compatibility)
-    if not all_resources:
-        try:
-            import csv
-            with open('country_game_utilites/staff_sheet_templete.csv', 'r') as file:
-                reader = csv.reader(file)
-                rows = list(reader)
-
-                # Find resources section (starting at row 31)
-                for i in range(31, len(rows)):
-                    if i < len(rows) and len(rows[i]) >= 4:
-                        name = rows[i][3].strip()
-                        # Process rows with resource names
-                        if name and name != "Name" and name != "":
-                            resource_type = rows[i][4] if len(rows[i]) > 4 else ""
-                            tier = rows[i][5] if len(rows[i]) > 5 else ""
-
-                            # Add to all_resources list
-                            all_resources.append({
-                                'name': name,
-                                'type': resource_type,
-                                'tier': tier
-                            })
-
-                        # Stop when we reach the "Committed in Detail" section
-                        if name == "Committed in Detail":
-                            break
-        except Exception as e:
-            print(f"Error loading resources from CSV: {e}")
-
-    # Get all stats for dropdown
-    stats = []
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM stats")
-        stats = cursor.fetchall()
-
-        # Get current season
-        current_season = None
-        try:
-            cursor.execute("SELECT * FROM seasons WHERE current = TRUE LIMIT 1")
-            current_season = cursor.fetchone()
-        except:
-            # Table might not exist yet
-            pass
-
-        # Get country achievements
-        achievements = []
-        try:
-            country_id = session.get('country_db')
-            if country_id:
-                cursor.execute("SELECT * FROM achievements WHERE country_id = %s", (country_id,))
-                achievements = cursor.fetchall()
-        except:
-            # Table might not exist yet
-            pass
-
-        cursor.close()
-        conn.close()
-
-    # Ensure standard actions exist, then load them for dropdowns
-    load_standard_actions_if_empty()
-    standard_actions = []
-    try:
-        main_conn_std = get_main_db_connection()
-        if main_conn_std:
-            main_cur_std = main_conn_std.cursor(dictionary=True)
-            try:
-                main_cur_std.execute("SELECT * FROM standard_actions ORDER BY stat_type, project")
-                standard_actions = main_cur_std.fetchall()
-            finally:
-                main_cur_std.close()
-                main_conn_std.close()
-    except Exception as e:
-        print(f"Error loading standard actions for player: {e}")
-
-    # Get religions data
-    religions = get_religions_data()
-
-    # Get the user's current religion if they have one
-    user_religion = None
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-        try:
-            # Check if the country_info table has a religion column
-            cursor.execute("SHOW COLUMNS FROM country_info LIKE 'religion'")
-            if cursor.fetchone():
-                # Get the current religion
-                cursor.execute("SELECT religion FROM country_info LIMIT 1")
-                result = cursor.fetchone()
-                if result and result['religion']:
-                    user_religion = result['religion']
-        except mysql.connector.Error as err:
-            print(f"Error fetching religion: {err}")
-        finally:
-            cursor.close()
-            conn.close()
-
-    return render_template('player_dashboard.html', 
-                          actions=actions, 
-                          messages=messages, 
-                          max_actions=max_actions, 
-                          politics_rating=politics_rating, 
-                          all_resources=all_resources, 
-                          stats=stats,
-                          current_season=current_season,
-                          achievements=achievements,
-                          religions=religions,
-                          user_religion=user_religion,
-                          standard_actions=standard_actions)
-
-@app.route('/submit_player_action', methods=['POST'])
-@login_required
-def submit_player_action():
-    """Submit a player action"""
-    if session.get('is_staff'):
-        flash('Staff members cannot submit player actions', 'danger')
-        return redirect(url_for('staff_dashboard'))
-
-    if request.method == 'POST':
-        action_number = int(request.form['action_number']) if request.form['action_number'].strip() else 0
-        description = request.form['description'] if 'description' in request.form else None
-        stat1 = request.form['stat1'] if 'stat1' in request.form else None
-        stat1_value = None
-        stat2 = request.form['stat2'] if 'stat2' in request.form else None
-        stat2_value = None
-        advisor_used = request.form['advisor_used'] == '1' if 'advisor_used' in request.form else False
-        resources_used = request.form['resources_used'] if 'resources_used' in request.form else None
-        gold_spent = int(request.form['gold_spent']) if 'gold_spent' in request.form and request.form['gold_spent'].strip() else 0
-        is_free = request.form['is_free'] == '1' if 'is_free' in request.form else False
-
-        # Check if action number is valid based on politics rating
-        politics_rating = 0
-        max_actions = 2  # Default to 2 actions
-
-        conn = get_db_connection()
-        if conn:
-            # Ensure schema compatibility for older country DBs
-            ensure_actions_is_free_column(conn)
-            cursor = conn.cursor(dictionary=True)
-
-            # Get politics stat to determine max actions
-            cursor.execute("SELECT * FROM stats WHERE name = 'Politics'")
-            politics_stat = cursor.fetchone()
-            if politics_stat:
-                politics_rating = politics_stat['rating']
-                # Determine max actions based on politics rating
-                if politics_rating >= 5:
-                    max_actions = 4
-                elif politics_rating >= 3:
-                    max_actions = 3
-
-            # Get stat values from database if stat names are provided
-            if stat1:
-                cursor.execute("SELECT rating FROM stats WHERE name = %s", (stat1,))
-                stat_result = cursor.fetchone()
-                if stat_result:
-                    stat1_value = stat_result['rating']
-
-            if stat2:
-                cursor.execute("SELECT rating FROM stats WHERE name = %s", (stat2,))
-                stat_result = cursor.fetchone()
-                if stat_result:
-                    stat2_value = stat_result['rating']
-
-            # Check for stat usage limits (each stat can only be used twice per turn)
-            if stat1 or stat2:
-                # Get current actions to check stat usage
-                cursor.execute("SELECT stat1, stat2 FROM actions WHERE is_free = 0")
-                current_actions = cursor.fetchall()
-
-                # Count stat usage
-                stat_usage = {}
-                for action in current_actions:
-                    if action['stat1']:
-                        stat_usage[action['stat1']] = stat_usage.get(action['stat1'], 0) + 1
-                    if action['stat2']:
-                        stat_usage[action['stat2']] = stat_usage.get(action['stat2'], 0) + 1
-
-                # Check if adding this action would exceed the limit
-                if not is_free:  # Only check for non-free actions
-                    if stat1 and stat_usage.get(stat1, 0) >= 2:
-                        flash(f'You have already used {stat1} twice this turn. Each stat can only be used twice per turn.', 'danger')
-                        cursor.close()
-                        conn.close()
-                        return redirect(url_for('player_dashboard'))
-
-                    if stat2 and stat_usage.get(stat2, 0) >= 2:
-                        flash(f'You have already used {stat2} twice this turn. Each stat can only be used twice per turn.', 'danger')
-                        cursor.close()
-                        conn.close()
-                        return redirect(url_for('player_dashboard'))
-
-            # Check if action number is valid for non-free actions
-            if not is_free and action_number > max_actions:
-                flash(f'Invalid action number. You can only submit up to {max_actions} actions with your current Politics rating of {politics_rating}.', 'danger')
-                cursor.close()
-                conn.close()
-                return redirect(url_for('player_dashboard'))
-
-            # Count existing actions to ensure not exceeding max
-            cursor.execute("SELECT COUNT(*) as count FROM actions WHERE action_number = %s", (action_number,))
-            action_count = cursor.fetchone()['count']
-
-            if action_count > 0:
-                # Action with this number already exists, allow update
-                cursor.execute(
-                    "UPDATE actions SET description = %s, stat1 = %s, stat1_value = %s, stat2 = %s, stat2_value = %s, advisor_used = %s, resources_used = %s, gold_spent = %s, is_free = %s WHERE action_number = %s",
-                    (description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, is_free, action_number)
-                )
-                flash('Action updated successfully', 'success')
-            else:
-                # New action
-                cursor.execute(
-                    "INSERT INTO actions (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, is_free) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (action_number, description, stat1, stat1_value, stat2, stat2_value, advisor_used, resources_used, gold_spent, is_free)
-                )
-                flash('Action submitted successfully', 'success')
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-        else:
-            flash('Database connection error', 'danger')
-
-        return redirect(url_for('player_dashboard'))
 
 # Messaging routes
 @app.route('/send_message', methods=['POST'])
@@ -2633,7 +1562,7 @@ def send_message():
                 recipient_id = staff['id']
             else:
                 flash('No staff members available to receive messages', 'danger')
-                return redirect(url_for('player_dashboard' if not session.get('is_staff') else 'staff_dashboard'))
+                return redirect(url_for('index' if not session.get('is_staff') else 'staff_dashboard'))
 
         # Insert the message
         try:
@@ -2663,25 +1592,34 @@ def send_message():
         if session.get('is_staff'):
             return redirect(url_for('staff_dashboard'))
         else:
-            return redirect(url_for('player_dashboard'))
+            return redirect(url_for('index'))
 
 # Staff routes
 @app.route('/import_countries_registry')
 @staff_required
 def import_countries_registry():
-    """Import or update entries in the central countries registry from cg5_country_descriptions.csv without creating DBs."""
+    """Import or update entries in the central countries registry from cg5_countries.csv without creating DBs."""
     try:
         # Ensure CSV exists; try to build if missing
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(script_dir, 'cg5_country_descriptions.csv')
-        if not os.path.exists(csv_path):
+        csv_path = None
+        candidates = [
+            os.path.join(script_dir, 'country_game_utilites', 'cg5_countries.csv'),
+            os.path.join(script_dir, 'cg5_countries.csv'),
+            os.path.join(os.getcwd(), 'projects', 'country_game', 'country_game_utilites', 'cg5_countries.csv'),
+        ]
+        for p in candidates:
+            if os.path.exists(p):
+                csv_path = p
+                break
+        if not csv_path:
             try:
                 from projects.country_game.country_game_utilites.descriptions_txt_to_csv import build_csv
                 build_csv()
             except Exception as _e:
                 print(f"Could not auto-build CSV for registry import: {_e}")
         import csv as _csv
-        if not os.path.exists(csv_path):
+        if not csv_path or not os.path.exists(csv_path):
             flash('Country descriptions CSV not found and could not be auto-built.', 'danger')
             return redirect(url_for('create_country_form'))
 
@@ -2713,19 +1651,28 @@ def import_countries_registry():
 @app.route('/create_countries_from_descriptions')
 @staff_required
 def create_countries_from_descriptions():
-    """Import/Upsert countries into the central registry from cg5_country_descriptions.csv (no DB creation)."""
+    """Import/Upsert countries into the central registry from cg5_countries.csv (no DB creation)."""
     try:
         # Load countries from CSV (auto-build if missing)
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(script_dir, 'cg5_country_descriptions.csv')
-        if not os.path.exists(csv_path):
+        csv_path = None
+        candidates = [
+            os.path.join(script_dir, 'country_game_utilites', 'cg5_countries.csv'),
+            os.path.join(script_dir, 'cg5_countries.csv'),
+            os.path.join(os.getcwd(), 'projects', 'country_game', 'country_game_utilites', 'cg5_countries.csv'),
+        ]
+        for p in candidates:
+            if os.path.exists(p):
+                csv_path = p
+                break
+        if not csv_path:
             try:
                 from projects.country_game.country_game_utilites.descriptions_txt_to_csv import build_csv
                 build_csv()
             except Exception as _e:
                 print(f"Could not auto-build CSV: {_e}")
         import csv as _csv
-        if not os.path.exists(csv_path):
+        if not csv_path or not os.path.exists(csv_path):
             flash('Country descriptions CSV not found and could not be auto-built.', 'danger')
             return redirect(url_for('create_country_form'))
 
@@ -2985,7 +1932,7 @@ def staff_dashboard():
         # Load all resources from CSV file
         try:
             import csv
-            with open('country_game_utilites/staff_sheet_templete.csv', 'r') as file:
+            with open('country_game_utilites/default_stats.csv', 'r') as file:
                 reader = csv.reader(file)
                 rows = list(reader)
 
@@ -3077,21 +2024,18 @@ def staff_dashboard():
         print(f"Error preparing staff dashboard: {err}")
         flash(f'Error preparing staff dashboard: {err}', 'danger')
 
-    # Get religions data
-    religions = get_religions_data()
 
     return render_template('staff_dashboard.html', 
-                          countries=countries,
-                          players=players,
-                          players_with_countries=players_with_countries,
-                          stats=stats,
-                          resources=resources,
-                          all_resources=all_resources,
-                          messages=messages,
-                          player_actions=player_actions,
-                          cpu_quota_info=cpu_quota_info,
-                          religions=religions,
-                          standard_actions=standard_actions)
+                         countries=countries,
+                         players=players,
+                         players_with_countries=players_with_countries,
+                         stats=stats,
+                         resources=resources,
+                         all_resources=all_resources,
+                         messages=messages,
+                         player_actions=player_actions,
+                         cpu_quota_info=cpu_quota_info,
+                         standard_actions=standard_actions)
 
 @app.route('/delete_country/<db_name>')
 @staff_required
@@ -3494,53 +2438,7 @@ def add_default_action_to_player():
 
     return redirect(url_for('staff_dashboard'))
 
-@app.route('/player_actions')
-@staff_required
-def player_actions():
-    """View all player actions and respond to them"""
-    player_actions = []
 
-    # Connect to country database for game data
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-
-        # Get all player actions
-        cursor.execute("SELECT * FROM actions ORDER BY id DESC")
-        player_actions = cursor.fetchall()
-
-        cursor.close()
-        conn.close()
-
-    return render_template('player_actions.html', player_actions=player_actions)
-
-@app.route('/respond_to_action/<int:action_id>', methods=['POST'])
-@staff_required
-def respond_to_action(action_id):
-    """Respond to a player action"""
-    if request.method == 'POST':
-        response = request.form['response']
-
-        # Connect to country database
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor()
-
-            # Update the action with the staff response
-            cursor.execute(
-                "UPDATE actions SET staff_response = %s, response_date = CURRENT_TIMESTAMP WHERE id = %s",
-                (response, action_id)
-            )
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            flash('Response submitted successfully', 'success')
-        else:
-            flash('Database connection error', 'danger')
-
-    return redirect(url_for('player_actions'))
 
 if __name__ == '__main__':
     # Use environment flags for debug and port to avoid exposing debug in production

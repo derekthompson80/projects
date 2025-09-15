@@ -5,7 +5,7 @@ from typing import Dict, Optional
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TXT_PATH = os.path.join(BASE_DIR, 'CG5_Country_Descriptions.txt')
-OUT_CSV = os.path.join(BASE_DIR, 'cg5_country_descriptions.csv')
+OUT_CSV = os.path.join(BASE_DIR, 'cg5_countries.csv')
 
 
 def _extract_label(line: str, label: str) -> Optional[str]:

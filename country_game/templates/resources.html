@@ -17,7 +17,7 @@
     </div>
     <div class="card-body">
         <form action="/resources/add" method="post">
-            <div class="row">
+            <div class="row g-3">
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="name">Name</label>
@@ -30,40 +30,16 @@
                         <input type="text" class="form-control" id="type" name="type" value="{{ pre_filled_type }}">
                     </div>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <div class="form-group">
-                        <label for="tier">Tier</label>
-                        <input type="number" class="form-control" id="tier" name="tier" value="{{ pre_filled_tier }}">
+                        <label for="level">Level</label>
+                        <input type="number" class="form-control" id="level" name="level" value="{{ pre_filled_tier }}">
                     </div>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-5">
                     <div class="form-group">
-                        <label for="natively_produced">Native</label>
-                        <input type="number" class="form-control" id="natively_produced" name="natively_produced" value="0">
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <div class="form-group">
-                        <label for="trade">Trade</label>
-                        <input type="number" class="form-control" id="trade" name="trade" value="0">
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <div class="form-group">
-                        <label for="committed">Committed</label>
-                        <input type="number" class="form-control" id="committed" name="committed" value="0">
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <div class="form-group">
-                        <label for="not_developed">Not Dev.</label>
-                        <input type="number" class="form-control" id="not_developed" name="not_developed" value="0">
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <div class="form-group">
-                        <label for="available">Available</label>
-                        <input type="number" class="form-control" id="available" name="available" value="0">
+                        <label for="description">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" placeholder="Optional">
                     </div>
                 </div>
             </div>
@@ -80,12 +56,8 @@
                 <th>ID</th>
                 <th>Name</th>
                 <th>Type</th>
-                <th>Tier</th>
-                <th>Native</th>
-                <th>Trade</th>
-                <th>Committed</th>
-                <th>Not Dev.</th>
-                <th>Available</th>
+                <th>Level</th>
+                <th>Description</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -95,12 +67,8 @@
                 <td>{{ resource.id }}</td>
                 <td>{{ resource.name }}</td>
                 <td>{{ resource.type }}</td>
-                <td>{{ resource.tier }}</td>
-                <td>{{ resource.natively_produced }}</td>
-                <td>{{ resource.trade }}</td>
-                <td>{{ resource.committed }}</td>
-                <td>{{ resource.not_developed }}</td>
-                <td>{{ resource.available }}</td>
+                <td>{{ resource.level if resource.level is not none else resource.tier }}</td>
+                <td>{{ resource.description }}</td>
                 <td>
                     {% if session.get('is_staff') %}
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ resource.id }}">Edit</button>
@@ -130,28 +98,12 @@
                                     <input type="text" class="form-control" id="edit_type{{ resource.id }}" name="type" value="{{ resource.type }}">
                                 </div>
                                 <div class="form-group">
-                                    <label for="edit_tier{{ resource.id }}">Tier</label>
-                                    <input type="number" class="form-control" id="edit_tier{{ resource.id }}" name="tier" value="{{ resource.tier }}">
+                                    <label for="edit_level{{ resource.id }}">Level</label>
+                                    <input type="number" class="form-control" id="edit_level{{ resource.id }}" name="level" value="{{ resource.level if resource.level is not none else resource.tier }}">
                                 </div>
                                 <div class="form-group">
-                                    <label for="edit_natively_produced{{ resource.id }}">Natively Produced</label>
-                                    <input type="number" class="form-control" id="edit_natively_produced{{ resource.id }}" name="natively_produced" value="{{ resource.natively_produced }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_trade{{ resource.id }}">Trade</label>
-                                    <input type="number" class="form-control" id="edit_trade{{ resource.id }}" name="trade" value="{{ resource.trade }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_committed{{ resource.id }}">Committed</label>
-                                    <input type="number" class="form-control" id="edit_committed{{ resource.id }}" name="committed" value="{{ resource.committed }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_not_developed{{ resource.id }}">Not Developed</label>
-                                    <input type="number" class="form-control" id="edit_not_developed{{ resource.id }}" name="not_developed" value="{{ resource.not_developed }}">
-                                </div>
-                                <div class="form-group">
-                                    <label for="edit_available{{ resource.id }}">Available</label>
-                                    <input type="number" class="form-control" id="edit_available{{ resource.id }}" name="available" value="{{ resource.available }}">
+                                    <label for="edit_description{{ resource.id }}">Description</label>
+                                    <input type="text" class="form-control" id="edit_description{{ resource.id }}" name="description" value="{{ resource.description }}">
                                 </div>
                                 <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
                             </form>

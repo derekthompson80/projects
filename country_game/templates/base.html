@@ -38,7 +38,7 @@
         }
     </style>
 </head>
-<body class="{% if request.path == '/staff_dashboard' or request.path == '/player_dashboard' or request.path == '/country_descriptions' %}map-backdrop{% endif %}">
+<body class="{% if request.path == '/staff_dashboard' or request.path == '/country_descriptions' %}map-backdrop{% endif %}">
     <div class="container">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-fluid">
@@ -74,36 +74,19 @@
                                     <a class="nav-link" href="/resources">Resources</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="/actions">Actions</a>
-                                </li>
-                                <li class="nav-item">
                                     <a class="nav-link" href="/projects">Projects</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="/create_country">Create Country</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/countries">Select Country</a>
-                                </li>
+
                             {% else %}
                                 <!-- Player Navigation -->
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/player_dashboard">Player Dashboard</a>
-                                </li>
                                 <li class="nav-item">
                                     <a class="nav-link" href="/resources">View Resources</a>
                                 </li>
                             {% endif %}
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/rules">Game Rules</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/country_descriptions">Country Descriptions</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/religions">Religions</a>
-                        </li>
+
                     </ul>
                     <ul class="navbar-nav ms-auto">
                         {% if session.get('username') %}

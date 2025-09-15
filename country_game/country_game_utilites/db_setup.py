@@ -6,8 +6,8 @@ try:
     from dotenv import load_dotenv, find_dotenv  # type: ignore
     load_dotenv(find_dotenv(), override=False)
 except Exception as e:
-    print(f"Warning: Error loading environment variables from .env file: {e}")
-    pass
+    if __name__ == "__main__":
+        print(f"Warning: Error loading environment variables from .env file: {e}")
 
 # Get the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -104,27 +104,35 @@ def create_tables(cursor):
     CREATE TABLE IF NOT EXISTS stats (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(50) NOT NULL,
-        rating INT NOT NULL,
-        modifier VARCHAR(10),
-        notes TEXT,
-        advisor VARCHAR(100)
+        rating INT NOT NULL
     )
     """)
 
-    # Resources table
+    # Resources table (legacy columns retained); ensure CG5 columns exist and backfill
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS resources (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         type VARCHAR(50),
-        tier INT,
-        natively_produced INT DEFAULT 0,
-        trade INT DEFAULT 0,
-        committed INT DEFAULT 0,
-        not_developed INT DEFAULT 0,
-        available INT DEFAULT 0
+        level INT NULL,
+        description TEXT NULL
     )
     """)
+
+    # Add missing CG5 columns if upgrading an existing DB
+    try:
+        if not column_exists(cursor, 'resources', 'level'):
+            cursor.execute("ALTER TABLE resources ADD COLUMN level INT NULL AFTER type")
+        if not column_exists(cursor, 'resources', 'description'):
+            cursor.execute("ALTER TABLE resources ADD COLUMN description TEXT NULL AFTER level")
+    except Exception as _e:
+        print(f"Warning: could not ensure CG5 columns on resources: {_e}")
+
+    # Backfill level from tier when level is NULL
+    try:
+        cursor.execute("UPDATE resources SET level = COALESCE(level, tier)")
+    except Exception as _e:
+        print(f"Warning: could not backfill level from tier: {_e}")
 
     # Actions table
     cursor.execute("""
@@ -227,28 +235,6 @@ def create_tables(cursor):
     )
     """)
 
-    # Religions table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS religions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        code VARCHAR(10),
-        description TEXT,
-        parent_religion_id INT,
-        FOREIGN KEY (parent_religion_id) REFERENCES religions(id)
-    )
-    """)
-
-    # Religion deities/entities table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS religion_entities (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        religion_id INT NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        FOREIGN KEY (religion_id) REFERENCES religions(id)
-    )
-    """)
 
     # Countries table (new central registry for countries)
     cursor.execute("""
@@ -327,7 +313,7 @@ def import_data():
 
         if stats_count == 0:
             print("Importing stats data...")
-            # Import stats from player sheet
+            # Import stats from a player sheet
             try:
                 with open(os.path.join(SCRIPT_DIR, 'player_sheet_templete.csv'), 'r') as file:
                     reader = csv.reader(file)
@@ -338,15 +324,12 @@ def import_data():
                         if i < len(rows) and len(rows[i]) >= 3:
                             name = rows[i][0].strip()
                             if name and name != "Stat":
-                                rating = int(rows[i][1]) if rows[i][1].isdigit() else 0
-                                modifier = rows[i][2] if len(rows[i]) > 2 else None
-                                notes = rows[i][3] if len(rows[i]) > 3 else None
-                                advisor = rows[i][4] if len(rows[i]) > 4 else None
+                                rating = 0
 
                                 cursor.execute("""
-                                INSERT INTO stats (name, rating, modifier, notes, advisor)
+                                INSERT INTO stats (name, rating)
                                 VALUES (%s, %s, %s, %s, %s)
-                                """, (name, rating, modifier, notes, advisor))
+                                """, (name, rating))
             except FileNotFoundError:
                 print("Warning: player_sheet_templete.csv not found. Skipping stats import.")
         else:
@@ -357,75 +340,71 @@ def import_data():
         resources_count = cursor.fetchone()[0]
 
         if resources_count == 0:
-            print("Importing resources data...")
-            # Import resources from player sheet
+            print("Importing resources data from cg5_resources.csv...")
+            # Prefer CG5 resources CSV
             try:
-                with open(os.path.join(SCRIPT_DIR, 'player_sheet_templete.csv'), 'r') as file:
-                    reader = csv.reader(file)
-                    rows = list(reader)
-
-                    # Find the resources section
-                    resource_start = 0
-                    for i, row in enumerate(rows):
-                        if len(row) > 0 and row[0] == "Resources":
-                            resource_start = i + 2  # Skip header row
-                            break
-
-                    # Extract resources
-                    if resource_start > 0 and resource_start < len(rows):
+                with open(os.path.join(SCRIPT_DIR, 'cg5_resources.csv'), 'r', encoding='utf-8') as file:
+                    reader = csv.DictReader(file)
+                    for row in reader:
+                        name = (row.get('name') or '').strip()
+                        if not name:
+                            continue
+                        rtype = (row.get('type') or '').strip()
+                        description = (row.get('description') or '').strip()
+                        # Some CSVs may use 'level' or 'tier'
+                        level_str = (row.get('level') or row.get('tier') or '').strip()
                         try:
-                            for i in range(resource_start, len(rows)):
-                                if i < len(rows) and len(rows[i]) >= 8:
-                                    try:
-                                        name = rows[i][0].strip() if rows[i][0] is not None else ""
-                                        if name and name != "Name" and name != "":
-                                            resource_type = rows[i][1] if len(rows[i]) > 1 and rows[i][1] is not None else None
-
-                                            # Safely convert values to integers with proper error handling
-                                            try:
-                                                tier = int(rows[i][2]) if len(rows[i]) > 2 and rows[i][2] is not None and rows[i][2].isdigit() else 0
-                                            except (ValueError, AttributeError):
-                                                tier = 0
-
-                                            try:
-                                                natively_produced = int(rows[i][3]) if len(rows[i]) > 3 and rows[i][3] is not None and rows[i][3].isdigit() else 0
-                                            except (ValueError, AttributeError):
-                                                natively_produced = 0
-
-                                            try:
-                                                trade = int(rows[i][4]) if len(rows[i]) > 4 and rows[i][4] is not None and rows[i][4].isdigit() else 0
-                                            except (ValueError, AttributeError):
-                                                trade = 0
-
-                                            try:
-                                                committed = int(rows[i][5]) if len(rows[i]) > 5 and rows[i][5] is not None and rows[i][5].isdigit() else 0
-                                            except (ValueError, AttributeError):
-                                                committed = 0
-
-                                            try:
-                                                not_developed = int(rows[i][6]) if len(rows[i]) > 6 and rows[i][6] is not None and rows[i][6].isdigit() else 0
-                                            except (ValueError, AttributeError):
-                                                not_developed = 0
-
-                                            try:
-                                                available = int(rows[i][7]) if len(rows[i]) > 7 and rows[i][7] is not None and rows[i][7].isdigit() else 0
-                                            except (ValueError, AttributeError):
-                                                available = 0
-
-                                            cursor.execute("""
-                                            INSERT INTO resources (name, type, tier, natively_produced, trade, committed, not_developed, available)
-                                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                                            """, (name, resource_type, tier, natively_produced, trade, committed, not_developed, available))
-                                    except IndexError as e:
-                                        print(f"Warning: Error processing resource row {i}: {e}")
-                                        continue
-
-                                    if i >= resource_start + 30:  # Limit to a reasonable number of resources
-                                        break
-                        except Exception as e:
-                            print(f"Warning: Error processing resources: {e}")
+                            level = int(level_str) if level_str.isdigit() else None
+                        except Exception:
+                            level = None
+                        cursor.execute(
+                            """
+                            INSERT INTO resources (name, type, level, description)
+                            VALUES (%s, %s, %s, %s)
+                            """,
+                            (name, rtype, level, description)
+                        )
+                print("CG5 resources imported.")
             except FileNotFoundError:
-                print("Warning: player_sheet_templete.csv not found. Skipping resources import.")
+                print("Warning: cg5_resources.csv not found. Falling back to player_sheet_templete.csv for legacy import.")
+                # Legacy fallback from player sheet
+                try:
+                    with open(os.path.join(SCRIPT_DIR, 'player_sheet_templete.csv'), 'r') as file:
+                        reader = csv.reader(file)
+                        rows = list(reader)
+                        resource_start = 0
+                        for i, row in enumerate(rows):
+                            if len(row) > 0 and row[0] == "Resources":
+                                resource_start = i + 2
+                                break
+                        if resource_start > 0 and resource_start < len(rows):
+                            try:
+                                for i in range(resource_start, len(rows)):
+                                    if i < len(rows) and len(rows[i]) >= 8:
+                                        try:
+                                            name = rows[i][0].strip() if rows[i][0] is not None else ""
+                                            if name and name != "Name" and name != "":
+                                                rtype = rows[i][1] if len(rows[i]) > 1 and rows[i][1] is not None else None
+                                                try:
+                                                    tier = int(rows[i][2]) if len(rows[i]) > 2 and rows[i][2] is not None and rows[i][2].isdigit() else 0
+                                                except (ValueError, AttributeError):
+                                                    tier = 0
+                                                cursor.execute(
+                                                    """
+                                                    INSERT INTO resources (name, type, tier, level)
+                                                    VALUES (%s, %s, %s, %s)
+                                                    """,
+                                                    (name, rtype, tier, tier)
+                                                )
+                                        except IndexError as e:
+                                            print(f"Warning: Error processing resource row {i}: {e}")
+                                            continue
+                                        if i >= resource_start + 30:
+                                            break
+                            except Exception as e:
+                                print(f"Warning: Error processing resources: {e}")
+                except FileNotFoundError:
+                    print("Warning: player_sheet_templete.csv not found. Skipping resources import.")
         else:
             print(f"Resources table already has {resources_count} records. Skipping import.")
 
@@ -529,7 +508,7 @@ def import_data():
             print("Importing projects data...")
             # Import projects from staff sheet
             try:
-                with open(os.path.join(SCRIPT_DIR, 'staff_sheet_templete.csv'), 'r') as file:
+                with open(os.path.join(SCRIPT_DIR, 'default_stats.csv'), 'r') as file:
                     reader = csv.reader(file)
                     rows = list(reader)
 
@@ -576,86 +555,10 @@ def import_data():
                                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                                 """, (name, effect, cost, resources, status, progress_per_turn, total_needed, total_progress, turn_started))
             except FileNotFoundError:
-                print("Warning: staff_sheet_templete.csv not found. Skipping projects import.")
+                print("Warning: default_stats.csv not found. Skipping projects import.")
         else:
             print(f"Projects table already has {projects_count} records. Skipping import.")
 
-        # Check if religions table has data
-        cursor.execute("SELECT COUNT(*) FROM religions")
-        religions_count = cursor.fetchone()[0]
-
-        if religions_count == 0:
-            print("Importing religions data...")
-            try:
-                with open(os.path.join(SCRIPT_DIR, 'CG5 Major religions .txt'), 'r', encoding='utf-8', errors='replace') as file:
-                    lines = file.readlines()
-
-                    religion_name = ""
-                    religion_code = ""
-                    religion_description = ""
-                    current_religion_id = None
-
-                    # Skip the first line which is just a header
-                    i = 1
-                    while i < len(lines):
-                        line = lines[i].strip()
-
-                        # Check if this is a religion header line (contains name and code in parentheses)
-                        if line and "(" in line and ")" in line and not line.startswith("*"):
-                            # Save previous religion if exists
-                            if religion_name:
-                                cursor.execute("""
-                                INSERT INTO religions (name, code, description, parent_religion_id)
-                                VALUES (%s, %s, %s, %s)
-                                """, (religion_name, religion_code, religion_description, None))
-                                current_religion_id = cursor.lastrowid
-                                religion_description = ""
-
-                            # Parse new religion
-                            parts = line.split("(")
-                            religion_name = parts[0].strip()
-                            religion_code = parts[1].split(")")[0].strip()
-
-                            # Collect description from following lines
-                            i += 1
-                            while i < len(lines) and not (lines[i].strip() and "(" in lines[i] and ")" in lines[i] and not lines[i].strip().startswith("*")):
-                                if lines[i].strip() and not lines[i].strip().startswith("*"):
-                                    religion_description += lines[i].strip() + " "
-                                # Check if this is an entity line
-                                elif lines[i].strip().startswith("*"):
-                                    # Only process entity if we have a valid religion_id
-                                    if current_religion_id is not None:
-                                        entity_line = lines[i].strip()[1:].strip()  # Remove the * and leading/trailing whitespace
-
-                                        # Parse entity name and description
-                                        if "-" in entity_line:
-                                            entity_parts = entity_line.split("-", 1)
-                                            entity_name = entity_parts[0].strip()
-                                            entity_description = entity_parts[1].strip() if len(entity_parts) > 1 else ""
-
-                                            cursor.execute("""
-                                            INSERT INTO religion_entities (religion_id, name, description)
-                                            VALUES (%s, %s, %s)
-                                            """, (current_religion_id, entity_name, entity_description))
-
-                                i += 1
-
-                            # No need to decrement i, as we want to move to the next line
-                        else:
-                            i += 1
-
-                    # Save the last religion if exists
-                    if religion_name:
-                        cursor.execute("""
-                        INSERT INTO religions (name, code, description, parent_religion_id)
-                        VALUES (%s, %s, %s, %s)
-                        """, (religion_name, religion_code, religion_description, None))
-                        current_religion_id = cursor.lastrowid
-
-            except FileNotFoundError:
-                print("Warning: CG5 Major religions .txt not found. Skipping religions import.")
-        else:
-            print(f"Religions table already has {religions_count} records. Skipping import.")
 
         # Check if standard_actions table has data
         cursor.execute("SELECT COUNT(*) FROM standard_actions")

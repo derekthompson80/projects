@@ -4,10 +4,9 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Country Management</h1>
+    <h1 class="mb-4">Create Country</h1>
 
-    {% if session.get('is_staff') %}
-    <!-- Country Management Section (moved from staff dashboard) -->
+    {% if false %}
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Existing Countries</h5>
@@ -110,85 +109,11 @@
     </div>
     {% endif %}
 
-    <!-- Major Religions Section (moved from Staff Dashboard) -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Major Religions</h5>
-        </div>
-        <div class="card-body">
-            <div class="mb-4">
-                <h6>Player Religion Management</h6>
-                <div class="alert alert-warning">
-                    <p>As a staff member, you can assign religions to player countries.</p>
-                    <form action="{{ url_for('staff_assign_religion') }}" method="post" class="mt-2">
-                        <div class="row g-3">
-                            <div class="col-md-5">
-                                <select class="form-select" name="player_id" required>
-                                    <option value="">-- Select a player --</option>
-                                    {% if players_with_countries %}
-                                        {% for player in players_with_countries %}
-                                            {% if player.country_db %}
-                                                <option value="{{ player.id }}">{{ player.username }} ({{ player.country_name }})</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                </select>
-                            </div>
-                            <div class="col-md-5">
-                                <select class="form-select" name="religion" required>
-                                    <option value="">-- Select a religion --</option>
-                                    {% for religion in religions %}
-                                        <option value="{{ religion.abbreviation }}">{{ religion.name }} ({{ religion.abbreviation }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary w-100">Assign</button>
-                            </div>
-                        </div>
-                    </form>
-                    <form action="{{ url_for('staff_remove_religion') }}" method="post" class="mt-2">
-                        <div class="row g-3">
-                            <div class="col-md-10">
-                                <select class="form-select" name="player_id" required>
-                                    <option value="">-- Select a player --</option>
-                                    {% if players_with_countries %}
-                                        {% for player in players_with_countries %}
-                                            {% if player.country_db %}
-                                                <option value="{{ player.id }}">{{ player.username }} ({{ player.country_name }}{% if player.religion %}, Religion: {{ player.religion }}{% endif %})</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-danger w-100">Remove</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <h2 class="mb-4">Create New Country</h2>
+        <h2 class="mb-4">Create New Country</h2>
 
     <div class="card">
         <div class="card-body">
             <form method="POST" action="{{ url_for('create_country') }}">
-                {% if default_countries %}
-                <div class="mb-3">
-                    <label for="default_country" class="form-label">Select Default Country</label>
-                    <select class="form-select" id="default_country" name="default_country">
-                        <option value="">-- Select a default country --</option>
-                        {% for country in default_countries %}
-                        <option value="{{ country }}">{{ country }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="form-text">Select a default country to use as a template, or create a custom country below.</div>
-                </div>
-                {% endif %}
 
                 <div class="mb-3">
                     <label for="country_name" class="form-label">Country Name</label>
@@ -241,24 +166,24 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="politics" class="form-label">Politics</label>
-                        <input type="number" class="form-control" id="politics" name="politics" value="5" min="1" max="5">
+                        <input type="number" class="form-control" id="politics" name="politics" value="1" min="1" max="5">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="military" class="form-label">Military</label>
-                        <input type="number" class="form-control" id="military" name="military" value="5" min="1" max="5">
+                        <input type="number" class="form-control" id="military" name="military" value="1" min="1" max="5">
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="economics" class="form-label">Economics</label>
-                        <input type="number" class="form-control" id="economics" name="economics" value="5" min="1" max="5">
+                        <input type="number" class="form-control" id="economics" name="economics" value="1" min="1" max="5">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label for="culture" class="form-label">Culture</label>
-                        <input type="number" class="form-control" id="culture" name="culture" value="5" min="1" max="5">
+                        <input type="number" class="form-control" id="culture" name="culture" value="1" min="1" max="5">
                     </div>
                 </div>
 
@@ -268,15 +193,6 @@
     </div>
 </div>
 
-<script>
-    // Auto-populate the country name when a default country is selected
-    document.getElementById('default_country').addEventListener('change', function() {
-        const selectedCountry = this.value;
-        if (selectedCountry) {
-            document.getElementById('country_name').value = selectedCountry;
-        }
-    });
-</script>
 
 {% if session.get('is_staff') %}
 <script>
@@ -289,32 +205,42 @@
         document.getElementById('culture').value = Math.floor(Math.random() * 3) + 1;
     }
 
-    // Sample resources for random generation
-    const allResources = [
-        { name: "Iron", type: "Metal", tier: 1 },
-        { name: "Copper", type: "Metal", tier: 1 },
-        { name: "Gold", type: "Precious Metal", tier: 2 },
-        { name: "Silver", type: "Precious Metal", tier: 2 },
-        { name: "Wheat", type: "Food", tier: 1 },
-        { name: "Rice", type: "Food", tier: 1 },
-        { name: "Cattle", type: "Livestock", tier: 1 },
-        { name: "Horses", type: "Livestock", tier: 2 },
-        { name: "Timber", type: "Wood", tier: 1 },
-        { name: "Exotic Wood", type: "Wood", tier: 2 },
-        { name: "Coal", type: "Fuel", tier: 1 },
-        { name: "Oil", type: "Fuel", tier: 2 },
-        { name: "Gems", type: "Luxury", tier: 3 },
-        { name: "Spices", type: "Luxury", tier: 2 },
-        { name: "Wine", type: "Luxury", tier: 2 },
-        { name: "Silk", type: "Textile", tier: 2 },
-        { name: "Cotton", type: "Textile", tier: 1 },
-        { name: "Stone", type: "Building Material", tier: 1 },
-        { name: "Marble", type: "Building Material", tier: 2 },
-        { name: "Fish", type: "Food", tier: 1 }
-    ];
+    // Cached resources pulled from the Resources table via API
+    let allResources = null;
+
+    async function loadResourcesIfNeeded() {
+        if (allResources && allResources.length) return allResources;
+        try {
+            const resp = await fetch('/api/resources');
+            const data = await resp.json();
+            if (Array.isArray(data)) {
+                // Ensure each record has a tier property (alias of level)
+                allResources = data.map(r => ({
+                    name: r.name,
+                    type: r.type,
+                    tier: (r.level !== null && r.level !== undefined) ? r.level : (r.tier !== undefined ? r.tier : null),
+                    description: r.description || ''
+                })).filter(r => r.name && r.type);
+            } else {
+                allResources = [];
+            }
+        } catch (e) {
+            console.error('Failed to load resources from API:', e);
+            allResources = [];
+        }
+        return allResources;
+    }
 
     // Random resources generation for staff
-    function generateRandomResources() {
+    async function generateRandomResources() {
+        // Load if needed
+        await loadResourcesIfNeeded();
+        if (!allResources || !allResources.length) {
+            const resourcesList = document.getElementById('resourcesList');
+            resourcesList.innerHTML = '<div class="alert alert-warning">No resources available in the catalog. Please add resources first.</div>';
+            document.getElementById('random_resources').value = '';
+            return;
+        }
         // Generate a random number of resources (between 5 and 12)
         const numResources = Math.floor(Math.random() * 8) + 5;
 
@@ -338,17 +264,17 @@
 
             resourcesList.innerHTML += `
                 <li class="list-group-item">
-                    ${resource.name} (${resource.type}, Tier: ${resource.tier})
+                    ${resource.name} (${resource.type}, Tier: ${resource.tier ?? 'N/A'})
                     <span class="badge bg-success ms-2">Native: ${nativelyProduced}</span>
                     <span class="badge bg-info ms-2">Trade: ${trade}</span>
                 </li>
             `;
 
-            // Add to resources data
+            // Add to resources data (preserve legacy expected keys)
             resourcesData.push({
                 name: resource.name,
                 type: resource.type,
-                tier: resource.tier,
+                tier: resource.tier ?? null,
                 natively_produced: nativelyProduced,
                 trade: trade
             });

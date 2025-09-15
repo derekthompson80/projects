@@ -1,0 +1,75 @@
+name,type,description,level
+Adamant,Strat,"A ""god metal"", it absorbs damage and is resilient.",3
+Alcohol,Lux,"Any beer, spirits, wine, ect.",2
+Bloodstone,Strat,"AKA ""Leechstone"" it is used in alchemy and vile magics.  Causes weapons to do bleed damage.  Armor studded with bloodstone will transform when it's wearer does.",2
+Brass,Lux/Strat,Mix of copper and zinc,2
+Bronze,Strat/Lux,Mix of copper and tin,2
+Cinnabar,Lux,Mercury,2
+Coal,Lux,Burned for warmth and forging/smelting metals,2
+Cocca,Lux,"Stimulant, can be made into chocolate",2
+Cold Iron,Strat,Specially made iron. Strong against some outsiders.,2
+Copper,Strat/Lux,,1
+Crab,Food,,1
+Crops,Food,"Any vegetable, tuber, legum, or grain.",1
+Cursed Stone,Strat,"Can be used to make undead but these undead are sentient and listen to the old gods.
+Causes bad luck.  Used in siege artillery shots. (from Dave)",2
+Cursed Wood,Strat,"Poisonous hardwood
+Causes bad luck.  Entities slain with it have a higher chance of rising as the undead. (from Dave)",2
+Darkwood,Strat,Extremely light hardwood,2
+Deathstone,Lux,Stone with negative energy,3
+Diamonds,Lux,Used for resurrection and restoration,3
+Dire Crops,Food,Crops of massive proportions grown by the halflings. Produces twice as much food.,2
+Dyes,Lux,,2
+Eternium,Lux/Strat,"One of the ""god metals"", never degrades, ever.  Extremely light and a noble metal.",3
+Faerzess,Lux/Strat,,3
+Fine Clothes,Lux,,2
+Fish,Food,,1
+Fruit,Food,,1
+Fur,Lux,,1
+Game (Hunting),Food,,1
+Gems,Lux,,2
+Glass,Lux,,2
+Gold,Lux,,2
+Greenwood,Strat,"Continues to heal after you have used it in crafting, self mending items.  Common in elven and lizardfolk watercraft.",1
+Gunpowder,Strat,,3
+Hardwood,Strat,"Exactly as it sounds.  Ex: Walnut, teak.  Great for wheelmaking.",1
+Herbs,Lux,,1
+Holystone,Lux,Smeltable stone that naturally contains positive energy.,3
+Honey,Food,,2
+Incense,Lux,,1
+Iron,Strat,,1
+Ironwood,Strat,"Heavily metallic wood, can be smelted as iron.  Dense.",2
+Ivory,Lux,,2
+Jewelry,Lux,,3
+Lead,Lux,,1
+Linite,Lux,Rock that naturally produces heat or cold.,2
+Livestock,Food,,1
+Marble,Lux,,1
+Medicine,Lux,,2
+Mithril,Strat/Lux,,3
+Narcotics,Lux,,2
+Obsidian,Lux/Strat,,1
+Olives (oil),Food/Lux,,1
+Onyx,Strat,Used in necromancy.,2
+Oricalculum,Strat/Lux,"A ""god metal"", grants bonus caster levels and insight bonus, used in artifacts.",3
+Peat,Lux,,1
+Phlogiston,Strat,"A magical gas used for airships, flying carpets, etc.",3
+Porcelain,Lux,,2
+Residuum,Lux,Residue that is left over after high energy magical activities.  Animals who include this in their diet will become magical beasts.,2
+Riding Animals (Basic),Strat/Food,Horses and Camels,1
+Riding Animals (Advanced),Strat/Food,Dinosaurs and Wargs,2
+Salt,Lux,,2
+Silk,Lux,,2
+Silver,Lux,,2
+Slaves,Lux/Strat,,1
+Spices,Lux,,2
+Steel,Strat,,2
+Sugar,Lux,,2
+Textiles,Lux,,1
+Tin,Strat,,1
+Tobacco,Lux,,2
+Truffles,Lux,The fungus not the chocolate,3
+Waterwood,Lux/Strat,"Requires specialized processes to use on a strategic scale.  Grows sub-aquatically, perfectly water sealent, highly flexible unless heat treated.  Fireproof.",2
+Wax,Lux,,2
+Whales,Lux/Food,,3
+Whipwood,Strat,"The most flexible wood, can be used in furniture, ship's sails, etc.",1
