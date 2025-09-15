@@ -143,127 +143,80 @@ def pexels_search():
 @app.route('/blog')
 def blog():
     """Display the blog homepage with a list of entries"""
+    # Load from database
+    try:
+        from .blog_db import get_entries, init_schema
+    except ImportError:
+        from blog_db import get_entries, init_schema
+
+    # Ensure schema exists
+    try:
+        init_schema()
+    except Exception as e:
+        app.logger.error(f"DB schema init failed: {e}")
+
     entries = []
-
-    # Get all blog entries
-    if os.path.exists(BLOG_ENTRIES_DIR):
-        for filename in sorted(os.listdir(BLOG_ENTRIES_DIR), reverse=True):
-            if filename.endswith('.txt'):
-                filepath = os.path.join(BLOG_ENTRIES_DIR, filename)
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    content = f.read()
-
-                # Parse the entry metadata
-                lines = content.split('\n')
-                title = lines[0].replace('Title: ', '') if lines and lines[0].startswith('Title: ') else 'Untitled'
-                author = lines[1].replace('Author: ', '') if len(lines) > 1 and lines[1].startswith('Author: ') else 'Anonymous'
-                date_str = lines[2].replace('Date: ', '') if len(lines) > 2 and lines[2].startswith('Date: ') else ''
-
-                # Parse media information if available
-                media = None
-                line_index = 3
-                if len(lines) > line_index and lines[line_index].startswith('Media-ID:'):
-                    media = {
-                        'id': lines[line_index].replace('Media-ID: ', ''),
-                        'type': lines[line_index + 1].replace('Media-Type: ', '') if len(lines) > line_index + 1 else '',
-                        'url': lines[line_index + 2].replace('Media-URL: ', '') if len(lines) > line_index + 2 else '',
-                        'thumbnail': lines[line_index + 3].replace('Media-Thumbnail: ', '') if len(lines) > line_index + 3 else '',
-                        'width': lines[line_index + 4].replace('Media-Width: ', '') if len(lines) > line_index + 4 else '',
-                        'height': lines[line_index + 5].replace('Media-Height: ', '') if len(lines) > line_index + 5 else '',
-                        'attribution': lines[line_index + 6].replace('Media-Attribution: ', '') if len(lines) > line_index + 6 else ''
-                    }
-                    # Skip media metadata lines to get to content
-                    line_index += 7
-
-                # Get the entry content (everything after the metadata)
-                content_start_index = line_index + 1  # Skip the empty line after metadata
-                entry_content = '\n'.join(lines[content_start_index:]) if len(lines) > content_start_index else ''
-
-                # Get comments count
-                comment_file = os.path.join(COMMENTS_DIR, f"{os.path.splitext(filename)[0]}.json")
-                comments_count = 0
-                if os.path.exists(comment_file):
-                    with open(comment_file, 'r', encoding='utf-8') as cf:
+    try:
+        db_entries = get_entries()
+        for e in db_entries:
+            content_preview = e['content'][:200] + '...' if len(e['content']) > 200 else e['content']
+            # Count comments from filesystem for now to avoid changing comments storage
+            comments_count = 0
+            # Comments still tied to filename; use entry id as key
+            possible_json = os.path.join(COMMENTS_DIR, f"{e['id']}.json")
+            if os.path.exists(possible_json):
+                try:
+                    with open(possible_json, 'r', encoding='utf-8') as cf:
                         comments = json.load(cf)
                         comments_count = len(comments)
+                except Exception:
+                    comments_count = 0
 
-                entries.append({
-                    'id': os.path.splitext(filename)[0],
-                    'title': title,
-                    'author': author,
-                    'date': date_str,
-                    'content': entry_content[:200] + '...' if len(entry_content) > 200 else entry_content,
-                    'comments_count': comments_count,
-                    'media': media
-                })
+            entries.append({
+                'id': e['id'],
+                'title': e['title'],
+                'author': e['author'],
+                'date': e['date'],
+                'content': content_preview,
+                'comments_count': comments_count,
+                'media': e.get('media')
+            })
+    except Exception as ex:
+        app.logger.error(f"Failed to load entries from DB: {ex}")
 
     return render_template('blog.html', entries=entries)
 
 @app.route('/blog/entry/<entry_id>')
 def view_entry(entry_id):
     """Display a single blog entry with its comments"""
-    # Find the entry file
-    entry_file = None
-    for filename in os.listdir(BLOG_ENTRIES_DIR):
-        if filename.startswith(entry_id) and filename.endswith('.txt'):
-            entry_file = os.path.join(BLOG_ENTRIES_DIR, filename)
-            break
+    # Load entry from database
+    try:
+        from .blog_db import get_entry, init_schema
+    except ImportError:
+        from blog_db import get_entry, init_schema
+    try:
+        init_schema()
+    except Exception as e:
+        app.logger.error(f"DB schema init failed: {e}")
 
-    if not entry_file:
+    entry = get_entry(entry_id)
+    if not entry:
         flash('Entry not found', 'error')
         return redirect(url_for('blog'))
 
-    # Read the entry
-    with open(entry_file, 'r', encoding='utf-8') as f:
-        content = f.read()
-
-    # Parse the entry metadata
-    lines = content.split('\n')
-    title = lines[0].replace('Title: ', '') if lines and lines[0].startswith('Title: ') else 'Untitled'
-    author = lines[1].replace('Author: ', '') if len(lines) > 1 and lines[1].startswith('Author: ') else 'Anonymous'
-    date_str = lines[2].replace('Date: ', '') if len(lines) > 2 and lines[2].startswith('Date: ') else ''
-
-    # Parse media information if available
-    media = None
-    line_index = 3
-    if len(lines) > line_index and lines[line_index].startswith('Media-ID:'):
-        media = {
-            'id': lines[line_index].replace('Media-ID: ', ''),
-            'type': lines[line_index + 1].replace('Media-Type: ', '') if len(lines) > line_index + 1 else '',
-            'url': lines[line_index + 2].replace('Media-URL: ', '') if len(lines) > line_index + 2 else '',
-            'thumbnail': lines[line_index + 3].replace('Media-Thumbnail: ', '') if len(lines) > line_index + 3 else '',
-            'width': lines[line_index + 4].replace('Media-Width: ', '') if len(lines) > line_index + 4 else '',
-            'height': lines[line_index + 5].replace('Media-Height: ', '') if len(lines) > line_index + 5 else '',
-            'attribution': lines[line_index + 6].replace('Media-Attribution: ', '') if len(lines) > line_index + 6 else ''
-        }
-        # Skip media metadata lines to get to content
-        line_index += 7
-
-    # Get the entry content (everything after the metadata)
-    content_start_index = line_index + 1  # Skip the empty line after metadata
-    entry_content = '\n'.join(lines[content_start_index:]) if len(lines) > content_start_index else ''
-
     # Get comments
     comments = []
-    # Find the actual filename that starts with entry_id
-    for filename in os.listdir(BLOG_ENTRIES_DIR):
-        if filename.startswith(entry_id) and filename.endswith('.txt'):
-            comment_file = os.path.join(COMMENTS_DIR, f"{os.path.splitext(filename)[0]}.json")
-            if os.path.exists(comment_file):
-                with open(comment_file, 'r', encoding='utf-8') as cf:
-                    comments = json.load(cf)
-            break
+    comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
+    if os.path.exists(comment_file):
+        try:
+            with open(comment_file, 'r', encoding='utf-8') as cf:
+                comments = json.load(cf)
+        except Exception:
+            comments = []
 
     return render_template('entry.html', 
-                          entry={
-                              'id': entry_id,
-                              'title': title,
-                              'author': author,
-                              'date': date_str,
-                              'content': entry_content,
-                              'media': media
-                          }, 
-                          comments=comments)
+                         entry=entry, 
+                         comments=comments)
 
 @app.route('/blog/new', methods=['GET', 'POST'])
 def new_entry():
@@ -327,11 +280,17 @@ def new_entry():
                     'attribution': request.form.get('media_attribution')
                 }
 
-            # Save the entry with media information
-            file_path = save_blog_entry(corrected_title, corrected_content, author, media, BLOG_ENTRIES_DIR)
+            # Save the entry to database
+            try:
+                from .blog_db import insert_entry, init_schema
+            except ImportError:
+                from blog_db import insert_entry, init_schema
+            try:
+                init_schema()
+            except Exception as e:
+                app.logger.error(f"DB schema init failed: {e}")
 
-            # Get the entry ID from the filename
-            entry_id = os.path.splitext(os.path.basename(file_path))[0]
+            entry_id = insert_entry(corrected_title, corrected_content, author, media)
 
             flash('Blog entry created successfully', 'success')
             return redirect(url_for('view_entry', entry_id=entry_id))
@@ -348,46 +307,26 @@ def new_entry():
 @app.route('/blog/entry/<entry_id>/edit', methods=['GET', 'POST'])
 def edit_entry(entry_id):
     """Edit an existing blog entry"""
-    # Find the entry file
-    entry_file = None
-    for filename in os.listdir(BLOG_ENTRIES_DIR):
-        if filename.startswith(entry_id) and filename.endswith('.txt'):
-            entry_file = os.path.join(BLOG_ENTRIES_DIR, filename)
-            break
+    # Load from DB
+    try:
+        from .blog_db import get_entry, update_entry, init_schema
+    except ImportError:
+        from blog_db import get_entry, update_entry, init_schema
+    try:
+        init_schema()
+    except Exception as e:
+        app.logger.error(f"DB schema init failed: {e}")
 
-    if not entry_file:
+    entry = get_entry(entry_id)
+    if not entry:
         flash('Entry not found', 'error')
         return redirect(url_for('blog'))
 
-    # Read the entry
-    with open(entry_file, 'r', encoding='utf-8') as f:
-        content = f.read()
-
-    # Parse the entry metadata
-    lines = content.split('\n')
-    title = lines[0].replace('Title: ', '') if lines and lines[0].startswith('Title: ') else 'Untitled'
-    author = lines[1].replace('Author: ', '') if len(lines) > 1 and lines[1].startswith('Author: ') else 'Anonymous'
-    date_str = lines[2].replace('Date: ', '') if len(lines) > 2 and lines[2].startswith('Date: ') else ''
-
-    # Parse media information if available
-    media = None
-    line_index = 3
-    if len(lines) > line_index and lines[line_index].startswith('Media-ID:'):
-        media = {
-            'id': lines[line_index].replace('Media-ID: ', ''),
-            'type': lines[line_index + 1].replace('Media-Type: ', '') if len(lines) > line_index + 1 else '',
-            'url': lines[line_index + 2].replace('Media-URL: ', '') if len(lines) > line_index + 2 else '',
-            'thumbnail': lines[line_index + 3].replace('Media-Thumbnail: ', '') if len(lines) > line_index + 3 else '',
-            'width': lines[line_index + 4].replace('Media-Width: ', '') if len(lines) > line_index + 4 else '',
-            'height': lines[line_index + 5].replace('Media-Height: ', '') if len(lines) > line_index + 5 else '',
-            'attribution': lines[line_index + 6].replace('Media-Attribution: ', '') if len(lines) > line_index + 6 else ''
-        }
-        # Skip media metadata lines to get to content
-        line_index += 7
-
-    # Get the entry content (everything after the metadata)
-    content_start_index = line_index + 1  # Skip the empty line after metadata
-    entry_content = '\n'.join(lines[content_start_index:]) if len(lines) > content_start_index else ''
+    title = entry['title']
+    author = entry['author']
+    date_str = entry['date']
+    media = entry.get('media')
+    entry_content = entry['content']
 
     if request.method == 'POST':
         # Get form data
@@ -457,44 +396,20 @@ def edit_entry(entry_id):
             else:
                 new_media = media
 
-            # Save the updated entry
-            # First, delete the old file
-            os.remove(entry_file)
-
-            # Then save the new entry with the same ID prefix
-            timestamp = entry_id.split('_')[0]
-            safe_title = "".join(c if c.isalnum() else "_" for c in corrected_title)
-            filename = f"{timestamp}_{safe_title}.txt"
-            file_path = os.path.join(BLOG_ENTRIES_DIR, filename)
-
-            # Format the blog entry
-            entry_text = f"Title: {corrected_title}\n"
-            entry_text += f"Author: {new_author}\n"
-            entry_text += f"Date: {date_str}\n"  # Keep the original date
-
-            # Add media information if provided
-            if new_media and new_media.get('id'):
-                entry_text += f"Media-ID: {new_media.get('id', '')}\n"
-                entry_text += f"Media-Type: {new_media.get('type', '')}\n"
-                entry_text += f"Media-URL: {new_media.get('url', '')}\n"
-                entry_text += f"Media-Thumbnail: {new_media.get('thumbnail', '')}\n"
-                entry_text += f"Media-Width: {new_media.get('width', '')}\n"
-                entry_text += f"Media-Height: {new_media.get('height', '')}\n"
-                entry_text += f"Media-Attribution: {new_media.get('attribution', '')}\n"
-
-            entry_text += f"\n{corrected_content}\n"
-
-            # Write to file
-            write_txt(file_path, entry_text)
-
-            # Update the comments file if it exists
-            comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
-            if os.path.exists(comment_file):
-                new_comment_file = os.path.join(COMMENTS_DIR, f"{os.path.splitext(filename)[0]}.json")
-                os.rename(comment_file, new_comment_file)
+            # Save the updated entry in DB (entry_id remains the same)
+            updated = update_entry(entry_id, corrected_title, corrected_content, new_author, new_media)
+            if not updated:
+                flash('Failed to update entry', 'error')
+                return render_template('new_entry.html', 
+                                      title=new_title, 
+                                      content=new_content, 
+                                      author=new_author,
+                                      is_edit=True,
+                                      entry_id=entry_id,
+                                      media=new_media)
 
             flash('Blog entry updated successfully', 'success')
-            return redirect(url_for('view_entry', entry_id=os.path.splitext(os.path.basename(file_path))[0]))
+            return redirect(url_for('view_entry', entry_id=entry_id))
         except Exception as e:
             app.logger.error(f"Error updating blog entry: {str(e)}")
             flash('An error occurred while updating the blog entry. Please try again.', 'error')
@@ -518,26 +433,24 @@ def edit_entry(entry_id):
 @app.route('/blog/entry/<entry_id>/delete', methods=['POST'])
 def delete_entry(entry_id):
     """Delete a blog entry and its comments"""
-    # Find the entry file
-    entry_file = None
-    for filename in os.listdir(BLOG_ENTRIES_DIR):
-        if filename.startswith(entry_id) and filename.endswith('.txt'):
-            entry_file = os.path.join(BLOG_ENTRIES_DIR, filename)
-            break
-
-    if not entry_file:
-        flash('Entry not found', 'error')
-        return redirect(url_for('blog'))
+    # Delete from DB
+    try:
+        from .blog_db import delete_entry as db_delete_entry, init_schema
+    except ImportError:
+        from blog_db import delete_entry as db_delete_entry, init_schema
+    try:
+        init_schema()
+    except Exception as e:
+        app.logger.error(f"DB schema init failed: {e}")
 
     try:
-        # Delete the entry file
-        os.remove(entry_file)
-
-        # Get the actual filename without extension
-        actual_filename = os.path.basename(entry_file)
+        deleted = db_delete_entry(entry_id)
+        if not deleted:
+            flash('Entry not found', 'error')
+            return redirect(url_for('blog'))
 
         # Delete the comments file if it exists
-        comment_file = os.path.join(COMMENTS_DIR, f"{os.path.splitext(actual_filename)[0]}.json")
+        comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
         if os.path.exists(comment_file):
             os.remove(comment_file)
 
@@ -551,16 +464,17 @@ def delete_entry(entry_id):
 @app.route('/blog/entry/<entry_id>/comment', methods=['POST'])
 def add_comment(entry_id):
     """Add a comment to a blog entry"""
-    # Find the entry file to make sure it exists
-    entry_exists = False
-    entry_file = None
-    for filename in os.listdir(BLOG_ENTRIES_DIR):
-        if filename.startswith(entry_id) and filename.endswith('.txt'):
-            entry_exists = True
-            entry_file = os.path.join(BLOG_ENTRIES_DIR, filename)
-            break
-
-    if not entry_exists:
+    # Verify entry exists in DB
+    try:
+        from .blog_db import get_entry, init_schema
+    except ImportError:
+        from blog_db import get_entry, init_schema
+    try:
+        init_schema()
+    except Exception as e:
+        app.logger.error(f"DB schema init failed: {e}")
+    entry = get_entry(entry_id)
+    if not entry:
         flash('Entry not found', 'error')
         return redirect(url_for('blog'))
 
@@ -584,39 +498,16 @@ def add_comment(entry_id):
 
             # If there are changes, show the confirmation screen
             if corrected_content != content:
-                # Read the entry to display it in the confirmation screen
-                with open(entry_file, 'r', encoding='utf-8') as f:
-                    entry_content = f.read()
-
-                # Parse the entry metadata
-                lines = entry_content.split('\n')
-                title = lines[0].replace('Title: ', '') if lines and lines[0].startswith('Title: ') else 'Untitled'
-                entry_author = lines[1].replace('Author: ', '') if len(lines) > 1 and lines[1].startswith('Author: ') else 'Anonymous'
-                date_str = lines[2].replace('Date: ', '') if len(lines) > 2 and lines[2].startswith('Date: ') else ''
-
-                # Parse media information if available
-                media = None
-                line_index = 3
-                if len(lines) > line_index and lines[line_index].startswith('Media-ID:'):
-                    media = {
-                        'id': lines[line_index].replace('Media-ID: ', ''),
-                        'type': lines[line_index + 1].replace('Media-Type: ', '') if len(lines) > line_index + 1 else '',
-                        'url': lines[line_index + 2].replace('Media-URL: ', '') if len(lines) > line_index + 2 else '',
-                        'thumbnail': lines[line_index + 3].replace('Media-Thumbnail: ', '') if len(lines) > line_index + 3 else '',
-                        'width': lines[line_index + 4].replace('Media-Width: ', '') if len(lines) > line_index + 4 else '',
-                        'height': lines[line_index + 5].replace('Media-Height: ', '') if len(lines) > line_index + 5 else '',
-                        'attribution': lines[line_index + 6].replace('Media-Attribution: ', '') if len(lines) > line_index + 6 else ''
-                    }
-                    # Skip media metadata lines to get to content
-                    line_index += 7
-
-                # Get the entry content (everything after the metadata)
-                content_start_index = line_index + 1  # Skip the empty line after metadata
-                entry_content_text = '\n'.join(lines[content_start_index:]) if len(lines) > content_start_index else ''
+                # Build entry info from DB
+                title = entry['title']
+                entry_author = entry['author']
+                date_str = entry['date']
+                media = entry.get('media')
+                entry_content_text = entry['content']
 
                 # Get comments
                 comments = []
-                comment_file = os.path.join(COMMENTS_DIR, f"{os.path.splitext(os.path.basename(entry_file))[0]}.json")
+                comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
                 if os.path.exists(comment_file):
                     with open(comment_file, 'r', encoding='utf-8') as cf:
                         comments = json.load(cf)
@@ -649,19 +540,8 @@ def add_comment(entry_id):
             'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
-        # Save the comment
-        # Find the actual filename that starts with entry_id
-        actual_filename = None
-        for filename in os.listdir(BLOG_ENTRIES_DIR):
-            if filename.startswith(entry_id) and filename.endswith('.txt'):
-                actual_filename = filename
-                break
-
-        if not actual_filename:
-            flash('Entry not found', 'error')
-            return redirect(url_for('blog'))
-
-        comment_file = os.path.join(COMMENTS_DIR, f"{os.path.splitext(actual_filename)[0]}.json")
+        # Save the comment JSON keyed by entry_id
+        comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
         comments = []
 
         if os.path.exists(comment_file):
