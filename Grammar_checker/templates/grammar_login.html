@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Checker Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; background: #f7f7f7; }
+        .container { max-width: 420px; margin: 3rem auto; background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.4rem; margin-bottom: 1rem; }
+        .field { margin: 1rem 0; }
+        label { display: block; margin-bottom: 0.4rem; }
+        input[type="password"] { width: 100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 0.6rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:disabled { background: #9fbff5; cursor: not-allowed; }
+        .msg { padding: 0.6rem 0.8rem; border-radius: 4px; margin: 0.5rem 0; }
+        .msg.error { background: #ffe6e6; color: #a33; }
+        .msg.success { background: #e6ffed; color: #256029; }
+        .note { font-size: 0.9rem; color: #555; }
+        .lockout { background: #fff4cc; color: #7a5d00; padding: 0.6rem 0.8rem; border-radius: 4px; margin-bottom: 0.8rem; }
+        .links { margin-top: 1rem; font-size: 0.9rem; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Grammar Checker Login</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="msg {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if locked and unlock_time %}
+      <div class="lockout">
+        Grammar Checker is locked due to multiple failed attempts.<br />
+        Try again after: <strong>{{ unlock_time.strftime('%Y-%m-%d %H:%M:%S') }}</strong>
+      </div>
+    {% endif %}
+
+    <form method="post">
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Enter password" required {% if locked %}disabled{% endif %} />
+        </div>
+        <button type="submit" {% if locked %}disabled{% endif %}>Login</button>
+    </form>
+
+    <div class="links">
+        <span class="note">After logging in, you'll be redirected to the Grammar Checker.</span>
+        {% if locked %}
+          <div style="margin-top:0.5rem;">
+            <a href="{{ url_for('grammar_request_reset') }}">Request password reset/unlock email</a>
+          </div>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>
