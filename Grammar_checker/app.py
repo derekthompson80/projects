@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 import os
 import tempfile
 import json
@@ -52,12 +52,241 @@ def allowed_file(filename):
 
 @app.route('/')
 def index():
-    return redirect(url_for('blog'))
+    # Open the Grammar Checker login screen first to ensure gatekeeping and tracking
+    return redirect(url_for('grammar_login'))
 
-# New explicit route for grammar checker
+# Grammar Checker authentication configuration
+GRAMMAR_PASSWORD = 'Darklove90!'
+FEATURE_NAME = 'grammar_checker'
+
+# Email notification configuration
+OWNER_EMAIL = os.environ.get('OWNER_EMAIL', 'spade605@gmail.com')
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'spade605@gmail.com')
+SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD', 'Darklove20!')
+
+
+def _send_email(to_addr: str, subject: str, body: str) -> bool:
+    # Email notifications disabled: suppress actual sending
+    try:
+        app.logger.info(
+            f"Email notifications disabled. Suppressed email to {to_addr} with subject '{subject}'."
+        )
+    except Exception:
+        # In case app.logger is not available for any reason, still succeed silently
+        pass
+    return True
+
+
+def _client_ip() -> str:
+    # Respect X-Forwarded-For if behind a proxy (e.g., PythonAnywhere)
+    if 'X-Forwarded-For' in request.headers:
+        return request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+    return request.remote_addr or 'unknown'
+
+
+@app.route('/grammar/login', methods=['GET', 'POST'])
+def grammar_login():
+    # Lazy import to avoid circulars and keep local dev flexible
+    try:
+        from .blog_db import (
+            init_schema,
+            log_auth_attempt,
+            is_locked,
+            get_consecutive_fail_count,
+            create_reset_token,
+        )
+    except ImportError:
+        from blog_db import (
+            init_schema,
+            log_auth_attempt,
+            is_locked,
+            get_consecutive_fail_count,
+            create_reset_token,
+        )
+
+    # Ensure schema includes auth_attempts
+    try:
+        init_schema()
+    except Exception as e:
+        app.logger.error(f"DB schema init failed on login: {e}")
+
+    locked, until = (False, None)
+    try:
+        locked, until = is_locked(FEATURE_NAME)
+    except Exception as e:
+        app.logger.error(f"Lock check failed: {e}")
+
+    if request.method == 'POST':
+        if locked:
+            flash(f"Grammar Checker is locked until {until.strftime('%Y-%m-%d %H:%M:%S')} due to multiple failed attempts.", 'error')
+            return render_template('grammar_login.html', locked=locked, unlock_time=until)
+
+        password = request.form.get('password', '')
+        ok = password == GRAMMAR_PASSWORD
+        ip = _client_ip()
+
+        try:
+            log_auth_attempt(FEATURE_NAME, ip, ok, None)
+        except Exception as e:
+            app.logger.error(f"Failed to log auth attempt: {e}")
+
+        if ok:
+            session['grammar_authenticated'] = True
+            flash('Logged in to Grammar Checker.', 'success')
+            # Notify owner of successful login
+            try:
+                now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                subject = 'Grammar Checker login success'
+                body = f'Successful login to Grammar Checker.\nTime: {now}\nIP: {ip}'
+                _send_email(OWNER_EMAIL, subject, body)
+            except Exception as e:
+                app.logger.error(f'Email notify (success) failed: {e}')
+            return redirect(url_for('grammar'))
+        else:
+            # After a failure, check if we reached 3 consecutive failures
+            try:
+                fails = get_consecutive_fail_count(FEATURE_NAME)
+                # Notify owner of wrong password attempt
+                try:
+                    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    subject = 'Grammar Checker wrong password attempt'
+                    body = f'Wrong password entered for Grammar Checker.\nTime: {now}\nIP: {ip}\nConsecutive fails: {fails}'
+                    _send_email(OWNER_EMAIL, subject, body)
+                except Exception as e:
+                    app.logger.error(f'Email notify (failure) failed: {e}')
+
+                if fails >= 3:
+                    # Record a lock event
+                    try:
+                        log_auth_attempt(FEATURE_NAME, ip, None, 'LOCK')
+                    except Exception as e:
+                        app.logger.error(f"Failed to record lock: {e}")
+                    locked = True
+                    # Notify owner of lockout
+                    try:
+                        subject = 'Grammar Checker locked out for 24 hours'
+                        body = f'Grammar Checker has been locked due to 3 consecutive failed attempts.\nIP (last attempt): {ip}'
+                        _send_email(OWNER_EMAIL, subject, body)
+                    except Exception as e:
+                        app.logger.error(f'Email notify (lock) failed: {e}')
+                    # Recompute until based on now + 24h on the server side when checking lock
+                
+            except Exception as e:
+                app.logger.error(f"Failed to compute consecutive fails: {e}")
+
+            flash('Incorrect password.', 'error')
+            return render_template('grammar_login.html', locked=locked, unlock_time=until)
+
+    # GET
+    return render_template('grammar_login.html', locked=locked, unlock_time=until)
+
+
+@app.route('/grammar/request-reset', methods=['GET', 'POST'])
+def grammar_request_reset():
+    # Ensure schema
+    try:
+        from .blog_db import init_schema, is_locked, create_reset_token
+    except ImportError:
+        from blog_db import init_schema, is_locked, create_reset_token
+    try:
+        init_schema()
+    except Exception as e:
+        app.logger.error(f"DB schema init failed on request-reset: {e}")
+
+    locked, until = (False, None)
+    try:
+        locked, until = is_locked(FEATURE_NAME)
+    except Exception as e:
+        app.logger.error(f"Lock check failed on request-reset: {e}")
+
+    # Always allow generating a reset token; especially relevant when locked
+    try:
+        token = create_reset_token(FEATURE_NAME)
+        reset_url = url_for('grammar_reset', token=token, _external=True)
+        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        subject = 'Grammar Checker password reset/unlock link'
+        body = (
+            f'A reset/unlock was requested for Grammar Checker.\n\n'
+            f'Time: {now}\n'
+            f'Link: {reset_url}\n\n'
+            f'This link will unlock access immediately.'
+        )
+        if _send_email(OWNER_EMAIL, subject, body):
+            flash('A reset link has been sent to the owner email.', 'success')
+        else:
+            flash('Failed to send reset link email. Please check email configuration.', 'error')
+    except Exception as e:
+        app.logger.error(f"Failed to create/send reset token: {e}")
+        flash('Could not generate a reset link. Try again later.', 'error')
+
+    return redirect(url_for('grammar_login'))
+
+
+@app.route('/grammar/reset/<token>')
+def grammar_reset(token: str):
+    try:
+        from .blog_db import get_reset_by_token, mark_reset_used, record_unlock
+    except ImportError:
+        from blog_db import get_reset_by_token, mark_reset_used, record_unlock
+
+    try:
+        data = get_reset_by_token(token)
+        if not data:
+            flash('Invalid or unknown reset token.', 'error')
+            return redirect(url_for('grammar_login'))
+        if data['used']:
+            flash('This reset token has already been used.', 'error')
+            return redirect(url_for('grammar_login'))
+        # Check expiry
+        expires_at = data['expires_at']
+        if isinstance(expires_at, str):
+            # In case DB driver returns string; best-effort parse
+            try:
+                expires_at = datetime.datetime.fromisoformat(expires_at)
+            except Exception:
+                pass
+        if expires_at and datetime.datetime.now() > expires_at:
+            flash('This reset token has expired.', 'error')
+            return redirect(url_for('grammar_login'))
+
+        # Record unlock and mark used
+        record_unlock(data['feature'])
+        mark_reset_used(token)
+        flash('Grammar Checker lock has been cleared. You can try logging in again.', 'success')
+    except Exception as e:
+        app.logger.error(f"Reset token handling failed: {e}")
+        flash('Failed to process reset token.', 'error')
+
+    return redirect(url_for('grammar_login'))
+
+
+@app.route('/grammar/logout')
+def grammar_logout():
+    session.pop('grammar_authenticated', None)
+    flash('Logged out from Grammar Checker.', 'success')
+    return redirect(url_for('grammar_login'))
+
+
+# New explicit route for grammar checker (protected)
 @app.route('/grammar')
 def grammar():
-    """Explicit route path for the grammar checker UI"""
+    """Protected route path for the grammar checker UI"""
+    if not session.get('grammar_authenticated'):
+        return redirect(url_for('grammar_login'))
+    # Also refuse if feature is currently locked
+    try:
+        from .blog_db import is_locked
+    except ImportError:
+        from blog_db import is_locked
+    try:
+        locked, until = is_locked(FEATURE_NAME)
+        if locked:
+            flash(f"Grammar Checker is locked until {until.strftime('%Y-%m-%d %H:%M:%S')}", 'error')
+            return redirect(url_for('grammar_login'))
+    except Exception:
+        pass
     return render_template('index.html')
 
 # New explicit route for blog homepage path alias
@@ -68,6 +297,20 @@ def blog_home():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    # Require authentication for grammar upload endpoint
+    if not session.get('grammar_authenticated'):
+        return jsonify({'error': 'Not authenticated'}), 403
+    # Check lock status
+    try:
+        from .blog_db import is_locked
+    except ImportError:
+        from blog_db import is_locked
+    try:
+        locked, until = is_locked(FEATURE_NAME)
+        if locked:
+            return jsonify({'error': f'Locked until {until.strftime("%Y-%m-%d %H:%M:%S")}' }), 423
+    except Exception:
+        pass
     # Check if a file was uploaded
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -143,6 +386,73 @@ def pexels_search():
 @app.route('/blog')
 def blog():
     """Display the blog homepage with a list of entries"""
+
+    def _load_entries_from_files() -> list[dict]:
+        """Fallback: load entries from JSON files in BLOG_ENTRIES_DIR.
+        Expected JSON structure: {id,title,author,date,content,media?} per file.
+        Uses filename (without extension) as id if not present.
+        """
+        results: list[dict] = []
+        try:
+            if not os.path.isdir(BLOG_ENTRIES_DIR):
+                return results
+            for name in os.listdir(BLOG_ENTRIES_DIR):
+                if not name.lower().endswith('.json'):
+                    continue
+                path = os.path.join(BLOG_ENTRIES_DIR, name)
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    if not isinstance(data, dict):
+                        continue
+                    entry_id = data.get('id') or os.path.splitext(name)[0]
+                    title = data.get('title') or 'Untitled'
+                    author = data.get('author') or 'Anonymous'
+                    date = data.get('date') or ''
+                    content = data.get('content') or ''
+                    media = data.get('media') if isinstance(data.get('media'), dict) else None
+                    # Count comments from filesystem (same as DB path does)
+                    comments_count = 0
+                    possible_json = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
+                    if os.path.exists(possible_json):
+                        try:
+                            with open(possible_json, 'r', encoding='utf-8') as cf:
+                                comments = json.load(cf)
+                                if isinstance(comments, list):
+                                    comments_count = len(comments)
+                        except Exception:
+                            comments_count = 0
+                    # Preview like DB path does
+                    content_preview = content[:200] + '...' if len(content) > 200 else content
+                    results.append({
+                        'id': entry_id,
+                        'title': title,
+                        'author': author,
+                        'date': date,
+                        'content': content_preview,
+                        'comments_count': comments_count,
+                        'media': media,
+                    })
+                except Exception:
+                    # Skip malformed files
+                    continue
+            # Sort by date descending if possible
+            try:
+                from datetime import datetime
+                def parse_dt(s: str):
+                    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%Y%m%d_%H%M%S"):
+                        try:
+                            return datetime.strptime(s, fmt)
+                        except Exception:
+                            continue
+                    return datetime.min
+                results.sort(key=lambda e: parse_dt(e.get('date','')), reverse=True)
+            except Exception:
+                pass
+        except Exception:
+            pass
+        return results
+
     # Load from database
     try:
         from .blog_db import get_entries, init_schema
@@ -155,7 +465,7 @@ def blog():
     except Exception as e:
         app.logger.error(f"DB schema init failed: {e}")
 
-    entries = []
+    entries: list[dict] = []
     try:
         db_entries = get_entries()
         for e in db_entries:
@@ -168,7 +478,7 @@ def blog():
                 try:
                     with open(possible_json, 'r', encoding='utf-8') as cf:
                         comments = json.load(cf)
-                        comments_count = len(comments)
+                        comments_count = len(comments) if isinstance(comments, list) else 0
                 except Exception:
                     comments_count = 0
 
@@ -182,7 +492,13 @@ def blog():
                 'media': e.get('media')
             })
     except Exception as ex:
-        app.logger.error(f"Failed to load entries from DB: {ex}")
+        # If DB dependencies are missing, fall back to file-based entries without logging an error
+        msg = str(ex)
+        if isinstance(ex, RuntimeError) and 'Database dependencies are not installed' in msg:
+            app.logger.info('DB deps missing; falling back to file-based entries in blog_entries directory.')
+            entries = _load_entries_from_files()
+        else:
+            app.logger.error(f"Failed to load entries from DB: {ex}")
 
     return render_template('blog.html', entries=entries)
 
@@ -199,7 +515,30 @@ def view_entry(entry_id):
     except Exception as e:
         app.logger.error(f"DB schema init failed: {e}")
 
-    entry = get_entry(entry_id)
+    try:
+        entry = get_entry(entry_id)
+    except Exception as ex:
+        # Fallback to file-based entry if DB deps missing
+        if isinstance(ex, RuntimeError) and 'Database dependencies are not installed' in str(ex):
+            path = os.path.join(BLOG_ENTRIES_DIR, f"{entry_id}.json")
+            entry = None
+            try:
+                if os.path.exists(path):
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    if isinstance(data, dict):
+                        entry = {
+                            'id': entry_id,
+                            'title': data.get('title') or 'Untitled',
+                            'author': data.get('author') or 'Anonymous',
+                            'date': data.get('date') or '',
+                            'content': data.get('content') or '',
+                            'media': data.get('media') if isinstance(data.get('media'), dict) else None,
+                        }
+            except Exception:
+                entry = None
+        else:
+            raise
     if not entry:
         flash('Entry not found', 'error')
         return redirect(url_for('blog'))

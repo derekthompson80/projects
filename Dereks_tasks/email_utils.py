@@ -5,6 +5,7 @@ import schedule
 import time
 import threading
 import datetime
+import atexit
 
 # --- Email Configuration ---
 # It's highly recommended to use environment variables for sensitive data like email passwords.
@@ -17,8 +18,9 @@ SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'spade605@gmail.com')
 # Generate an App Password at: https://myaccount.google.com/apppasswords
 SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD', 'balx uoto qxrc msba')
 
-# Global variable to store the scheduler thread
+# Global variables to manage the scheduler thread and its shutdown
 scheduler_thread = None
+_scheduler_stop_event: threading.Event | None = None
 
 
 def send_email(receiver_email, subject, body_text):
@@ -94,18 +96,54 @@ def schedule_daily_reminder(receiver_email, reminder_time, subject, body_text):
 
 
 def start_scheduler():
-    """Start the scheduler in a background thread."""
-    global scheduler_thread
+    """Start the scheduler in a background thread.
+
+    Ensures the background thread can shut down cleanly to avoid Python 3.13
+    interpreter-shutdown issues related to threading cleanup.
+    """
+    global scheduler_thread, _scheduler_stop_event
+
+    if _scheduler_stop_event is None:
+        _scheduler_stop_event = threading.Event()
 
     def run_scheduler():
-        while True:
+        # Loop until asked to stop
+        while not _scheduler_stop_event.is_set():
             schedule.run_pending()
-            time.sleep(60)  # Check for pending tasks every minute
+            # Sleep in short intervals so we can react quickly to stop requests
+            _scheduler_stop_event.wait(1.0)
 
     # Create and start the thread
-    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-    scheduler_thread.start()
-    print("Scheduler thread started")
+    if scheduler_thread is None or not scheduler_thread.is_alive():
+        scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+        scheduler_thread.start()
+        print("Scheduler thread started")
+
+    # Ensure we stop the scheduler cleanly at interpreter exit
+    try:
+        atexit.unregister(stop_scheduler)  # avoid duplicates if called repeatedly
+    except Exception:
+        pass
+    atexit.register(stop_scheduler)
+
+
+def stop_scheduler(timeout: float = 2.0):
+    """Signal the scheduler thread to stop and wait briefly for it.
+
+    This helps avoid late-thread cleanup at interpreter shutdown which can
+    trigger noisy exceptions on Python 3.13.
+    """
+    global scheduler_thread, _scheduler_stop_event
+    try:
+        if _scheduler_stop_event is not None:
+            _scheduler_stop_event.set()
+        # Give the thread a moment to exit if it's non-daemon
+        if scheduler_thread is not None and scheduler_thread.is_alive():
+            if not scheduler_thread.daemon:
+                scheduler_thread.join(timeout=timeout)
+    finally:
+        scheduler_thread = None
+        _scheduler_stop_event = None
 
 
 def get_current_reminders():

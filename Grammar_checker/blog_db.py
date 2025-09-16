@@ -1,17 +1,4 @@
-import paramiko
-import MySQLdb
-import sshtunnel
 from typing import Optional, Dict, Any, List
-
-# Paramiko v3+ compatibility for sshtunnel
-if not hasattr(paramiko, "DSSKey"):
-    try:
-        paramiko.DSSKey = paramiko.RSAKey  # type: ignore[attr-defined]
-    except Exception:
-        pass
-
-sshtunnel.SSH_TIMEOUT = 10.0
-sshtunnel.TUNNEL_TIMEOUT = 10.0
 
 SSH_HOST = 'ssh.pythonanywhere.com'
 SSH_USERNAME = 'spade605'
@@ -24,6 +11,31 @@ DB_NAME = 'spade605$blog'
 
 
 def _open_connection():
+    """Open a DB connection via SSH tunnel.
+
+    Imports heavy/optional dependencies lazily so that importing this module
+    does not crash in environments where paramiko/sshtunnel/MySQLdb are not
+    installed. Callers should expect RuntimeError if the DB layer is
+    unavailable; route code already catches and logs such errors.
+    """
+    try:
+        import paramiko  # type: ignore
+        import MySQLdb  # type: ignore
+        import sshtunnel  # type: ignore
+    except ImportError as e:
+        raise RuntimeError("Database dependencies are not installed (paramiko/sshtunnel/MySQLdb)") from e
+
+    # Paramiko v3+ compatibility for sshtunnel
+    if not hasattr(paramiko, "DSSKey"):
+        try:
+            paramiko.DSSKey = paramiko.RSAKey  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+    # Configure sshtunnel timeouts
+    sshtunnel.SSH_TIMEOUT = 10.0
+    sshtunnel.TUNNEL_TIMEOUT = 10.0
+
     tunnel = sshtunnel.SSHTunnelForwarder(
         (SSH_HOST, 22),
         ssh_username=SSH_USERNAME,
@@ -71,6 +83,7 @@ def init_schema() -> None:
     conn, tunnel = _open_connection()
     try:
         cur = conn.cursor()
+        # Blog entries table
         cur.execute(
             """
             CREATE TABLE IF NOT EXISTS entries (
@@ -87,6 +100,32 @@ def init_schema() -> None:
                 media_width VARCHAR(16) NULL,
                 media_height VARCHAR(16) NULL,
                 media_attribution TEXT NULL
+            ) CHARACTER SET utf8mb4;
+            """
+        )
+        # Auth attempts table for Grammar Checker (and potentially other features)
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS auth_attempts (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                feature VARCHAR(64) NOT NULL,
+                ts DATETIME NOT NULL,
+                ip VARCHAR(64) NULL,
+                success TINYINT(1) NULL,
+                note VARCHAR(255) NULL
+            ) CHARACTER SET utf8mb4;
+            """
+        )
+        # Reset tokens table for owner-triggered unlocks
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reset_tokens (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                feature VARCHAR(64) NOT NULL,
+                token VARCHAR(128) NOT NULL UNIQUE,
+                ts DATETIME NOT NULL,
+                expires_at DATETIME NOT NULL,
+                used TINYINT(1) NOT NULL DEFAULT 0
             ) CHARACTER SET utf8mb4;
             """
         )
@@ -239,5 +278,192 @@ def delete_entry(entry_id: str) -> bool:
         cur.execute("DELETE FROM entries WHERE entry_key=%s", (entry_id,))
         conn.commit()
         return cur.rowcount > 0
+    finally:
+        _close(conn, tunnel)
+
+
+# --- Authentication attempt tracking for Grammar Checker ---
+from datetime import datetime, timedelta
+
+def log_auth_attempt(feature: str, ip: str | None, success: bool | None, note: str | None = None) -> None:
+    """Insert an authentication attempt record.
+
+    success: True for correct password, False for wrong password, None for special events
+    (e.g., a lock event recorded with note='LOCK').
+    """
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO auth_attempts (feature, ts, ip, success, note)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (feature, datetime.now(), ip, int(success) if success is not None else None, note)
+        )
+        conn.commit()
+    finally:
+        _close(conn, tunnel)
+
+
+def get_last_lock_time(feature: str) -> Optional[datetime]:
+    """Return the timestamp of the most recent LOCK event, or None."""
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT ts FROM auth_attempts
+            WHERE feature=%s AND note='LOCK'
+            ORDER BY ts DESC LIMIT 1
+            """,
+            (feature,)
+        )
+        row = cur.fetchone()
+        return row[0] if row else None
+    finally:
+        _close(conn, tunnel)
+
+
+def get_last_unlock_time(feature: str) -> Optional[datetime]:
+    """Return the timestamp of the most recent UNLOCK event, or None."""
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT ts FROM auth_attempts
+            WHERE feature=%s AND note='UNLOCK'
+            ORDER BY ts DESC LIMIT 1
+            """,
+            (feature,)
+        )
+        row = cur.fetchone()
+        return row[0] if row else None
+    finally:
+        _close(conn, tunnel)
+
+
+def record_unlock(feature: str) -> None:
+    """Record an UNLOCK event in auth_attempts to bypass an active lock."""
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO auth_attempts (feature, ts, ip, success, note)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (feature, datetime.now(), None, None, 'UNLOCK')
+        )
+        conn.commit()
+    finally:
+        _close(conn, tunnel)
+
+
+def is_locked(feature: str) -> tuple[bool, Optional[datetime]]:
+    """Check if feature is locked based on last LOCK event within 24 hours,
+    honoring any newer UNLOCK event that clears the lock early.
+    """
+    last_lock = get_last_lock_time(feature)
+    if not last_lock:
+        return False, None
+    last_unlock = get_last_unlock_time(feature)
+    if last_unlock and last_unlock >= last_lock:
+        return False, None
+    until = last_lock + timedelta(hours=24)
+    if datetime.now() < until:
+        return True, until
+    return False, None
+
+
+def get_consecutive_fail_count(feature: str) -> int:
+    """Count consecutive failed attempts since the last success, most recent first."""
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT success FROM auth_attempts
+            WHERE feature=%s AND note IS NULL
+            ORDER BY ts DESC LIMIT 10
+            """,
+            (feature,)
+        )
+        fails = 0
+        for (success_val,) in cur.fetchall():
+            if success_val is None:
+                # Skip unexpected rows
+                continue
+            if success_val == 1:
+                break
+            else:
+                fails += 1
+        return fails
+    finally:
+        _close(conn, tunnel)
+
+
+# --- Reset token helpers ---
+import secrets
+
+def create_reset_token(feature: str, lifetime_hours: int = 24) -> str:
+    """Create and store a reset token for the given feature and return it."""
+    token = secrets.token_urlsafe(32)
+    now = datetime.now()
+    expires = now + timedelta(hours=lifetime_hours)
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO reset_tokens (feature, token, ts, expires_at, used)
+            VALUES (%s, %s, %s, %s, 0)
+            """,
+            (feature, token, now, expires)
+        )
+        conn.commit()
+    finally:
+        _close(conn, tunnel)
+    return token
+
+
+def get_reset_by_token(token: str) -> Optional[dict]:
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id, feature, token, ts, expires_at, used
+            FROM reset_tokens WHERE token=%s
+            """,
+            (token,)
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        return {
+            'id': row[0],
+            'feature': row[1],
+            'token': row[2],
+            'ts': row[3],
+            'expires_at': row[4],
+            'used': bool(row[5]),
+        }
+    finally:
+        _close(conn, tunnel)
+
+
+def mark_reset_used(token: str) -> None:
+    conn, tunnel = _open_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE reset_tokens SET used=1 WHERE token=%s
+            """,
+            (token,)
+        )
+        conn.commit()
     finally:
         _close(conn, tunnel)
