@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Blackjack{% endblock %}
+{% block header %}Blackjack — Single Player{% endblock %}
+{% block content %}
+  <div class="row">
+    <div class="card" style="flex:1 1 380px;">
+      <div class="stack">
+        <div class="muted">Bankroll: {{ bankroll }} chips</div>
+        <div class="banner">{{ message }}</div>
+        <div>
+          <div style="font-weight:600; margin-bottom:.25rem;">Dealer</div>
+          <div class="hand">
+            {% for c in dealer_cards %}
+              {% if c != '⍰⍰' %}
+                {% set suit = c[-1] %}
+                {% set rank = c[:-1] %}
+                {% set cls = 'spade' %}
+                {% if suit in ['♥','♦'] %}{% set cls = 'heart' if suit=='♥' else 'diamond' %}{% endif %}
+                <div class="cardface {{ cls }}">{{ rank }}{{ suit }}</div>
+              {% else %}
+                <div class="cardface">{{ c }}</div>
+              {% endif %}
+            {% else %}
+              <div class="muted">No cards</div>
+            {% endfor %}
+          </div>
+          {% if total_dealer is not none %}
+            <div class="totals">Total: {{ total_dealer }}</div>
+          {% endif %}
+        </div>
+        <hr style="border-color:#1f2937;">
+        <div>
+          <div style="font-weight:600; margin-bottom:.25rem;">Player</div>
+          <div class="hand">
+            {% for c in player_cards %}
+              {% set suit = c[-1] %}
+              {% set rank = c[:-1] %}
+              {% set cls = 'spade' %}
+              {% if suit in ['♥','♦'] %}{% set cls = 'heart' if suit=='♥' else 'diamond' %}{% endif %}
+              <div class="cardface {{ cls }}">{{ rank }}{{ suit }}</div>
+            {% else %}
+              <div class="muted">No cards</div>
+            {% endfor %}
+          </div>
+          <div class="totals">Total: {{ total_player }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="flex:1 1 220px; max-width:320px; height:max-content;">
+      <div class="stack">
+        <div style="font-weight:600; margin-bottom:.25rem;">Actions</div>
+        <div class="stack">
+          {% if state in ['idle','round_over'] %}
+            <a class="btn primary" href="{{ url_for('deal') }}">Deal</a>
+          {% else %}
+            <span class="btn primary" style="opacity:.5;">Deal</span>
+          {% endif %}
+          {% if state == 'player' %}
+            <a class="btn good" href="{{ url_for('hit') }}">Hit</a>
+            <a class="btn good" href="{{ url_for('stand') }}">Stand</a>
+          {% else %}
+            <span class="btn good" style="opacity:.5;">Hit</span>
+            <span class="btn good" style="opacity:.5;">Stand</span>
+          {% endif %}
+          {% if state == 'round_over' %}
+            <a class="btn" href="{{ url_for('new_round') }}">New Round</a>
+          {% else %}
+            <span class="btn" style="opacity:.5;">New Round</span>
+          {% endif %}
+          <a class="btn bad" href="{{ url_for('reset_game') }}">Reset Game</a>
+        </div>
+        <div class="muted" style="margin-top:.5rem; font-size:.9rem;">
+          Base bet is 10 chips per hand. Blackjack pays 3:2.
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

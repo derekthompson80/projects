@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}{{ name }} • Project{% endblock %}
+{% block header %}Project: {{ name }}{% endblock %}
+{% block content %}
+  <div class="breadcrumbs">
+    <a href="{{ url_for('index') }}">← All Projects</a>
+    {% if data.base_rel %}
+      &nbsp;•&nbsp; In: <code>{{ data.base_rel }}</code>
+    {% endif %}
+  </div>
+
+  <div class="card" style="margin-bottom: 1rem; display:flex; gap:.5rem; align-items:center; justify-content:space-between;">
+    <div class="muted">{{ data.project_root }}</div>
+    <div style="display:flex; gap:.4rem; flex-wrap:wrap;">
+      <a class="pill" href="{{ url_for('project_detail', name=name) }}">Overview</a>
+      <a class="pill" href="{{ url_for('open_project_folder', name=name) }}">Open Folder</a>
+    </div>
+  </div>
+
+  {% if data.entry_points %}
+    <div class="card" style="margin-bottom: 1rem;">
+      <div style="font-weight:600; margin-bottom:.3rem;">Possible entry points</div>
+      <div style="display:flex; gap:.4rem; flex-wrap: wrap;">
+        {% for ep in data.entry_points %}
+          <a class="tag entrypoint" href="{{ url_for('view_file', name=name, relpath=ep.rel) }}">{{ ep.rel }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="filelist">
+    {% for item in data.entries %}
+      <div class="entry">
+        <div class="name">
+          {% if item.is_dir %}
+            📁 {{ item.rel }}
+          {% else %}
+            📄 {{ item.rel }}
+          {% endif %}
+        </div>
+        <div>
+          {% if not item.is_dir and item.can_view %}
+            <a class="pill" href="{{ url_for('view_file', name=name, relpath=item.rel_from_project) }}">View</a>
+          {% elif item.is_dir %}
+            <a class="pill" href="{{ url_for('browse_subdir', name=name, relpath=item.rel_from_project) }}">Open</a>
+          {% else %}
+            <span class="pill">binary</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

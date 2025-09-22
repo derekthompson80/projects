@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Projects Overview{% endblock %}
+{% block header %}Projects Overview{% endblock %}
+{% block content %}
+  <p class="muted">Listing all projects under <code>{{ projects[0].path.rsplit('\\', 1)[0] if projects else '' }}</code>.</p>
+  {% for p in projects %}
+    <div class="card" style="margin-bottom:.6rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:.6rem;">
+        <div>
+          <div style="font-weight:600; font-size:1rem;">{{ p.name }}</div>
+          <div class="muted" style="font-size:.85rem; white-space: pre-wrap;">{{ p.path }}</div>
+        </div>
+        <div style="display:flex; gap:.4rem;">
+          <a class="pill" href="{{ url_for('project_detail', name=p.name) }}">Open →</a>
+          <a class="pill" href="{{ url_for('open_project_folder', name=p.name) }}">Open Folder</a>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="card">
+      <div>No projects found.</div>
+    </div>
+  {% endfor %}
+{% endblock %}

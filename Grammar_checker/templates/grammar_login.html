@@ -54,7 +54,7 @@
         <span class="note">After logging in, you'll be redirected to the Grammar Checker.</span>
         {% if locked %}
           <div style="margin-top:0.5rem;">
-            <a href="{{ url_for('grammar_request_reset') }}">Request password reset/unlock email</a>
+            <a href="{{ url_for('grammar_request_reset') }}">Generate password reset/unlock link</a>
           </div>
         {% endif %}
     </div>

@@ -59,24 +59,7 @@ def index():
 GRAMMAR_PASSWORD = 'Darklove90!'
 FEATURE_NAME = 'grammar_checker'
 
-# Email notification configuration
-OWNER_EMAIL = os.environ.get('OWNER_EMAIL', 'spade605@gmail.com')
-SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 587
-SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'spade605@gmail.com')
-SENDER_PASSWORD = os.environ.get('SENDER_PASSWORD', 'Darklove20!')
 
-
-def _send_email(to_addr: str, subject: str, body: str) -> bool:
-    # Email notifications disabled: suppress actual sending
-    try:
-        app.logger.info(
-            f"Email notifications disabled. Suppressed email to {to_addr} with subject '{subject}'."
-        )
-    except Exception:
-        # In case app.logger is not available for any reason, still succeed silently
-        pass
-    return True
 
 
 def _client_ip() -> str:
@@ -135,27 +118,11 @@ def grammar_login():
         if ok:
             session['grammar_authenticated'] = True
             flash('Logged in to Grammar Checker.', 'success')
-            # Notify owner of successful login
-            try:
-                now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                subject = 'Grammar Checker login success'
-                body = f'Successful login to Grammar Checker.\nTime: {now}\nIP: {ip}'
-                _send_email(OWNER_EMAIL, subject, body)
-            except Exception as e:
-                app.logger.error(f'Email notify (success) failed: {e}')
             return redirect(url_for('grammar'))
         else:
             # After a failure, check if we reached 3 consecutive failures
             try:
                 fails = get_consecutive_fail_count(FEATURE_NAME)
-                # Notify owner of wrong password attempt
-                try:
-                    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                    subject = 'Grammar Checker wrong password attempt'
-                    body = f'Wrong password entered for Grammar Checker.\nTime: {now}\nIP: {ip}\nConsecutive fails: {fails}'
-                    _send_email(OWNER_EMAIL, subject, body)
-                except Exception as e:
-                    app.logger.error(f'Email notify (failure) failed: {e}')
 
                 if fails >= 3:
                     # Record a lock event
@@ -164,13 +131,6 @@ def grammar_login():
                     except Exception as e:
                         app.logger.error(f"Failed to record lock: {e}")
                     locked = True
-                    # Notify owner of lockout
-                    try:
-                        subject = 'Grammar Checker locked out for 24 hours'
-                        body = f'Grammar Checker has been locked due to 3 consecutive failed attempts.\nIP (last attempt): {ip}'
-                        _send_email(OWNER_EMAIL, subject, body)
-                    except Exception as e:
-                        app.logger.error(f'Email notify (lock) failed: {e}')
                     # Recompute until based on now + 24h on the server side when checking lock
                 
             except Exception as e:
@@ -206,17 +166,8 @@ def grammar_request_reset():
         token = create_reset_token(FEATURE_NAME)
         reset_url = url_for('grammar_reset', token=token, _external=True)
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        subject = 'Grammar Checker password reset/unlock link'
-        body = (
-            f'A reset/unlock was requested for Grammar Checker.\n\n'
-            f'Time: {now}\n'
-            f'Link: {reset_url}\n\n'
-            f'This link will unlock access immediately.'
-        )
-        if _send_email(OWNER_EMAIL, subject, body):
-            flash('A reset link has been sent to the owner email.', 'success')
-        else:
-            flash('Failed to send reset link email. Please check email configuration.', 'error')
+        # Email sending removed: display the reset URL directly to the user
+        flash(f'Reset/unlock link (copy & open): {reset_url}', 'success')
     except Exception as e:
         app.logger.error(f"Failed to create/send reset token: {e}")
         flash('Could not generate a reset link. Try again later.', 'error')

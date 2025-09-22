@@ -103,3 +103,26 @@ A Flask web application that allows you to run grammar and spelling checks on yo
 - If you encounter other authentication errors, make sure your OAuth credentials are correctly set up
 - If the application can't access your Google Docs, ensure you've granted the necessary permissions
 - For any other issues, check the Flask server logs for error messages
+
+### Optional database (MySQL over SSH)
+
+This app can show blog entries from a MySQL database via an SSH tunnel. Database access is optional — if the DB dependencies are not installed or the connection fails, the app gracefully falls back to reading entries from local JSON files under `blog_entries/`.
+
+To enable DB access, install the real packages from PyPI:
+
+```
+pip install paramiko sshtunnel
+```
+
+You also need a MySQL driver. On Windows, building `mysqlclient` can require extra build tools; a pure-Python fallback is available:
+
+- Preferred (C extension, faster):
+  ```
+  pip install mysqlclient
+  ```
+- Fallback (pure Python):
+  ```
+  pip install PyMySQL
+  ```
+
+Important: Do NOT install packages named `paramiko-on-pypi` or `pycrypto-on-pypi`. Those are not the official packages and will fail to build on modern Python versions (e.g., Python 3.13). The project’s DB layer will automatically use `mysqlclient` if available, or fall back to `PyMySQL` if installed.

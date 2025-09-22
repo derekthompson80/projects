@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Blackjack{% endblock %}</title>
+  <style>
+    :root { --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; --accent:#60a5fa; --good:#34d399; --bad:#f87171; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    header { padding: 1rem 1.2rem; background: #0b1220; border-bottom: 1px solid #1f2937; position: sticky; top:0; }
+    header h1 { margin:0; font-size: 1.1rem; letter-spacing: .5px; }
+    main { max-width: 900px; margin: 1rem auto; padding: 0 1rem 2rem; }
+    .card { background: var(--card); border: 1px solid #1f2937; border-radius: 10px; padding: 14px; }
+    .row { display:flex; gap: 1rem; flex-wrap: wrap; }
+    .stack { display:flex; flex-direction: column; gap: .4rem; }
+    .muted { color: var(--muted); }
+    a.btn, button.btn { display:inline-block; padding:.5rem .8rem; border:1px solid #334155; border-radius:8px; color: var(--text); background:#0b1220; text-decoration:none; }
+    a.btn:hover, button.btn:hover { border-color:#475569; }
+    .btn.primary { background:#0b3b77; border-color:#1e40af; }
+    .btn.good { background:#064e3b; border-color:#065f46; }
+    .btn.bad { background:#7f1d1d; border-color:#991b1b; }
+    .hand { display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; }
+    .cardface { display:inline-flex; align-items:center; justify-content:center; width:52px; height:72px; border-radius:6px; border:1px solid #374151; background:#0b1220; font-weight:600; }
+    .cardface.heart, .cardface.diamond { color:#fca5a5; }
+    .totals { font-weight:600; }
+    .banner { padding:.6rem .8rem; border-radius:6px; background:#0b1220; border:1px solid #374151; margin:.5rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{% block header %}Blackjack{% endblock %}</h1>
+  </header>
+  <main>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="banner">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
