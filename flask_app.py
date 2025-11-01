@@ -1,4 +1,4 @@
-# Import the Flask app from the Grammar_checker directory
+# Import the Flask app from the Blog directory
 import sys
 import os
 
@@ -11,8 +11,8 @@ for git_path in git_cmd_paths:
     if os.path.exists(git_path) and git_path not in os.environ["PATH"]:
         os.environ["PATH"] = git_path + os.pathsep + os.environ["PATH"]
 
-# Add the Grammar_checker directory to the Python path
-project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Grammar_checker')
+# Add the Blog directory to the Python path
+project_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Blog')
 if project_dir not in sys.path:
     sys.path.insert(0, project_dir)
 

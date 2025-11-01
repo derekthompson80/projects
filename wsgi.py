@@ -19,7 +19,7 @@ for git_path in git_cmd_paths:
         os.environ["PATH"] = git_path + os.pathsep + os.environ.get("PATH", "")
 
 # add your project directory to the sys.path
-project_home = '/home/spade605/Derek_person_projects/Grammar_checker'
+project_home = '/home/spade605/Derek_person_projects/Blog'
 if project_home not in sys.path:
     sys.path = [project_home] + sys.path
 

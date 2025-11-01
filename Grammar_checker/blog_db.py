@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 """
-File-based backend for Grammar_checker to remove Paramiko/MySQL dependencies.
+File-based backend for Blog to remove Paramiko/MySQL dependencies.
 
 This module provides the same public API as the previous DB-backed version but
-stores data in JSON files under the Grammar_checker directory. This eliminates
+stores data in JSON files under the Blog directory. This eliminates
 any need for paramiko/sshtunnel/MySQL drivers.
 """
 
