@@ -711,5 +711,73 @@ def browse_entry_files():
         return render_template('entries_browse.html', files=[], error=str(e)), 500
 
 
+def _comments_count(entry_id: str) -> int:
+    """Return number of comments for an entry based on blog_comments/<entry_id>.json."""
+    try:
+        path = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                comments = json.load(f)
+                return len(comments) if isinstance(comments, list) else 0
+    except Exception:
+        return 0
+    return 0
+
+
+@app.route('/blog/entries/db')
+def entries_db():
+    """Render an HTML page that lists entries fetched from the database layer."""
+    # Load from DB layer
+    try:
+        try:
+            from .blog_db import get_entries, init_schema
+        except ImportError:
+            from blog_db import get_entries, init_schema
+        try:
+            init_schema()
+        except Exception as e:
+            app.logger.error(f"DB schema init failed: {e}")
+        items = []
+        for e in get_entries():
+            items.append({
+                'id': e['id'],
+                'title': e.get('title') or 'Untitled',
+                'author': e.get('author') or 'Anonymous',
+                'date': e.get('date') or '',
+                'comments_count': _comments_count(e['id']),
+            })
+        return render_template('entries_db.html', entries=items, error=None)
+    except Exception as ex:
+        app.logger.error(f"Failed to load DB entries: {ex}")
+        return render_template('entries_db.html', entries=[], error=str(ex)), 500
+
+
+@app.route('/blog/entries/db.json')
+def entries_db_json():
+    """Return DB entries as JSON (normalized) with comments_count."""
+    try:
+        try:
+            from .blog_db import get_entries, init_schema
+        except ImportError:
+            from blog_db import get_entries, init_schema
+        try:
+            init_schema()
+        except Exception as e:
+            app.logger.error(f"DB schema init failed: {e}")
+        items = []
+        for e in get_entries():
+            items.append({
+                'id': e['id'],
+                'title': e.get('title') or 'Untitled',
+                'author': e.get('author') or 'Anonymous',
+                'date': e.get('date') or '',
+                'comments_count': _comments_count(e['id']),
+            })
+        return jsonify({'entries': items})
+    except Exception as ex:
+        app.logger.error(f"Failed to load DB entries (json): {ex}")
+        return jsonify({'entries': [], 'error': str(ex)}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)
