@@ -537,9 +537,15 @@ def add_comment(entry_id):
 
 @app.route('/blog/entries/files')
 def list_entry_files():
-    """List files in the blog_entries directory (JSON and TXT)."""
+    """List files in the blog_entries directory.
+    - Default: JSON with both .json and .txt files (name, size, modified)
+    - If ?format=text: return a plain-text list (one per line) of only .txt filenames.
+    """
     try:
         if not os.path.isdir(BLOG_ENTRIES_DIR):
+            # Text format requested → return plain 404 message; otherwise JSON
+            if request.args.get('format') == 'text':
+                return ("blog_entries directory not found\n", 404, {'Content-Type': 'text/plain; charset=utf-8'})
             return jsonify({'files': [], 'error': 'blog_entries directory not found'}), 404
 
         files = []
@@ -563,9 +569,18 @@ def list_entry_files():
         except Exception:
             pass
 
+        # Plain text mode: return only .txt filenames, one per line
+        if request.args.get('format') == 'text':
+            txt_names = [f['name'] for f in files if f['name'].lower().endswith('.txt')]
+            body = "\n".join(txt_names) + ("\n" if txt_names else "")
+            return (body, 200, {'Content-Type': 'text/plain; charset=utf-8'})
+
+        # Default JSON
         return jsonify({'files': files})
     except Exception as e:
         app.logger.error(f"Error listing blog entry files: {e}")
+        if request.args.get('format') == 'text':
+            return (f"Error: {str(e)}\n", 500, {'Content-Type': 'text/plain; charset=utf-8'})
         return jsonify({'error': str(e)}), 500
 
 
@@ -624,11 +639,11 @@ def _parse_txt_entry(file_path: str, entry_id: str) -> dict:
 
 @app.route('/blog/entry/txt/<path:name>')
 def blog_entry_txt(name: str):
-    """Return a legacy .txt blog entry from blog_entries as JSON.
+    """Return a legacy .txt blog entry from blog_entries as plain text.
     Usage examples:
       /blog/entry/txt/20250613_171359_June_9__2025_75th
       /blog/entry/txt/20250613_171359_June_9__2025_75th.txt
-    The response structure matches JSON entries used by the blog list: {id,title,author,date,content}.
+    The response is returned as plain text content.
     """
     try:
         # Normalize filename and ensure .txt extension is allowed
@@ -642,16 +657,58 @@ def blog_entry_txt(name: str):
         candidate = os.path.normpath(os.path.join(BLOG_ENTRIES_DIR, filename))
         base_dir = os.path.normpath(BLOG_ENTRIES_DIR)
         if not candidate.startswith(base_dir):
-            return jsonify({'error': 'Invalid path'}), 400
+            return "Invalid path", 400
         if not os.path.isfile(candidate):
-            return jsonify({'error': 'File not found'}), 404
+            return "File not found", 404
 
-        entry_id = os.path.splitext(os.path.basename(candidate))[0]
-        entry = _parse_txt_entry(candidate, entry_id)
-        return jsonify(entry)
+        # Read and return the raw file content as plain text
+        with open(candidate, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        from flask import Response
+        return Response(content, mimetype='text/plain')
     except Exception as e:
         app.logger.error(f"Error reading txt entry '{name}': {e}")
-        return jsonify({'error': str(e)}), 500
+        return f"Error: {str(e)}", 500
+
+
+@app.route('/blog/entries/browse')
+def browse_entry_files():
+    """Render an HTML page to browse and open .txt files in blog_entries.
+    - Lists only .txt files
+    - Sorted by last modified (desc)
+    - Each filename links to the plain-text endpoint `/blog/entry/txt/<name>`
+    """
+    try:
+        if not os.path.isdir(BLOG_ENTRIES_DIR):
+            # Render a friendly empty state
+            return render_template('entries_browse.html', files=[], error='blog_entries directory not found')
+
+        files = []
+        for name in os.listdir(BLOG_ENTRIES_DIR):
+            if not name.lower().endswith('.txt'):
+                continue
+            path = os.path.join(BLOG_ENTRIES_DIR, name)
+            try:
+                files.append({
+                    'name': name,
+                    'size': os.path.getsize(path),
+                    'modified': datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime('%Y-%m-%d %H:%M:%S'),
+                })
+            except Exception:
+                # Skip files that cannot be stat'ed
+                continue
+
+        # Sort by modified desc
+        try:
+            files.sort(key=lambda x: x['modified'], reverse=True)
+        except Exception:
+            pass
+
+        return render_template('entries_browse.html', files=files, error=None)
+    except Exception as e:
+        app.logger.error(f"Error rendering entries browse page: {e}")
+        return render_template('entries_browse.html', files=[], error=str(e)), 500
 
 
 if __name__ == '__main__':
