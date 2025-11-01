@@ -1,20 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
 import os
-import tempfile
 import json
 import datetime
-from werkzeug.utils import secure_filename
 
-# Import the txt.reviewer functionality
-import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-# Import with the correct module name (txt.reviewer.py -> txt_reviewer)
-from txt_reviewer import correct_text, write_txt, process_document, process_blog_entry, save_blog_entry
 from pexels_api import PexelsAPI
 
 # Initialize Pexels API with the provided key
 PEXELS_API_KEY = "hSk5iMSAzF3dI68VVnjpil8CcXNd3twEdCZ4oTBl8ZrgP9ucJQQnwTLp"
 pexels = PexelsAPI(PEXELS_API_KEY)
+
+# Grammar correction features removed: provide no-op stubs to keep routes simple
+# and avoid any dependency on the old txt_reviewer module.
+def correct_text(text: str) -> str:
+    return text
+
+def process_blog_entry(title: str, content: str) -> tuple[str, str]:
+    return title, content
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # For session management
@@ -35,29 +36,17 @@ def redirect_to_pythonanywhere():
 # Blog configuration
 BLOG_ENTRIES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blog_entries')
 COMMENTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'blog_comments')
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
 # Create directories if they don't exist
 os.makedirs(BLOG_ENTRIES_DIR, exist_ok=True)
 os.makedirs(COMMENTS_DIR, exist_ok=True)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Configure upload settings
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
-ALLOWED_EXTENSIONS = {'docx'}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
-    # Open the Grammar Checker login screen first to ensure gatekeeping and tracking
-    return redirect(url_for('grammar_login'))
+    # Blog is the homepage
+    return redirect(url_for('blog'))
 
-# Grammar Checker authentication configuration
-GRAMMAR_PASSWORD = 'Darklove90!'
-FEATURE_NAME = 'grammar_checker'
+# Grammar Checker features removed in Derek's Blog
 
 
 
@@ -71,174 +60,33 @@ def _client_ip() -> str:
 
 @app.route('/grammar/login', methods=['GET', 'POST'])
 def grammar_login():
-    # Lazy import to avoid circulars and keep local dev flexible
-    try:
-        from .blog_db import (
-            init_schema,
-            log_auth_attempt,
-            is_locked,
-            get_consecutive_fail_count,
-            create_reset_token,
-        )
-    except ImportError:
-        from blog_db import (
-            init_schema,
-            log_auth_attempt,
-            is_locked,
-            get_consecutive_fail_count,
-            create_reset_token,
-        )
-
-    # Ensure schema includes auth_attempts
-    try:
-        init_schema()
-    except Exception as e:
-        app.logger.error(f"DB schema init failed on login: {e}")
-
-    locked, until = (False, None)
-    try:
-        locked, until = is_locked(FEATURE_NAME)
-    except Exception as e:
-        app.logger.error(f"Lock check failed: {e}")
-
-    if request.method == 'POST':
-        if locked:
-            flash(f"Grammar Checker is locked until {until.strftime('%Y-%m-%d %H:%M:%S')} due to multiple failed attempts.", 'error')
-            return render_template('grammar_login.html', locked=locked, unlock_time=until)
-
-        password = request.form.get('password', '')
-        ok = password == GRAMMAR_PASSWORD
-        ip = _client_ip()
-
-        try:
-            log_auth_attempt(FEATURE_NAME, ip, ok, None)
-        except Exception as e:
-            app.logger.error(f"Failed to log auth attempt: {e}")
-
-        if ok:
-            session['grammar_authenticated'] = True
-            flash('Logged in to Grammar Checker.', 'success')
-            return redirect(url_for('grammar'))
-        else:
-            # After a failure, check if we reached 3 consecutive failures
-            try:
-                fails = get_consecutive_fail_count(FEATURE_NAME)
-
-                if fails >= 3:
-                    # Record a lock event
-                    try:
-                        log_auth_attempt(FEATURE_NAME, ip, None, 'LOCK')
-                    except Exception as e:
-                        app.logger.error(f"Failed to record lock: {e}")
-                    locked = True
-                    # Recompute until based on now + 24h on the server side when checking lock
-                
-            except Exception as e:
-                app.logger.error(f"Failed to compute consecutive fails: {e}")
-
-            flash('Incorrect password.', 'error')
-            return render_template('grammar_login.html', locked=locked, unlock_time=until)
-
-    # GET
-    return render_template('grammar_login.html', locked=locked, unlock_time=until)
+    # Feature removed: redirect to blog home
+    return redirect(url_for('blog'))
 
 
 @app.route('/grammar/request-reset', methods=['GET', 'POST'])
 def grammar_request_reset():
-    # Ensure schema
-    try:
-        from .blog_db import init_schema, is_locked, create_reset_token
-    except ImportError:
-        from blog_db import init_schema, is_locked, create_reset_token
-    try:
-        init_schema()
-    except Exception as e:
-        app.logger.error(f"DB schema init failed on request-reset: {e}")
-
-    locked, until = (False, None)
-    try:
-        locked, until = is_locked(FEATURE_NAME)
-    except Exception as e:
-        app.logger.error(f"Lock check failed on request-reset: {e}")
-
-    # Always allow generating a reset token; especially relevant when locked
-    try:
-        token = create_reset_token(FEATURE_NAME)
-        reset_url = url_for('grammar_reset', token=token, _external=True)
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        # Email sending removed: display the reset URL directly to the user
-        flash(f'Reset/unlock link (copy & open): {reset_url}', 'success')
-    except Exception as e:
-        app.logger.error(f"Failed to create/send reset token: {e}")
-        flash('Could not generate a reset link. Try again later.', 'error')
-
-    return redirect(url_for('grammar_login'))
+    # Feature removed: redirect to blog home
+    return redirect(url_for('blog'))
 
 
 @app.route('/grammar/reset/<token>')
 def grammar_reset(token: str):
-    try:
-        from .blog_db import get_reset_by_token, mark_reset_used, record_unlock
-    except ImportError:
-        from blog_db import get_reset_by_token, mark_reset_used, record_unlock
-
-    try:
-        data = get_reset_by_token(token)
-        if not data:
-            flash('Invalid or unknown reset token.', 'error')
-            return redirect(url_for('grammar_login'))
-        if data['used']:
-            flash('This reset token has already been used.', 'error')
-            return redirect(url_for('grammar_login'))
-        # Check expiry
-        expires_at = data['expires_at']
-        if isinstance(expires_at, str):
-            # In case DB driver returns string; best-effort parse
-            try:
-                expires_at = datetime.datetime.fromisoformat(expires_at)
-            except Exception:
-                pass
-        if expires_at and datetime.datetime.now() > expires_at:
-            flash('This reset token has expired.', 'error')
-            return redirect(url_for('grammar_login'))
-
-        # Record unlock and mark used
-        record_unlock(data['feature'])
-        mark_reset_used(token)
-        flash('Grammar Checker lock has been cleared. You can try logging in again.', 'success')
-    except Exception as e:
-        app.logger.error(f"Reset token handling failed: {e}")
-        flash('Failed to process reset token.', 'error')
-
-    return redirect(url_for('grammar_login'))
+    # Feature removed: redirect to blog home
+    return redirect(url_for('blog'))
 
 
 @app.route('/grammar/logout')
 def grammar_logout():
-    session.pop('grammar_authenticated', None)
-    flash('Logged out from Grammar Checker.', 'success')
-    return redirect(url_for('grammar_login'))
+    # Feature removed: redirect to blog home
+    return redirect(url_for('blog'))
 
 
 # New explicit route for grammar checker (protected)
 @app.route('/grammar')
 def grammar():
-    """Protected route path for the grammar checker UI"""
-    if not session.get('grammar_authenticated'):
-        return redirect(url_for('grammar_login'))
-    # Also refuse if feature is currently locked
-    try:
-        from .blog_db import is_locked
-    except ImportError:
-        from blog_db import is_locked
-    try:
-        locked, until = is_locked(FEATURE_NAME)
-        if locked:
-            flash(f"Grammar Checker is locked until {until.strftime('%Y-%m-%d %H:%M:%S')}", 'error')
-            return redirect(url_for('grammar_login'))
-    except Exception:
-        pass
-    return render_template('index.html')
+    # Feature removed: redirect to blog home
+    return redirect(url_for('blog'))
 
 # New explicit route for blog homepage path alias
 @app.route('/blog-home')
@@ -248,67 +96,8 @@ def blog_home():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    # Require authentication for grammar upload endpoint
-    if not session.get('grammar_authenticated'):
-        return jsonify({'error': 'Not authenticated'}), 403
-    # Check lock status
-    try:
-        from .blog_db import is_locked
-    except ImportError:
-        from blog_db import is_locked
-    try:
-        locked, until = is_locked(FEATURE_NAME)
-        if locked:
-            return jsonify({'error': f'Locked until {until.strftime("%Y-%m-%d %H:%M:%S")}' }), 423
-    except Exception:
-        pass
-    # Check if a file was uploaded
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-
-    file = request.files['file']
-
-    # Check if the file is empty
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-
-    # Check if the file is allowed
-    if not allowed_file(file.filename):
-        return jsonify({'error': 'File type not allowed. Please upload a .docx file'}), 400
-
-    # Save the file temporarily
-    filename = secure_filename(file.filename)
-    temp_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(temp_path)
-
-    # Process the document
-    output_filename = f"corrected_{filename.rsplit('.', 1)[0]}.txt"
-    output_path = os.path.join(tempfile.gettempdir(), output_filename)
-
-    try:
-        process_document(temp_path, output_path)
-
-        # Read the corrected text
-        with open(output_path, 'r', encoding='utf-8') as f:
-            corrected_text = f.read()
-
-        # Clean up temporary files
-        os.unlink(temp_path)
-        os.unlink(output_path)
-
-        return jsonify({
-            'success': True,
-            'document_name': filename.rsplit('.', 1)[0],
-            'corrected_text': corrected_text
-        })
-    except Exception as e:
-        # Clean up temporary files if they exist
-        if os.path.exists(temp_path):
-            os.unlink(temp_path)
-        if os.path.exists(output_path):
-            os.unlink(output_path)
-
-        return jsonify({'error': str(e)}), 500
+    # Feature removed as part of refactor to pure blog
+    return jsonify({'error': 'Grammar upload/correction feature has been removed'}), 410
 
 
 
@@ -524,38 +313,9 @@ def new_entry():
                                   author=author)
 
         try:
-            # Check if this is a confirmation of grammar changes
-            if request.form.get('confirm_changes') == 'true':
-                # Use the corrected versions from the form
-                corrected_title = request.form.get('corrected_title', title)
-                corrected_content = request.form.get('corrected_content', content)
-            else:
-                # Process the entry with grammar checking
-                corrected_title, corrected_content = process_blog_entry(title, content)
-
-                # If there are changes, show the confirmation screen
-                if corrected_title != title or corrected_content != content:
-                    # Get media information if provided
-                    media = None
-                    if request.form.get('media_id'):
-                        media = {
-                            'id': request.form.get('media_id'),
-                            'type': request.form.get('media_type'),
-                            'url': request.form.get('media_url'),
-                            'thumbnail': request.form.get('media_thumbnail'),
-                            'width': request.form.get('media_width'),
-                            'height': request.form.get('media_height'),
-                            'attribution': request.form.get('media_attribution')
-                        }
-
-                    return render_template('confirm_changes.html',
-                                          original_title=title,
-                                          original_content=content,
-                                          corrected_title=corrected_title,
-                                          corrected_content=corrected_content,
-                                          author=author,
-                                          media=media,
-                                          is_new=True)
+            # Grammar checker removed: use content as-is
+            corrected_title = title
+            corrected_content = content
 
             # Get media information if provided
             media = None
@@ -635,41 +395,9 @@ def edit_entry(entry_id):
                                   media=media)
 
         try:
-            # Check if this is a confirmation of grammar changes
-            if request.form.get('confirm_changes') == 'true':
-                # Use the corrected versions from the form
-                corrected_title = request.form.get('corrected_title', new_title)
-                corrected_content = request.form.get('corrected_content', new_content)
-            else:
-                # Process the entry with grammar checking
-                corrected_title, corrected_content = process_blog_entry(new_title, new_content)
-
-                # If there are changes, show the confirmation screen
-                if corrected_title != new_title or corrected_content != new_content:
-                    # Get media information if provided
-                    new_media = None
-                    if request.form.get('media_id'):
-                        new_media = {
-                            'id': request.form.get('media_id'),
-                            'type': request.form.get('media_type'),
-                            'url': request.form.get('media_url'),
-                            'thumbnail': request.form.get('media_thumbnail'),
-                            'width': request.form.get('media_width'),
-                            'height': request.form.get('media_height'),
-                            'attribution': request.form.get('media_attribution')
-                        }
-                    else:
-                        new_media = media
-
-                    return render_template('confirm_changes.html',
-                                          original_title=new_title,
-                                          original_content=new_content,
-                                          corrected_title=corrected_title,
-                                          corrected_content=corrected_content,
-                                          author=new_author,
-                                          media=new_media,
-                                          is_new=False,
-                                          entry_id=entry_id)
+            # Grammar checker removed: use content as-is
+            corrected_title = new_title
+            corrected_content = new_content
 
             # Get media information if provided
             new_media = None
@@ -739,7 +467,7 @@ def delete_entry(entry_id):
             flash('Entry not found', 'error')
             return redirect(url_for('blog'))
 
-        # Delete the comments file if it exists
+        # Delete the comment file if it exists
         comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
         if os.path.exists(comment_file):
             os.remove(comment_file)
@@ -772,55 +500,12 @@ def add_comment(entry_id):
     author = request.form.get('author', '').strip() or 'Anonymous'
     content = request.form.get('content', '').strip()
 
-    # Check if this is a confirmation of grammar changes
-    if request.form.get('confirm_changes') == 'true':
-        # Use the corrected version from the form
-        corrected_content = request.form.get('corrected_content', content)
-    else:
-        # Regular comment submission
-        if not content:
-            flash('Comment content is required', 'error')
-            return redirect(url_for('view_entry', entry_id=entry_id))
+    # Grammar checker removed: save comment as-is
+    if not content:
+        flash('Comment content is required', 'error')
+        return redirect(url_for('view_entry', entry_id=entry_id))
 
-        try:
-            # Process the comment with grammar checking
-            corrected_content = correct_text(content)
-
-            # If there are changes, show the confirmation screen
-            if corrected_content != content:
-                # Build entry info from DB
-                title = entry['title']
-                entry_author = entry['author']
-                date_str = entry['date']
-                media = entry.get('media')
-                entry_content_text = entry['content']
-
-                # Get comments
-                comments = []
-                comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
-                if os.path.exists(comment_file):
-                    with open(comment_file, 'r', encoding='utf-8') as cf:
-                        comments = json.load(cf)
-
-                # Render the confirmation template for comments
-                return render_template('confirm_comment.html',
-                                      entry={
-                                          'id': entry_id,
-                                          'title': title,
-                                          'author': entry_author,
-                                          'date': date_str,
-                                          'content': entry_content_text,
-                                          'media': media
-                                      },
-                                      comments=comments,
-                                      original_content=content,
-                                      corrected_content=corrected_content,
-                                      author=author)
-
-        except Exception as e:
-            app.logger.error(f"Error processing comment: {str(e)}")
-            flash('An error occurred while processing the comment. Please try again.', 'error')
-            return redirect(url_for('view_entry', entry_id=entry_id))
+    corrected_content = content
 
     try:
         # Create comment object
@@ -849,6 +534,125 @@ def add_comment(entry_id):
         app.logger.error(f"Error adding comment: {str(e)}")
         flash('An error occurred while adding the comment. Please try again.', 'error')
         return redirect(url_for('view_entry', entry_id=entry_id))
+
+@app.route('/blog/entries/files')
+def list_entry_files():
+    """List files in the blog_entries directory (JSON and TXT)."""
+    try:
+        if not os.path.isdir(BLOG_ENTRIES_DIR):
+            return jsonify({'files': [], 'error': 'blog_entries directory not found'}), 404
+
+        files = []
+        for name in os.listdir(BLOG_ENTRIES_DIR):
+            if name.lower().endswith(('.json', '.txt')):
+                path = os.path.join(BLOG_ENTRIES_DIR, name)
+                try:
+                    info = {
+                        'name': name,
+                        'size': os.path.getsize(path),
+                        'modified': datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                    files.append(info)
+                except Exception:
+                    # If any single file fails to stat, skip it
+                    continue
+
+        # Sort by last modified (descending)
+        try:
+            files.sort(key=lambda x: x['modified'], reverse=True)
+        except Exception:
+            pass
+
+        return jsonify({'files': files})
+    except Exception as e:
+        app.logger.error(f"Error listing blog entry files: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+def _parse_txt_entry(file_path: str, entry_id: str) -> dict:
+    """Parse a legacy .txt blog entry file into a structured dict.
+    Expected header lines at top (any order), then a blank line, then content:
+      Title: ...
+      Author: ...
+      Date: YYYY-MM-DD HH:MM:SS (free-form kept as-is)
+    The rest of the file is the content body.
+    """
+    title = 'Untitled'
+    author = 'Anonymous'
+    date = ''
+    content_lines: list[str] = []
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        # Extract simple headers from the first ~20 lines or until first non-header content
+        i = 0
+        max_header_scan = min(len(lines), 20)
+        while i < max_header_scan:
+            line = lines[i].rstrip('\n')
+            if not line.strip():
+                # Allow a blank separator; continue scanning a bit further
+                i += 1
+                # Stop scanning headers if we already saw some headers and hit a blank line
+                if (title != 'Untitled' or author != 'Anonymous' or date):
+                    break
+                continue
+            low = line.lower()
+            if low.startswith('title:'):
+                title = line.split(':', 1)[1].strip() or title
+            elif low.startswith('author:'):
+                author = line.split(':', 1)[1].strip() or author
+            elif low.startswith('date:'):
+                date = line.split(':', 1)[1].strip() or date
+            else:
+                # Not a header-like line; stop header scanning
+                break
+            i += 1
+        # The rest is content
+        content_lines = [l.rstrip('\n') for l in lines[i:]]
+    except Exception:
+        # On any failure, return minimal information
+        content_lines = []
+    content = '\n'.join(content_lines).strip('\n')
+    return {
+        'id': entry_id,
+        'title': title,
+        'author': author,
+        'date': date,
+        'content': content,
+    }
+
+
+@app.route('/blog/entry/txt/<path:name>')
+def blog_entry_txt(name: str):
+    """Return a legacy .txt blog entry from blog_entries as JSON.
+    Usage examples:
+      /blog/entry/txt/20250613_171359_June_9__2025_75th
+      /blog/entry/txt/20250613_171359_June_9__2025_75th.txt
+    The response structure matches JSON entries used by the blog list: {id,title,author,date,content}.
+    """
+    try:
+        # Normalize filename and ensure .txt extension is allowed
+        orig_name = name
+        if not orig_name.lower().endswith('.txt'):
+            filename = f"{orig_name}.txt"
+        else:
+            filename = orig_name
+
+        # Resolve path inside BLOG_ENTRIES_DIR only
+        candidate = os.path.normpath(os.path.join(BLOG_ENTRIES_DIR, filename))
+        base_dir = os.path.normpath(BLOG_ENTRIES_DIR)
+        if not candidate.startswith(base_dir):
+            return jsonify({'error': 'Invalid path'}), 400
+        if not os.path.isfile(candidate):
+            return jsonify({'error': 'File not found'}), 404
+
+        entry_id = os.path.splitext(os.path.basename(candidate))[0]
+        entry = _parse_txt_entry(candidate, entry_id)
+        return jsonify(entry)
+    except Exception as e:
+        app.logger.error(f"Error reading txt entry '{name}': {e}")
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)

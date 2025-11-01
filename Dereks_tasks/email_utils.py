@@ -1,11 +1,33 @@
 import smtplib
 from email.mime.text import MIMEText
 import os
-import schedule
 import time
 import threading
 import datetime
 import atexit
+
+# Try to import the 'schedule' library; provide a no-op fallback if unavailable
+try:
+    import schedule  # type: ignore
+except Exception:
+    class _ScheduleStub:
+        def every(self):
+            return self
+        def day(self):
+            return self
+        def at(self, _time_str):
+            return self
+        def do(self, *args, **kwargs):
+            return None
+        def run_pending(self):
+            pass
+        def clear(self):
+            pass
+        def get_jobs(self):
+            return []
+        def cancel_job(self, job):
+            pass
+    schedule = _ScheduleStub()  # type: ignore
 
 # --- Email Configuration ---
 # It's highly recommended to use environment variables for sensitive data like email passwords.

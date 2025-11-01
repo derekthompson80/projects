@@ -1,9 +1,21 @@
 # Import necessary libraries
 import datetime
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
-import os # Needed for environment variables
+import os  # Needed for environment variables
+
+# Try to import Google API libraries; fall back to a safe mock if unavailable
+_GAPI_AVAILABLE = True
+try:
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import HttpError
+except Exception:  # ImportError or environment without google libs
+    _GAPI_AVAILABLE = False
+
+    class HttpError(Exception):
+        pass
+
+    def build(*args, **kwargs):
+        raise ImportError("google-api-python-client is not installed. Install it with: pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib")
 
 # --- Configuration ---
 # Path to your Service Account JSON key file.
@@ -11,13 +23,20 @@ import os # Needed for environment variables
 # with the actual filename of your downloaded Google Cloud service account key JSON file.
 SERVICE_ACCOUNT_FILE = "service_account_file.json"  # <<< YOU MUST CHANGE THIS
 
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets'] # Full read/write access
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']  # Full read/write access
 
 SPREADSHEET_ID = os.environ.get('YOUR_SPREADSHEET_ID', '1cAKXeige5AuGbiiLGuOOyb6hq3c2KLTtLFFdEQvkdn0')
+
+# In-memory mock storage when Google APIs are unavailable
+_MOCK_SHEET = [["Task", "Timeframe", "Description", "Recurring", "Date", "Completed"],
+               ["Demo task", "Today", "Try the app", "No", datetime.date.today().isoformat(), "No"]]
 
 # --- Authentication Function ---
 def get_credentials():
     """Gets credentials for Google Sheets API using a Service Account."""
+    if not _GAPI_AVAILABLE:
+        # Google API libs not installed; signal to use mock
+        return None
     creds = None
     try:
         if not os.path.exists(SERVICE_ACCOUNT_FILE):
@@ -27,7 +46,7 @@ def get_credentials():
         # Ensure the file being loaded is the correct JSON service account key
         creds = service_account.Credentials.from_service_account_file(
             SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    except ValueError as ve: # Catch JSON decoding errors or wrong format errors
+    except ValueError as ve:  # Catch JSON decoding errors or wrong format errors
         print(f"Error loading service account credentials: {ve}")
         print(f"This usually means the file '{SERVICE_ACCOUNT_FILE}' is not a valid JSON service account key file, is empty, or is not the correct type of JSON file (e.g. missing fields like client_email, token_uri).")
         return None
