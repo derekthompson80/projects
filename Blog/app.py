@@ -193,11 +193,11 @@ def blog():
             pass
         return results
 
-    # Load from database
+    # Load from database (db_setup is the sole backend)
     try:
-        from .blog_db import get_entries, init_schema
+        from .db_setup import get_entries, init_schema, comments_count as db_comments_count
     except ImportError:
-        from blog_db import get_entries, init_schema
+        from db_setup import get_entries, init_schema, comments_count as db_comments_count
 
     # Ensure schema exists
     try:
@@ -210,17 +210,11 @@ def blog():
         db_entries = get_entries()
         for e in db_entries:
             content_preview = e['content'][:200] + '...' if len(e['content']) > 200 else e['content']
-            # Count comments from filesystem for now to avoid changing comments storage
-            comments_count = 0
-            # Comments still tied to filename; use entry id as key
-            possible_json = os.path.join(COMMENTS_DIR, f"{e['id']}.json")
-            if os.path.exists(possible_json):
-                try:
-                    with open(possible_json, 'r', encoding='utf-8') as cf:
-                        comments = json.load(cf)
-                        comments_count = len(comments) if isinstance(comments, list) else 0
-                except Exception:
-                    comments_count = 0
+            # Count comments via DB
+            try:
+                cc = db_comments_count(e['id'])
+            except Exception:
+                cc = 0
 
             entries.append({
                 'id': e['id'],
@@ -228,17 +222,13 @@ def blog():
                 'author': e['author'],
                 'date': e['date'],
                 'content': content_preview,
-                'comments_count': comments_count,
+                'comments_count': cc,
                 'media': e.get('media')
             })
     except Exception as ex:
-        # If DB dependencies are missing, fall back to file-based entries without logging an error
-        msg = str(ex)
-        if isinstance(ex, RuntimeError) and 'Database dependencies are not installed' in msg:
-            app.logger.info('DB deps missing; falling back to file-based entries in blog_entries directory.')
-            entries = _load_entries_from_files()
-        else:
-            app.logger.error(f"Failed to load entries from DB: {ex}")
+        # DB failure: log and render empty list (no file fallback; DB is source of truth)
+        app.logger.error(f"Failed to load entries from DB: {ex}")
+        entries = []
 
     return render_template('blog.html', entries=entries)
 
@@ -247,9 +237,9 @@ def view_entry(entry_id):
     """Display a single blog entry with its comments"""
     # Load entry from database
     try:
-        from .blog_db import get_entry, init_schema
+        from .db_setup import get_entry, init_schema, get_comments
     except ImportError:
-        from blog_db import get_entry, init_schema
+        from db_setup import get_entry, init_schema, get_comments
     try:
         init_schema()
     except Exception as e:
@@ -258,40 +248,19 @@ def view_entry(entry_id):
     try:
         entry = get_entry(entry_id)
     except Exception as ex:
-        # Fallback to file-based entry if DB deps missing
-        if isinstance(ex, RuntimeError) and 'Database dependencies are not installed' in str(ex):
-            path = os.path.join(BLOG_ENTRIES_DIR, f"{entry_id}.json")
-            entry = None
-            try:
-                if os.path.exists(path):
-                    with open(path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                    if isinstance(data, dict):
-                        entry = {
-                            'id': entry_id,
-                            'title': data.get('title') or 'Untitled',
-                            'author': data.get('author') or 'Anonymous',
-                            'date': data.get('date') or '',
-                            'content': data.get('content') or '',
-                            'media': data.get('media') if isinstance(data.get('media'), dict) else None,
-                        }
-            except Exception:
-                entry = None
-        else:
-            raise
+        app.logger.error(f"Failed to load entry from DB: {ex}")
+        entry = None
     if not entry:
         flash('Entry not found', 'error')
         return redirect(url_for('blog'))
 
-    # Get comments
+    # Get comments from DB
     comments = []
-    comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
-    if os.path.exists(comment_file):
-        try:
-            with open(comment_file, 'r', encoding='utf-8') as cf:
-                comments = json.load(cf)
-        except Exception:
-            comments = []
+    try:
+        comments = get_comments(entry_id) or []
+    except Exception as e:
+        app.logger.error(f"Failed to load comments for {entry_id}: {e}")
+        comments = []
 
     return render_template('entry.html', 
                          entry=entry, 
@@ -332,9 +301,9 @@ def new_entry():
 
             # Save the entry to database
             try:
-                from .blog_db import insert_entry, init_schema
+                from .db_setup import insert_entry, init_schema
             except ImportError:
-                from blog_db import insert_entry, init_schema
+                from db_setup import insert_entry, init_schema
             try:
                 init_schema()
             except Exception as e:
@@ -359,9 +328,9 @@ def edit_entry(entry_id):
     """Edit an existing blog entry"""
     # Load from DB
     try:
-        from .blog_db import get_entry, update_entry, init_schema
+        from .db_setup import get_entry, update_entry, init_schema
     except ImportError:
-        from blog_db import get_entry, update_entry, init_schema
+        from db_setup import get_entry, update_entry, init_schema
     try:
         init_schema()
     except Exception as e:
@@ -453,9 +422,9 @@ def delete_entry(entry_id):
     """Delete a blog entry and its comments"""
     # Delete from DB
     try:
-        from .blog_db import delete_entry as db_delete_entry, init_schema
+        from .db_setup import delete_entry as db_delete_entry, init_schema
     except ImportError:
-        from blog_db import delete_entry as db_delete_entry, init_schema
+        from db_setup import delete_entry as db_delete_entry, init_schema
     try:
         init_schema()
     except Exception as e:
@@ -484,9 +453,9 @@ def add_comment(entry_id):
     """Add a comment to a blog entry"""
     # Verify entry exists in DB
     try:
-        from .blog_db import get_entry, init_schema
+        from .db_setup import get_entry, add_comment as db_add_comment, init_schema
     except ImportError:
-        from blog_db import get_entry, init_schema
+        from db_setup import get_entry, add_comment as db_add_comment, init_schema
     try:
         init_schema()
     except Exception as e:
@@ -508,26 +477,8 @@ def add_comment(entry_id):
     corrected_content = content
 
     try:
-        # Create comment object
-        comment = {
-            'author': author,
-            'content': corrected_content,
-            'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        }
-
-        # Save the comment JSON keyed by entry_id
-        comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
-        comments = []
-
-        if os.path.exists(comment_file):
-            with open(comment_file, 'r', encoding='utf-8') as f:
-                comments = json.load(f)
-
-        comments.append(comment)
-
-        with open(comment_file, 'w', encoding='utf-8') as f:
-            json.dump(comments, f, indent=2)
-
+        # Insert comment into DB
+        _ = add_comment(entry_id, author, corrected_content)
         flash('Comment added successfully', 'success')
         return redirect(url_for('view_entry', entry_id=entry_id))
     except Exception as e:
@@ -730,9 +681,9 @@ def entries_db():
     # Load from DB layer
     try:
         try:
-            from .blog_db import get_entries, init_schema
+            from .db_setup import get_entries, init_schema, comments_count as db_comments_count
         except ImportError:
-            from blog_db import get_entries, init_schema
+            from db_setup import get_entries, init_schema, comments_count as db_comments_count
         try:
             init_schema()
         except Exception as e:
@@ -744,7 +695,7 @@ def entries_db():
                 'title': e.get('title') or 'Untitled',
                 'author': e.get('author') or 'Anonymous',
                 'date': e.get('date') or '',
-                'comments_count': _comments_count(e['id']),
+                'comments_count': db_comments_count(e['id']),
             })
         return render_template('entries_db.html', entries=items, error=None)
     except Exception as ex:
@@ -757,9 +708,9 @@ def entries_db_json():
     """Return DB entries as JSON (normalized) with comments_count."""
     try:
         try:
-            from .blog_db import get_entries, init_schema
+            from .db_setup import get_entries, init_schema, comments_count as db_comments_count
         except ImportError:
-            from blog_db import get_entries, init_schema
+            from db_setup import get_entries, init_schema, comments_count as db_comments_count
         try:
             init_schema()
         except Exception as e:
@@ -771,12 +722,27 @@ def entries_db_json():
                 'title': e.get('title') or 'Untitled',
                 'author': e.get('author') or 'Anonymous',
                 'date': e.get('date') or '',
-                'comments_count': _comments_count(e['id']),
+                'comments_count': db_comments_count(e['id']),
             })
         return jsonify({'entries': items})
     except Exception as ex:
         app.logger.error(f"Failed to load DB entries (json): {ex}")
         return jsonify({'entries': [], 'error': str(ex)}), 500
+
+
+@app.route('/health/db')
+def health_db():
+    try:
+        try:
+            from .db_setup import health_check
+        except ImportError:
+            from db_setup import health_check
+        ok = health_check()
+        if ok:
+            return jsonify({"status": "ok"})
+        return jsonify({"status": "error"}), 500
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == '__main__':
