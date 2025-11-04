@@ -2,12 +2,25 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, f
 import os
 import json
 import datetime
+import os
+from pathlib import Path
+try:
+    from dotenv import load_dotenv  # type: ignore
+except Exception:
+    load_dotenv = None  # type: ignore
+import paramiko
+import MySQLdb
+import sshtunnel
+from typing import Optional, Dict, Any, List
 
 from pexels_api import PexelsAPI
 
+# Load environment variables from .env located alongside this file
+if load_dotenv:
+    load_dotenv(dotenv_path=Path(__file__).with_name('.env'))
+
 # Initialize Pexels API with the provided key
-PEXELS_API_KEY = "hSk5iMSAzF3dI68VVnjpil8CcXNd3twEdCZ4oTBl8ZrgP9ucJQQnwTLp"
-pexels = PexelsAPI(PEXELS_API_KEY)
+pexels = PexelsAPI(os.getenv('PEXELS_API_KEY'))
 
 # Grammar correction features removed: provide no-op stubs to keep routes simple
 # and avoid any dependency on the old txt_reviewer module.
@@ -193,11 +206,11 @@ def blog():
             pass
         return results
 
-    # Load from database (db_setup is the sole backend)
+    # Load from database
     try:
-        from .db_setup import get_entries, init_schema, comments_count as db_comments_count
+        from .blog_db import get_entries, init_schema
     except ImportError:
-        from db_setup import get_entries, init_schema, comments_count as db_comments_count
+        from blog_db import get_entries, init_schema
 
     # Ensure schema exists
     try:
@@ -210,11 +223,17 @@ def blog():
         db_entries = get_entries()
         for e in db_entries:
             content_preview = e['content'][:200] + '...' if len(e['content']) > 200 else e['content']
-            # Count comments via DB
-            try:
-                cc = db_comments_count(e['id'])
-            except Exception:
-                cc = 0
+            # Count comments from filesystem for now to avoid changing comments storage
+            comments_count = 0
+            # Comments still tied to filename; use entry id as key
+            possible_json = os.path.join(COMMENTS_DIR, f"{e['id']}.json")
+            if os.path.exists(possible_json):
+                try:
+                    with open(possible_json, 'r', encoding='utf-8') as cf:
+                        comments = json.load(cf)
+                        comments_count = len(comments) if isinstance(comments, list) else 0
+                except Exception:
+                    comments_count = 0
 
             entries.append({
                 'id': e['id'],
@@ -222,13 +241,17 @@ def blog():
                 'author': e['author'],
                 'date': e['date'],
                 'content': content_preview,
-                'comments_count': cc,
+                'comments_count': comments_count,
                 'media': e.get('media')
             })
     except Exception as ex:
-        # DB failure: log and render empty list (no file fallback; DB is source of truth)
-        app.logger.error(f"Failed to load entries from DB: {ex}")
-        entries = []
+        # If DB dependencies are missing, fall back to file-based entries without logging an error
+        msg = str(ex)
+        if isinstance(ex, RuntimeError) and 'Database dependencies are not installed' in msg:
+            app.logger.info('DB deps missing; falling back to file-based entries in blog_entries directory.')
+            entries = _load_entries_from_files()
+        else:
+            app.logger.error(f"Failed to load entries from DB: {ex}")
 
     return render_template('blog.html', entries=entries)
 
@@ -237,9 +260,9 @@ def view_entry(entry_id):
     """Display a single blog entry with its comments"""
     # Load entry from database
     try:
-        from .db_setup import get_entry, init_schema, get_comments
+        from .blog_db import get_entry, init_schema
     except ImportError:
-        from db_setup import get_entry, init_schema, get_comments
+        from blog_db import get_entry, init_schema
     try:
         init_schema()
     except Exception as e:
@@ -248,19 +271,40 @@ def view_entry(entry_id):
     try:
         entry = get_entry(entry_id)
     except Exception as ex:
-        app.logger.error(f"Failed to load entry from DB: {ex}")
-        entry = None
+        # Fallback to file-based entry if DB deps missing
+        if isinstance(ex, RuntimeError) and 'Database dependencies are not installed' in str(ex):
+            path = os.path.join(BLOG_ENTRIES_DIR, f"{entry_id}.json")
+            entry = None
+            try:
+                if os.path.exists(path):
+                    with open(path, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    if isinstance(data, dict):
+                        entry = {
+                            'id': entry_id,
+                            'title': data.get('title') or 'Untitled',
+                            'author': data.get('author') or 'Anonymous',
+                            'date': data.get('date') or '',
+                            'content': data.get('content') or '',
+                            'media': data.get('media') if isinstance(data.get('media'), dict) else None,
+                        }
+            except Exception:
+                entry = None
+        else:
+            raise
     if not entry:
         flash('Entry not found', 'error')
         return redirect(url_for('blog'))
 
-    # Get comments from DB
+    # Get comments
     comments = []
-    try:
-        comments = get_comments(entry_id) or []
-    except Exception as e:
-        app.logger.error(f"Failed to load comments for {entry_id}: {e}")
-        comments = []
+    comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
+    if os.path.exists(comment_file):
+        try:
+            with open(comment_file, 'r', encoding='utf-8') as cf:
+                comments = json.load(cf)
+        except Exception:
+            comments = []
 
     return render_template('entry.html', 
                          entry=entry, 
@@ -301,9 +345,9 @@ def new_entry():
 
             # Save the entry to database
             try:
-                from .db_setup import insert_entry, init_schema
+                from .blog_db import insert_entry, init_schema
             except ImportError:
-                from db_setup import insert_entry, init_schema
+                from blog_db import insert_entry, init_schema
             try:
                 init_schema()
             except Exception as e:
@@ -328,9 +372,9 @@ def edit_entry(entry_id):
     """Edit an existing blog entry"""
     # Load from DB
     try:
-        from .db_setup import get_entry, update_entry, init_schema
+        from .blog_db import get_entry, update_entry, init_schema
     except ImportError:
-        from db_setup import get_entry, update_entry, init_schema
+        from blog_db import get_entry, update_entry, init_schema
     try:
         init_schema()
     except Exception as e:
@@ -422,9 +466,9 @@ def delete_entry(entry_id):
     """Delete a blog entry and its comments"""
     # Delete from DB
     try:
-        from .db_setup import delete_entry as db_delete_entry, init_schema
+        from .blog_db import delete_entry as db_delete_entry, init_schema
     except ImportError:
-        from db_setup import delete_entry as db_delete_entry, init_schema
+        from blog_db import delete_entry as db_delete_entry, init_schema
     try:
         init_schema()
     except Exception as e:
@@ -453,9 +497,9 @@ def add_comment(entry_id):
     """Add a comment to a blog entry"""
     # Verify entry exists in DB
     try:
-        from .db_setup import get_entry, add_comment as db_add_comment, init_schema
+        from .blog_db import get_entry, init_schema
     except ImportError:
-        from db_setup import get_entry, add_comment as db_add_comment, init_schema
+        from blog_db import get_entry, init_schema
     try:
         init_schema()
     except Exception as e:
@@ -477,8 +521,26 @@ def add_comment(entry_id):
     corrected_content = content
 
     try:
-        # Insert comment into DB
-        _ = add_comment(entry_id, author, corrected_content)
+        # Create comment object
+        comment = {
+            'author': author,
+            'content': corrected_content,
+            'date': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        # Save the comment JSON keyed by entry_id
+        comment_file = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
+        comments = []
+
+        if os.path.exists(comment_file):
+            with open(comment_file, 'r', encoding='utf-8') as f:
+                comments = json.load(f)
+
+        comments.append(comment)
+
+        with open(comment_file, 'w', encoding='utf-8') as f:
+            json.dump(comments, f, indent=2)
+
         flash('Comment added successfully', 'success')
         return redirect(url_for('view_entry', entry_id=entry_id))
     except Exception as e:
@@ -488,15 +550,9 @@ def add_comment(entry_id):
 
 @app.route('/blog/entries/files')
 def list_entry_files():
-    """List files in the blog_entries directory.
-    - Default: JSON with both .json and .txt files (name, size, modified)
-    - If ?format=text: return a plain-text list (one per line) of only .txt filenames.
-    """
+    """List files in the blog_entries directory (JSON and TXT)."""
     try:
         if not os.path.isdir(BLOG_ENTRIES_DIR):
-            # Text format requested → return plain 404 message; otherwise JSON
-            if request.args.get('format') == 'text':
-                return ("blog_entries directory not found\n", 404, {'Content-Type': 'text/plain; charset=utf-8'})
             return jsonify({'files': [], 'error': 'blog_entries directory not found'}), 404
 
         files = []
@@ -520,229 +576,10 @@ def list_entry_files():
         except Exception:
             pass
 
-        # Plain text mode: return only .txt filenames, one per line
-        if request.args.get('format') == 'text':
-            txt_names = [f['name'] for f in files if f['name'].lower().endswith('.txt')]
-            body = "\n".join(txt_names) + ("\n" if txt_names else "")
-            return (body, 200, {'Content-Type': 'text/plain; charset=utf-8'})
-
-        # Default JSON
         return jsonify({'files': files})
     except Exception as e:
         app.logger.error(f"Error listing blog entry files: {e}")
-        if request.args.get('format') == 'text':
-            return (f"Error: {str(e)}\n", 500, {'Content-Type': 'text/plain; charset=utf-8'})
         return jsonify({'error': str(e)}), 500
-
-
-def _parse_txt_entry(file_path: str, entry_id: str) -> dict:
-    """Parse a legacy .txt blog entry file into a structured dict.
-    Expected header lines at top (any order), then a blank line, then content:
-      Title: ...
-      Author: ...
-      Date: YYYY-MM-DD HH:MM:SS (free-form kept as-is)
-    The rest of the file is the content body.
-    """
-    title = 'Untitled'
-    author = 'Anonymous'
-    date = ''
-    content_lines: list[str] = []
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        # Extract simple headers from the first ~20 lines or until first non-header content
-        i = 0
-        max_header_scan = min(len(lines), 20)
-        while i < max_header_scan:
-            line = lines[i].rstrip('\n')
-            if not line.strip():
-                # Allow a blank separator; continue scanning a bit further
-                i += 1
-                # Stop scanning headers if we already saw some headers and hit a blank line
-                if (title != 'Untitled' or author != 'Anonymous' or date):
-                    break
-                continue
-            low = line.lower()
-            if low.startswith('title:'):
-                title = line.split(':', 1)[1].strip() or title
-            elif low.startswith('author:'):
-                author = line.split(':', 1)[1].strip() or author
-            elif low.startswith('date:'):
-                date = line.split(':', 1)[1].strip() or date
-            else:
-                # Not a header-like line; stop header scanning
-                break
-            i += 1
-        # The rest is content
-        content_lines = [l.rstrip('\n') for l in lines[i:]]
-    except Exception:
-        # On any failure, return minimal information
-        content_lines = []
-    content = '\n'.join(content_lines).strip('\n')
-    return {
-        'id': entry_id,
-        'title': title,
-        'author': author,
-        'date': date,
-        'content': content,
-    }
-
-
-@app.route('/blog/entry/txt/<path:name>')
-def blog_entry_txt(name: str):
-    """Return a legacy .txt blog entry from blog_entries as plain text.
-    Usage examples:
-      /blog/entry/txt/20250613_171359_June_9__2025_75th
-      /blog/entry/txt/20250613_171359_June_9__2025_75th.txt
-    The response is returned as plain text content.
-    """
-    try:
-        # Normalize filename and ensure .txt extension is allowed
-        orig_name = name
-        if not orig_name.lower().endswith('.txt'):
-            filename = f"{orig_name}.txt"
-        else:
-            filename = orig_name
-
-        # Resolve path inside BLOG_ENTRIES_DIR only
-        candidate = os.path.normpath(os.path.join(BLOG_ENTRIES_DIR, filename))
-        base_dir = os.path.normpath(BLOG_ENTRIES_DIR)
-        if not candidate.startswith(base_dir):
-            return "Invalid path", 400
-        if not os.path.isfile(candidate):
-            return "File not found", 404
-
-        # Read and return the raw file content as plain text
-        with open(candidate, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        from flask import Response
-        return Response(content, mimetype='text/plain')
-    except Exception as e:
-        app.logger.error(f"Error reading txt entry '{name}': {e}")
-        return f"Error: {str(e)}", 500
-
-
-@app.route('/blog/entries/browse')
-def browse_entry_files():
-    """Render an HTML page to browse and open .txt files in blog_entries.
-    - Lists only .txt files
-    - Sorted by last modified (desc)
-    - Each filename links to the plain-text endpoint `/blog/entry/txt/<name>`
-    """
-    try:
-        if not os.path.isdir(BLOG_ENTRIES_DIR):
-            # Render a friendly empty state
-            return render_template('entries_browse.html', files=[], error='blog_entries directory not found')
-
-        files = []
-        for name in os.listdir(BLOG_ENTRIES_DIR):
-            if not name.lower().endswith('.txt'):
-                continue
-            path = os.path.join(BLOG_ENTRIES_DIR, name)
-            try:
-                files.append({
-                    'name': name,
-                    'size': os.path.getsize(path),
-                    'modified': datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime('%Y-%m-%d %H:%M:%S'),
-                })
-            except Exception:
-                # Skip files that cannot be stat'ed
-                continue
-
-        # Sort by modified desc
-        try:
-            files.sort(key=lambda x: x['modified'], reverse=True)
-        except Exception:
-            pass
-
-        return render_template('entries_browse.html', files=files, error=None)
-    except Exception as e:
-        app.logger.error(f"Error rendering entries browse page: {e}")
-        return render_template('entries_browse.html', files=[], error=str(e)), 500
-
-
-def _comments_count(entry_id: str) -> int:
-    """Return number of comments for an entry based on blog_comments/<entry_id>.json."""
-    try:
-        path = os.path.join(COMMENTS_DIR, f"{entry_id}.json")
-        if os.path.exists(path):
-            with open(path, 'r', encoding='utf-8') as f:
-                comments = json.load(f)
-                return len(comments) if isinstance(comments, list) else 0
-    except Exception:
-        return 0
-    return 0
-
-
-@app.route('/blog/entries/db')
-def entries_db():
-    """Render an HTML page that lists entries fetched from the database layer."""
-    # Load from DB layer
-    try:
-        try:
-            from .db_setup import get_entries, init_schema, comments_count as db_comments_count
-        except ImportError:
-            from db_setup import get_entries, init_schema, comments_count as db_comments_count
-        try:
-            init_schema()
-        except Exception as e:
-            app.logger.error(f"DB schema init failed: {e}")
-        items = []
-        for e in get_entries():
-            items.append({
-                'id': e['id'],
-                'title': e.get('title') or 'Untitled',
-                'author': e.get('author') or 'Anonymous',
-                'date': e.get('date') or '',
-                'comments_count': db_comments_count(e['id']),
-            })
-        return render_template('entries_db.html', entries=items, error=None)
-    except Exception as ex:
-        app.logger.error(f"Failed to load DB entries: {ex}")
-        return render_template('entries_db.html', entries=[], error=str(ex)), 500
-
-
-@app.route('/blog/entries/db.json')
-def entries_db_json():
-    """Return DB entries as JSON (normalized) with comments_count."""
-    try:
-        try:
-            from .db_setup import get_entries, init_schema, comments_count as db_comments_count
-        except ImportError:
-            from db_setup import get_entries, init_schema, comments_count as db_comments_count
-        try:
-            init_schema()
-        except Exception as e:
-            app.logger.error(f"DB schema init failed: {e}")
-        items = []
-        for e in get_entries():
-            items.append({
-                'id': e['id'],
-                'title': e.get('title') or 'Untitled',
-                'author': e.get('author') or 'Anonymous',
-                'date': e.get('date') or '',
-                'comments_count': db_comments_count(e['id']),
-            })
-        return jsonify({'entries': items})
-    except Exception as ex:
-        app.logger.error(f"Failed to load DB entries (json): {ex}")
-        return jsonify({'entries': [], 'error': str(ex)}), 500
-
-
-@app.route('/health/db')
-def health_db():
-    try:
-        try:
-            from .db_setup import health_check
-        except ImportError:
-            from db_setup import health_check
-        ok = health_check()
-        if ok:
-            return jsonify({"status": "ok"})
-        return jsonify({"status": "error"}), 500
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == '__main__':
