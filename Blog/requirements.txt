@@ -1,7 +1,8 @@
 flask
+python-dotenv
 google-auth-oauthlib
 google-auth
 google-api-python-client
 python-docx
-language-tool-python>=3.8.0
 requests
+mysqlclient

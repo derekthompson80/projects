@@ -104,25 +104,33 @@ A Flask web application that allows you to run grammar and spelling checks on yo
 - If the application can't access your Google Docs, ensure you've granted the necessary permissions
 - For any other issues, check the Flask server logs for error messages
 
-### Optional database (MySQL over SSH)
+### Database (direct MySQL)
 
-This app can show blog entries from a MySQL database via an SSH tunnel. Database access is optional — if the DB dependencies are not installed or the connection fails, the app gracefully falls back to reading entries from local JSON files under `blog_entries/`.
+The app can use a MySQL database to store blog entries. SSH tunneling has been removed. Connect directly to your MySQL server.
 
-To enable DB access, install the real packages from PyPI:
+1) Install the MySQL driver:
 
 ```
-pip install paramiko sshtunnel
+pip install -r Blog/requirements.txt
 ```
 
-You also need a MySQL driver. On Windows, building `mysqlclient` can require extra build tools; a pure-Python fallback is available:
+2) Configure environment in `Blog/.env`:
 
-- Preferred (C extension, faster):
-  ```
-  pip install mysqlclient
-  ```
-- Fallback (pure Python):
-  ```
-  pip install PyMySQL
-  ```
+```
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=your_mysql_user
+DB_PASSWORD=your_mysql_password
+DB_NAME=your_database_name
+```
 
-Important: Do NOT install packages named `paramiko-on-pypi` or `pycrypto-on-pypi`. Those are not the official packages and will fail to build on modern Python versions (e.g., Python 3.13). The project’s DB layer will automatically use `mysqlclient` if available, or fall back to `PyMySQL` if installed.
+3) Initialize schema or run migration:
+
+```
+python -c "from Blog.blog_db import init_schema; init_schema()"
+python Blog/migrate_files_to_db.py
+```
+
+Notes:
+- The code will attempt to create the database `DB_NAME` if it does not exist.
+- Ensure the configured MySQL user has permission to create databases and tables, or pre-create the database with proper privileges.

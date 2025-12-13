@@ -12,9 +12,9 @@ from typing import Optional, Dict, Any
 
 # Allow running both as module or script
 try:
-    from .blog_db import init_schema, _open_connection, _close
+    from .blog_db import init_schema, open_connection, _close
 except ImportError:
-    from blog_db import init_schema, _open_connection, _close
+    from blog_db import init_schema, open_connection, _close
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BLOG_ENTRIES_DIR = os.path.join(BASE_DIR, 'blog_entries')
@@ -102,7 +102,7 @@ def main():
         return
 
     init_schema()
-    conn, tunnel = _open_connection()
+    conn = open_connection()
     try:
         total = 0
         migrated = 0
@@ -120,7 +120,7 @@ def main():
                 print(f"Upserted: {entry_key}")
         print(f"Done. Processed: {total}. Upserted/exists: {migrated}.")
     finally:
-        _close(conn, tunnel)
+        _close(conn)
 
 
 if __name__ == '__main__':

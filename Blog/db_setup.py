@@ -1,38 +1,15 @@
-import paramiko
-import MySQLdb
-import sshtunnel
+"""
+Deprecated: SSH tunneling has been removed from the project.
 
-# Workaround for Paramiko v3+ removal of DSSKey which sshtunnel may try to access
-if not hasattr(paramiko, "DSSKey"):
-    try:
-        paramiko.DSSKey = paramiko.RSAKey  # type: ignore[attr-defined]
-    except Exception:
-        pass
+This file previously created an SSH tunnel to connect to MySQL. All SSH-related
+code and configuration have been deleted. Connect directly to your database
+using the `Blog.blog_db` module and the following environment variables in Blog/.env:
 
-sshtunnel.SSH_TIMEOUT = 10.0
-sshtunnel.TUNNEL_TIMEOUT = 10.0
+  DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 
-with sshtunnel.SSHTunnelForwarder(
-    ('ssh.pythonanywhere.com'),
-    ssh_username='spade605',
-    ssh_password='Beholder20!',
-    remote_bind_address=('spade605.mysql.pythonanywhere-services.com', 3306),
-    allow_agent=False,
-    host_pkey_directories=[],
-    set_keepalive=15,
-) as tunnel:
-    connection = MySQLdb.connect(
-        user='spade605',
-        passwd='Darklove90!',
-        host='127.0.0.1',
-        port=tunnel.local_bind_port,
-        db='spade605$blog',
-        connect_timeout=10,
-        charset='utf8mb4',
-        use_unicode=True,
-    )
-    try:
-        # Do stuff
-        pass
-    finally:
-        connection.close()
+This module is intentionally left as a stub to avoid import errors.
+"""
+
+raise RuntimeError(
+    "db_setup.py has been deprecated. Use direct DB connection via Blog.blog_db and env vars (DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME)."
+)

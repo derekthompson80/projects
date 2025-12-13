@@ -2,18 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, f
 import os
 import json
 import datetime
-import os
 from pathlib import Path
 try:
     from dotenv import load_dotenv  # type: ignore
 except Exception:
     load_dotenv = None  # type: ignore
-import paramiko
-import MySQLdb
-import sshtunnel
-from typing import Optional, Dict, Any, List
 
-from pexels_api import PexelsAPI
+# Support running both as a package (Blog) and as a standalone script
+try:
+    from .pexels_api import PexelsAPI  # type: ignore
+except Exception:
+    from pexels_api import PexelsAPI  # type: ignore
 
 # Load environment variables from .env located alongside this file
 if load_dotenv:

@@ -4,102 +4,77 @@ try:
     from dotenv import load_dotenv  # type: ignore
 except Exception:
     load_dotenv = None  # type: ignore
-import paramiko
 import MySQLdb
-import sshtunnel
 from typing import Optional, Dict, Any, List
 
 # Load environment variables from .env located alongside this file
 if load_dotenv:
     load_dotenv(dotenv_path=Path(__file__).with_name('.env'))
 
-# Paramiko v3+ compatibility for sshtunnel
-if not hasattr(paramiko, "DSSKey"):
-    try:
-        paramiko.DSSKey = paramiko.RSAKey  # type: ignore[attr-defined]
-    except Exception:
-        pass
-
-# Timeouts with environment overrides
-_SSH_TIMEOUT = os.getenv('sshtunnel.SSH_TIMEOUT') or os.getenv('SSH_TIMEOUT') or '10.0'
-_TUNNEL_TIMEOUT = os.getenv('sshtunnel.TUNNEL_TIMEOUT') or os.getenv('TUNNEL_TIMEOUT') or '10.0'
-try:
-    sshtunnel.SSH_TIMEOUT = float(_SSH_TIMEOUT)
-except Exception:
-    sshtunnel.SSH_TIMEOUT = 10.0
-try:
-    sshtunnel.TUNNEL_TIMEOUT = float(_TUNNEL_TIMEOUT)
-except Exception:
-    sshtunnel.TUNNEL_TIMEOUT = 10.0
-
-# Connection settings from environment; avoid hardcoded secrets
-SSH_HOST = os.getenv('SSH_HOST', 'ssh.pythonanywhere.com')
-SSH_USERNAME = os.getenv('SSH_USERNAME')
-SSH_PASSWORD = os.getenv('SSH_PASSWORD')
-REMOTE_DB_HOST = os.getenv('REMOTE_DB_HOST', 'spade605.mysql.pythonanywhere-services.com')
-REMOTE_DB_PORT = int(os.getenv('REMOTE_DB_PORT', '3306'))
+# Direct MySQL connection settings from environment; avoid hardcoded secrets
+DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
+DB_PORT = int(os.getenv('DB_PORT', '3305'))
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_NAME = os.getenv('DB_NAME')
 
-# Validate required secrets are present
-_missing = [k for k, v in {
-    'SSH_USERNAME': SSH_USERNAME,
-    'SSH_PASSWORD': SSH_PASSWORD,
-    'DB_USER': DB_USER,
-    'DB_PASSWORD': DB_PASSWORD,
-    'DB_NAME': DB_NAME,
-}.items() if not v]
-if _missing:
-    raise RuntimeError(f"Missing required environment variables: {', '.join(_missing)}. Ensure they are set in the environment or in .env next to blog_db.py.")
+# Note: We intentionally do not validate DB settings at import time to avoid
+# raising errors when the database feature is not used. Validation happens in
+# the connection function below.
 
-
-def _open_connection():
-    tunnel = sshtunnel.SSHTunnelForwarder(
-        (SSH_HOST, 22),
-        ssh_username=SSH_USERNAME,
-        ssh_password=SSH_PASSWORD,
-        remote_bind_address=(REMOTE_DB_HOST, REMOTE_DB_PORT),
-        set_keepalive=15,
-        allow_agent=False,
-        host_pkey_directories=[],
-    )
-    tunnel.start()
-    # Guard: ensure tunnel is active and local port assigned
-    if not getattr(tunnel, 'is_active', False) or not getattr(tunnel, 'local_bind_port', None):
-        # Best-effort stop and raise a clearer error
-        try:
-            tunnel.stop()
-        except Exception:
-            pass
-        raise RuntimeError('SSH tunnel failed to start or no local_bind_port assigned')
-    conn = MySQLdb.connect(
-        user=DB_USER,
-        passwd=DB_PASSWORD,
-        host='127.0.0.1',
-        port=tunnel.local_bind_port,
-        db=DB_NAME,
+def _ensure_database_exists() -> None:
+    """Ensure the target database exists with utf8mb4 settings before connecting to it.
+    Connects without selecting a DB, creates it if missing, then returns.
+    """
+    if not DB_NAME:
+        raise RuntimeError("DB_NAME is not set. Define it in environment or .env.")
+    # Connect to server without selecting DB
+    server_conn = MySQLdb.connect(
+        host=os.getenv("DB_HOST", "127.0.0.1"),
+        port=int(os.getenv("DB_PORT", "3305")),
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWORD"),
         connect_timeout=10,
-        charset='utf8mb4',
+        charset="utf8mb4",
         use_unicode=True,
     )
-    return conn, tunnel
+    try:
+        cur = server_conn.cursor()
+        cur.execute(
+            f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        )
+        server_conn.commit()
+    finally:
+        try:
+            server_conn.close()
+        except Exception:
+            pass
 
 
-def _close(conn, tunnel):
+def open_connection():
+    _ensure_database_exists()
+    conn = MySQLdb.connect(
+        host=os.getenv("DB_HOST", "127.0.0.1"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWORD"),
+        db=os.getenv("DB_NAME"),
+        connect_timeout=10,
+        charset="utf8mb4",
+        use_unicode=True,
+    )
+    return conn
+
+
+def _close(conn):
     try:
         conn.close()
-    except Exception:
-        pass
-    try:
-        if getattr(tunnel, 'is_active', False):
-            tunnel.stop()
     except Exception:
         pass
 
 
 def init_schema() -> None:
-    conn, tunnel = _open_connection()
+    conn = open_connection()
     try:
         cur = conn.cursor()
         cur.execute(
@@ -123,7 +98,7 @@ def init_schema() -> None:
         )
         conn.commit()
     finally:
-        _close(conn, tunnel)
+        _close(conn)
 
 
 def insert_entry(title: str, content: str, author: str, media: Optional[Dict[str, Any]] = None) -> str:
@@ -133,7 +108,7 @@ def insert_entry(title: str, content: str, author: str, media: Optional[Dict[str
     safe_title = "".join(c if c.isalnum() else "_" for c in title)
     entry_key = f"{timestamp}_{safe_title}"
 
-    conn, tunnel = _open_connection()
+    conn = open_connection()
     try:
         cur = conn.cursor()
         cur.execute(
@@ -161,11 +136,11 @@ def insert_entry(title: str, content: str, author: str, media: Optional[Dict[str
         conn.commit()
         return entry_key
     finally:
-        _close(conn, tunnel)
+        _close(conn)
 
 
 def get_entries() -> List[Dict[str, Any]]:
-    conn, tunnel = _open_connection()
+    conn = open_connection()
     try:
         cur = conn.cursor()
         cur.execute("SELECT entry_key, title, author, created_at, content, media_id, media_type, media_url, media_thumbnail, media_width, media_height, media_attribution FROM entries ORDER BY created_at DESC")
@@ -194,11 +169,11 @@ def get_entries() -> List[Dict[str, Any]]:
             })
         return entries
     finally:
-        _close(conn, tunnel)
+        _close(conn)
 
 
 def get_entry(entry_id: str) -> Optional[Dict[str, Any]]:
-    conn, tunnel = _open_connection()
+    conn = open_connection()
     try:
         cur = conn.cursor()
         cur.execute(
@@ -228,12 +203,12 @@ def get_entry(entry_id: str) -> Optional[Dict[str, Any]]:
             'media': media,
         }
     finally:
-        _close(conn, tunnel)
+        _close(conn)
 
 
 def update_entry(entry_id: str, title: str, content: str, author: str, media: Optional[Dict[str, Any]] = None) -> bool:
     """Update an existing entry by entry_key. Preserves created_at."""
-    conn, tunnel = _open_connection()
+    conn = open_connection()
     try:
         cur = conn.cursor()
         cur.execute(
@@ -260,15 +235,15 @@ def update_entry(entry_id: str, title: str, content: str, author: str, media: Op
         conn.commit()
         return cur.rowcount > 0
     finally:
-        _close(conn, tunnel)
+        _close(conn)
 
 
 def delete_entry(entry_id: str) -> bool:
-    conn, tunnel = _open_connection()
+    conn = open_connection()
     try:
         cur = conn.cursor()
         cur.execute("DELETE FROM entries WHERE entry_key=%s", (entry_id,))
         conn.commit()
         return cur.rowcount > 0
     finally:
-        _close(conn, tunnel)
+        _close(conn)
