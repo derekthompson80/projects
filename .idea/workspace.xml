@@ -5,10 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="04b38445-f267-46d0-bc3b-62f93fae2eb2" name="Changes" comment="working code">
-      <change beforePath="$PROJECT_DIR$/.idea/country_game.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/country_game.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Blog/.env" beforeDir="false" afterPath="$PROJECT_DIR$/Blog/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Blog/blog_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/Blog/blog_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Blog/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/Blog/app.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +68,7 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "ai.playground.ignore.import.keys.banner.in.settings": "true",
     "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "flask__remote__conn",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "C:/Users/spade/PycharmProjects/PythonProject/country_game",
@@ -84,6 +82,13 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecapSpentCounter">
+    <option name="endsOfQuotaMs" value="1767870025279" />
+    <option name="spentUsd" value="0.0040495" />
+  </component>
+  <component name="RecapUselessUpdatesCounter">
+    <option name="suspendCountdown" value="9" />
+  </component>
   <component name="RunManager" selected="Python.app">
     <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="country_game" />
@@ -160,7 +165,7 @@
       <workItem from="1765642118126" duration="6817000" />
       <workItem from="1765847349972" duration="10297000" />
       <workItem from="1765935316134" duration="6664000" />
-      <workItem from="1766339312817" duration="1279000" />
+      <workItem from="1766339312817" duration="2574000" />
     </task>
     <task id="LOCAL-00001" summary="working code">
       <option name="closed" value="true" />
@@ -186,7 +191,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766339777574</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="working code">
+      <option name="closed" value="true" />
+      <created>1766340615763</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1766340615763</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -221,14 +234,14 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Blog/app.py</url>
-          <line>584</line>
+          <line>191</line>
           <option name="timeStamp" value="9" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Derek_current_projects$app.coverage" NAME="app Coverage Results" MODIFIED="1766339638034" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Blog" />
+    <SUITE FILE_PATH="coverage/Derek_current_projects$app.coverage" NAME="app Coverage Results" MODIFIED="1766341833387" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Blog" />
     <SUITE FILE_PATH="coverage/remote_connection$app.coverage" NAME="app Coverage Results" MODIFIED="1765935845404" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Blog" />
     <SUITE FILE_PATH="coverage/remote_connection$blog_db.coverage" NAME="blog_db Coverage Results" MODIFIED="1765935823890" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Blog" />
     <SUITE FILE_PATH="coverage/Derek_current_projects$blog_db.coverage" NAME="blog_db Coverage Results" MODIFIED="1765932963931" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Blog" />
